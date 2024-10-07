@@ -5,7 +5,7 @@
 # Assumes POSIX system for glob syntax
 import os
 import sys
-sys.path.append('/r02/lhcb/rrm42/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/')
+sys.path.append('/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/')
 import subprocess
 
 from shutil import which

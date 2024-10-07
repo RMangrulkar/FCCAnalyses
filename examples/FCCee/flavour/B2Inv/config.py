@@ -5,7 +5,7 @@
 import os
 
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
-FCCAnalysesPath = "/r02/lhcb/rrm42/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
+FCCAnalysesPath = "/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 
 ##############################

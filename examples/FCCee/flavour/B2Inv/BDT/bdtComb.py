@@ -6,7 +6,7 @@ import xgboost as xgb  # Has to be imported first to avoid conflicts with PyROOT
 
 import sys
 # Path to config.py and variable_plotter.py
-sys.path.append("/r02/lhcb/rrm42/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/")
+sys.path.append("/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/")
 
 import ROOT
 import numpy as np

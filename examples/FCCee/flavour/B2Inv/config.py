@@ -157,6 +157,8 @@ prod_frac = {
     "Bs": 0.096,
     "Lb": 0.037,
     "Bc": 0.0004,
+    # Actually, use the sample name to make integration with Bd2NuNu easier
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.096, 0),
 }
 
 

@@ -95,7 +95,7 @@ def get_efficiencies(inputtype,
     ##############################
     if verbose:
         start = time()
-        print(f"\n{30*'-'}")
+        print(f"{30*'-'}")
         print(f"EFFICIENCY CALCULATOR")
         print(f"{30*'-'}\n")
         print("Initialising...")
@@ -250,6 +250,121 @@ def get_efficiencies(inputtype,
         return data
 
 
+def get_sample_expectations(efficiencies, placeholder_bf, save=None, verbose=True, cut=None):
+    '''
+    Given a dictionary of efficiencies find the expected number of each events that survive the cut.
+
+    Parameters
+    ----------
+    efficiencies: dict
+        A dictionary of efficiencies formatted according to the output of `get_efficiencies`.
+        That is, the keys are <sample>_eff and <sample_err>. Works with single (scalar) or multiple cuts (ndarray)
+    placeholder_bf: float
+        A placeholder branching fraction to use for the signal expectation.
+    save: str, optional
+        Path to a csv file to save the expected numbers. Default = None.
+    verbose: bool, optional
+        Flag to print messages in stdout. Default = True
+    cut: str or list of str, optional
+        The cuts used when finding the efficiencies. Its length should match the length of values of `efficiencies`
+
+    Returns
+    -------
+    n_expect: dict
+        A dictionary with keys <sample>_num and <sample>_err for the expected numbers and their errors for each sample.
+    '''
+    ##############################
+    ## INITIALISATION
+    ##############################
+    if verbose:
+        start = time()
+        print(f"\n{30*'-'}\n")
+        print(f"EXPECTATION OF SAMPLE NUMBERS")
+        print(f"----> INFO: Using signal placeholder branching fraction")
+        print(f"{15*' '}{placeholder_bf:.3e}")
+        print(f"----> INFO: For cut(s)")
+        print(f"{15*' '}{cut}")
+        print(f"\n{30*'-'}\n")
+    
+    # Dict to store output
+    n_expect = {}
+
+    # Remove suffix from the keys and convert to set to remove duplicates
+    keys = set([key[:-4] for key in list(efficiencies.keys())])
+    # Sort `keys` according to config.samples
+    keys = [sample for sample in cfg.samples if sample in keys]
+    ##############################
+    ## COMPUTING EXPECTATION
+    ##############################
+    for key in keys:
+        bfs_val = cfg.branching_fractions[key][0]
+        bfs_err = cfg.branching_fractions[key][1]
+        eff_val = efficiencies[key+'_eff']
+        eff_err = efficiencies[key+'_err']
+        
+        num = 6e12*bfs_val*eff_val
+
+        # If multiple efficiencies (i.e. list of cuts) passed need to convert scalars to ndarrays
+        if isinstance(eff_val, np.ndarray):
+            relative_var = np.ones_like(eff_val)*np.divide(bfs_err, bfs_val)**2 + np.divide(eff_err, eff_val)**2
+        else:
+            relative_var = np.divide(bfs_err, bfs_val)**2 + np.divide(eff_err, eff_val)**2
+
+        if key in cfg.sample_allocations['signal']:
+            num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[key][0]*placeholder_bf
+            
+            # If multiple efficiencies (i.e. multiple cuts) passed need to convert the scalars to ndarrays with the correct dimensions
+            if isinstance(eff_val, np.ndarray):
+                relative_var += np.ones_like(eff_val)*(cfg.branching_fractions['p8_ee_Zbb_ecm91'][1] / cfg.branching_fractions['p8_ee_Zbb_ecm91'][0])**2
+                relative_var += np.ones_like(eff_val)*(cfg.prod_frac[key][1] / cfg.prod_frac[key][0])**2
+            else:
+                relative_var += (cfg.branching_fractions['p8_ee_Zbb_ecm91'][1] / cfg.branching_fractions['p8_ee_Zbb_ecm91'][0])**2
+                relative_var += (cfg.prod_frac[key][1] / cfg.prod_frac[key][0])**2
+
+        err = np.sqrt(relative_var)*num
+        n_expect[key+'_num'] = num
+        n_expect[key+'_err'] = err
+
+        if verbose:
+            if isinstance(cut, list):
+                for i, cut_expr in enumerate(cut):
+                    common_div = np.floor(np.log10(num[i]))
+                    print(f"{key} with cut {cut_expr}")
+                    print(f"{15*' '}Expectation = ({num[i]/10**common_div:.3f} +/- {err[i]/10**common_div:.3f}) x 10^{int(common_div)}")
+            else:
+                common_div = np.floor(np.log10(num))
+                if cut is None:
+                    print(f"{key} with preselection cuts")
+                else:
+                    print(f"{key} with cut {cut}")
+                
+                print(f"{15*' '}Expectation = ({num/10**common_div:.3f} +/- {err/10**common_div:.3f}) x 10^{int(common_div)}")
+
+            print("\n")
+
+    ##############################
+    ## SAVING
+    ##############################
+    if save is None and verbose:
+        print(f"{30*'-'}\n")
+        print(f"----> INFO: `save` set to None, skipping")
+
+    elif save is not None:
+        pd.DataFrame(data, index=cut, columns=list(data.keys())).to_csv(save, columns=list(data.keys()))
+        if verbose:
+            print(f"{30*'-'}\n")
+            print(f"----> INFO: Efficiencies saved to")
+            print(f"{15*' '}{save}")
+    
+    if verbose:
+        end = time()
+        print(f"\n{30*'-'}")
+        print(f"Execution time = {timedelta(seconds=end-start)}")
+        print(f"{30*'-'}")
+
+    return n_expect
+
+
 if __name__ == "__main__":
     # If this script is run, i.e. not imported, pass arguments
     from argparse import ArgumentParser
@@ -263,6 +378,8 @@ if __name__ == "__main__":
     rawv = parser.add_argument("--raw",        default=False, action="store_true")
     cstp = parser.add_argument("--custompath", default=None,  type=str)
     save = parser.add_argument("--save",       default=None,  type=str)
+    nums = parser.add_argument("--n-expect",   default=False, action="store_true")
+    nsav = parser.add_argument("--save-nums",  default=None,  type=str)
 
     inpt.help = 'Sample collection to use, if custom needs CUSTOMPATH'
     smpl.help = 'List of samples to use from config.samples, default is None (all config.samples used)'
@@ -271,9 +388,21 @@ if __name__ == "__main__":
     rawv.help = 'If `cut` is set, use `eventsProcessed` instead of `eventsSelected`, default is False'
     cstp.help = 'Path to samples if INPUTTYPE is `custom`, default is None'
     save.help = 'Save efficiencies to this csv file, default is None (csv file is not saved)'
+    nums.help = 'Compute the expected number of events of each type with these cuts'
+    nsav.help = 'If --n-expect is set, also save these expected numbers to this path, default is None (csv file not saved)'
 
     args = parser.parse_args()
-
-    get_efficiencies(args.inputtype, further_analysis=False, samples=args.samples,
+    
+    get_efficiencies(args.inputtype, further_analysis=True, samples=args.samples,
                      cut=args.cut, nchunks=args.nchunks, raw=args.raw,
                      custompath=args.custompath, save=args.save, verbose=True)
+
+    # If calculating the expectation numbers force args.raw to be true
+    if args.n_expect:
+        if not args.raw:
+            print(f"----> WARNING: `args.raw` == False incompatible with args.n_expect, setting to True")
+        effs = get_efficiencies(args.inputtype, further_analysis=True, samples=args.samples,
+                                cut=args.cut, nchunks=args.nchunks, raw=True,
+                                custompath=args.custompath, save=None, verbose=False)
+
+        get_sample_expectations(effs, 1e-6, save=args.save_nums, verbose=True, cut=args.cut)

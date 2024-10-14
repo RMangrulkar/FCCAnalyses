@@ -17,7 +17,8 @@ import efficiency_finder
 from argparse import ArgumentParser
 parser = ArgumentParser(description="Interactively plots features from a specified inputpath")
 parser.add_argument("-i","--inputpath", default=f"{cfg.fccana_opts['outputDir']['stage2']}", help="Path to look for files in, default is the stage2 directory in config.py")
-parser.add_argument("-e","--efficiencies", default=None, help="Name of efficiency dictionary key, default is None")
+# MARK FOR DELETION
+# parser.add_argument("-e","--efficiencies", default=None, help="Name of efficiency dictionary key, default is None")
 args = parser.parse_args()
 
 def get_list_of_files(folder):
@@ -143,7 +144,8 @@ def plot(varname,
          range=None, 
          logy=False,
          total=["background"], 
-         components=["signal", "background"]):
+         components=["signal", "background"],
+         verbose=True):
     
     """ 
     plot( varname, **opts ) will plot a variable
@@ -186,6 +188,8 @@ def plot(varname,
         Provide a key of config.sample_allocations to stack. Default: ['background']
     components : list of str, optional
         Distinguish the samples according to cfg.sample_allocations. Default: ['signal', 'background']
+    verbose : bool, optional
+        Print out some useful stuff. Default: True
     """
     # If nchunks is a list, use corresponding elements
     if remove_outliers:
@@ -212,11 +216,12 @@ def plot(varname,
     fig, ax = plt.subplots()
 
     if weight:
-        if density:
-            print("----> WARNING: `density` incompatible with `weight`, setting to False")
-            density = False
-        effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=args.inputpath, verbose=False)
-        n_expect = efficiency_finder.get_sample_expectations(effs, signal_bf, save=None, verbose=False, cut=cut)
+                # TODO: fix me please!
+        # if density:
+        #     print("----> WARNING: `density` incompatible with `weight`, setting to False")
+        #     density = False
+        effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=args.inputpath, verbose=verbose)
+        n_expect = efficiency_finder.get_sample_expectations(effs, signal_bf, save=None, verbose=verbose, cut=cut)
         ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
 
     for allocation in cfg.sample_allocations:
@@ -224,13 +229,11 @@ def plot(varname,
             continue
         samples = cfg.sample_allocations[allocation]
         hist_x = [ values[sample] for sample in samples ]
-        #hist_w = [ np.ones_like( values[sample] ) * hist_weights[sample]/len(values[sample]) for sample in samples ]
-        # TEST
-        hist_w = [ np.ones_like(values[sample])*n_expect[sample+'_num']/len(values[sample]) for sample in samples ]
-
+        if weight:
+                hist_w = [ np.ones_like(values[sample])*n_expect[sample+'_num']/len(values[sample]) for sample in samples ]
+        else:
+                hist_w = None
         hist_l = [ cfg.titles[sample] for sample in samples ]
-        if not weight:
-            hist_w = None
 
         if stacked:
             hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
@@ -263,7 +266,7 @@ def plot(varname,
                 range = (xmin,xmax),
                 density = density,
                 label = f'Total {allocation}',
-                weights = np.concatenate( hist_w ),
+                weights = np.concatenate( hist_w ) if weight else None,
                 histtype = 'step',
                 color = 'k',
                 lw = 2,

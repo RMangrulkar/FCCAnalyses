@@ -202,3 +202,8 @@ efficiencies = {
         "p8_ee_Zud_ecm91": (0.002103, 0.000003),
     },
 }
+
+wp1_cuts = {
+    "EVT_MVA1":0.994,
+    "EVT_MVA2":0.95,
+                  }

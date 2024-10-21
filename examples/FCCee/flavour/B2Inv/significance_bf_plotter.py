@@ -29,10 +29,12 @@ from efficiency_finder import get_efficiencies
 def plot(type,
         signal_bf=np.logspace(-7,-4, num=50),
         errorband=False,
+        errorbar=False,
         cut='wp1',
         interactive=True, 
         save=None, 
         xtitle=None,
+        title=None,
         range=None, 
         logx=True,
         components=["signal", "background"],
@@ -49,6 +51,8 @@ def plot(type,
         The assumed signal branching fraction to be plotted against. Default = np.logspace(1e-7,1e-4)
     errorband : bool, optional
         Plot band showing effect of B+/- deltaB. Default=False
+    errorbar: bool, optional
+        Plot error bars from total error in significance due to S and B (assuming independent)
     cut : str, optional
         'wp1' or cut branch varname according to a (valid) UPROOT expression.
         Which cuts to use on data. Default: wp1
@@ -57,7 +61,9 @@ def plot(type,
     save : str, optional
         Save file for the plot. If None then no plot is saved. Default: None 
     xtitle : str, optional
-        Provide a custom title for the x axis. Default : `BDTcuts`
+        Provide a custom title for the x axis. Default : `Siganl BF`
+    title : str, optional
+        Provide a custom title. Default : `BDTcuts`
         Use this if LaTeX complains about the cut expression.
     range : tuple or list, optional
         The lower and upper limits to use in the plot. 
@@ -97,6 +103,7 @@ def plot(type,
 
     eff = get_efficiencies(inputtype='stage2',  raw=True, cut=f"{eff_cut}", verbose=verbose) #raw=True means includes preselection and BDT efficiencies
 
+
     #################################
         ## Plotting
     ###############################
@@ -110,6 +117,9 @@ def plot(type,
     uncertainty_arr=[]
     unc_l_arr=[]
     unc_u_arr=[]
+    sig_err_arr=[]
+    unc_err_arr=[]
+ 
 
 
     for n in signal_bf:
@@ -132,6 +142,7 @@ def plot(type,
 
                 for i in np.arange(len(samples)):
                     S += S_arr[i]
+
                     S_var += Serr_arr[i]**2
                 
             elif allocation=='background':
@@ -154,26 +165,37 @@ def plot(type,
         unc_l_arr.append(1/sig_u)
         unc_u_arr.append(1/sig_l)
 
-        print(np.sqrt(B_var)/B)
+        significance_error = np.sqrt((S_var*(2*B+S)**2+B_var*S**2)/(4*(S+B)**3))
+        sig_err_arr.append(significance_error)
+
+        uncertainty_error = np.sqrt((S_var*(2*B+S)**2/S**2+B_var)/(4*S**2*(S+B)))
+        unc_err_arr.append(uncertainty_error)
 
     if type =='significance':
-        ax.plot( np.array(signal_bf),sig_arr, label= r'$S/\sqrt(S+B)$')
+        ax.plot( np.array(signal_bf),sig_arr, label= r'$S/\sqrt(S+B)$', color='b')
         ax.set_ylabel('Significance')
         if errorband:
-            ax.plot(np.array(signal_bf),sig_u_arr, color='r',linestyle='dashed',label= r'$S/\sqrt(S+(B \pm \sigma_B))$')
+            ax.plot(np.array(signal_bf),sig_u_arr, color='r',linestyle='dashed',label= r'$S/\sqrt(S+(B \pm \sigma_{Bsyst}))$')
             ax.plot(np.array(signal_bf),sig_l_arr, color='r',linestyle='dashed')
+        if errorbar:
+            ax.errorbar(np.array(signal_bf),sig_arr,yerr=sig_err_arr,color='b')
 
     if type =='uncertainty':
         ax.plot( np.array(signal_bf),uncertainty_arr, label= r'$\sqrt(S+B)/S$')
         ax.set_ylabel(r'Uncertainty, $\sqrt(S+B)/S$')
         if errorband:
-            ax.plot(np.array(signal_bf),unc_u_arr, color='r',linestyle='dashed',label= r'$\sqrt(S+(B \pm \sigma_B))/S$')
+            ax.plot(np.array(signal_bf),unc_u_arr, color='r',linestyle='dashed',label= r'$\sqrt(S+(B \pm \sigma_{Bsyst}))/S$')
             ax.plot(np.array(signal_bf),unc_l_arr, color='r',linestyle='dashed')
+        if errorbar:
+            ax.errorbar(np.array(signal_bf),uncertainty_arr,yerr=unc_err_arr,color='b')
    
     if cut=='wp1':
         ax.set_title(r"Cuts = MVA1$>0.994$, MVA2$>0.95$")
     else:
-        ax.set_title(f"Cut={cut}")
+        if title:
+            ax.set_title(title)
+        else:
+            ax.set_title(f"Cut={cut}")
 
     
     ax.set_xlim(xmin,xmax)

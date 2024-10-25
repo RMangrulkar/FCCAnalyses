@@ -96,7 +96,7 @@ bottom = np.zeros(len(cut_expr))
 ##############################
 reds = mpl.colormaps['Reds_r']
 cols = reds(np.linspace(0, 1, len(cfg.sample_allocations['background'])+4)[2:-2])
-fig, ax = plt.subplots(figsize=(10, 8))
+fig, ax = plt.subplots(figsize=(10, 8), tight_layout=True)
 
 # Background
 for i, sample in enumerate(cfg.sample_allocations['background']):
@@ -132,8 +132,8 @@ fig.tight_layout()
 if not args.no_save:
     print(f"----> INFO: Plot with individual backgrounds saved to")
     print(f"{15*' '}{os.path.join(outputpath, 'prediction_all_separate.pdf')}")
-    plt.savefig(os.path.join(outputpath, 'prediction_all_separate.pdf'), dpi=600)
-    
+    fig.savefig(os.path.join(outputpath, 'prediction_all_separate.pdf'), dpi=600)
+
 # Plot with just the total background and errorbars on signal+background
 S = np.zeros(len(bin_centres))
 S_err = np.zeros(len(bin_centres))
@@ -150,7 +150,7 @@ SplusB_err = np.sqrt(tot_err**2 + S_err**2 + SplusB)
 # Separation between B and S+B in the last bin
 sep_last_bin = (SplusB[-1] - tot[-1])/SplusB_err[-1]
 
-fig2, ax2 = plt.subplots(figsize=(10, 8))
+fig2, ax2 = plt.subplots(figsize=(10, 8), tight_layout=True)
 # Background, B
 #ax2.bar(bin_centres, 2*tot_err, width=np.diff(bins), align='center', color='red', alpha=0.4, bottom=tot-tot_err)
 B_bar_opts = {'align': 'center', 'alpha': 1, 'color': cols[-1], 'edgecolor': 'red', 'linewidth': 0.7}
@@ -177,14 +177,16 @@ SplusB_str = '\n'.join((
     rf'${sep_last_bin:.1f}\sigma$ separation in last bin'
 ))
 props = dict(boxstyle='round', facecolor='white', alpha=0.8)
-ax2.text(0.02, 0.83, SplusB_str, transform=ax.transAxes, fontsize=14, verticalalignment='top', bbox=props)
+ax2.text(0.16, 0.975, SplusB_str, transform=ax2.transAxes, fontsize=14, verticalalignment='top', bbox=props)
 ax2.legend(loc='upper left', fontsize=14)
 fig2.tight_layout()
 
 if not args.no_save:
     print(f"----> INFO: Plot with total signal and background saved to")
     print(f"{15*' '}{os.path.join(outputpath, 'prediction_SplusB.pdf')}")
-    plt.savefig(os.path.join(outputpath, 'prediction_SplusB.pdf'), dpi=600)
+    fig2.savefig(os.path.join(outputpath, 'prediction_SplusB.pdf'), dpi=600)
 
 if args.interactive:
     plt.show()
+
+plt.close()

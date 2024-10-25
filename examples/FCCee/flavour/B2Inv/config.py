@@ -19,6 +19,13 @@ processList = {
     # p8_ee_Zcc_ecm91                == 3.5T
     # p8_ee_Zss_ecm91                == 3.3T
     # p8_ee_Zud_ecm91                == 3.3T
+    "stage0": {
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.05, "chunks": 10},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.001, "chunks": 10},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.001, "chunks": 10},
+        "p8_ee_Zss_ecm91": {"fraction": 0.001, "chunks": 10},
+        "p8_ee_Zud_ecm91": {"fraction": 0.001, "chunks": 10},
+    },
     "stage1_training": {  # ~2G or ~500k events per sample
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.3, "chunks": 10},
         "p8_ee_Zbb_ecm91": {"fraction": 0.01, "chunks": 50},
@@ -43,6 +50,7 @@ processList = {
 fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
+        "stage0":          os.path.join(FCCAnalysesPath, "outputs/stage0"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
         "stage1":          os.path.join(FCCAnalysesPath, "outputs/stage1/"),
         "stage2_training": os.path.join(FCCAnalysesPath, "outputs/stage1/"),  # By default stage2 trained on output of stage1
@@ -54,6 +62,7 @@ fccana_opts = {
         "cc": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zcc_ecm91/events_000046867.root",
         "ss": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zss_ecm91/events_000099129.root",
         "ud": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zud_ecm91/events_000071896.root",
+        "tautau": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Ztautau_ecm91/events_000143148.root",
     },
     "analysisName":   "",
     "nCPUs":          8,
@@ -68,7 +77,7 @@ fccana_opts = {
 
 # TMVA options
 bdt1_opts = {
-    "training":           True,                  # True == stage1 does not use BDT1
+    "training":           False,                  # True == stage1 does not use BDT1
     "inputPath":          fccana_opts['outputDir']['stage1_training'],
     "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdt1out/"),
     "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdt1out/bdt1.json"),

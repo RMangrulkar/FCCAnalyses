@@ -1,39 +1,45 @@
+import os
+import sys
+from yaml import safe_load
+
+# Config and yaml file must be in this directory by default
+# Absolute path must be supplied for the script to work in batch mode
+configPath = '/r02/lhcb/rrm42/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv'
+sys.path.append(os.path.abspath(configPath))
+
+import config as cfg
+
 #Mandatory: List of processes
-processList = {
-        'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu': {'fraction': 0.2, 'chunks': 10},
-        'p8_ee_Zbb_ecm91': {'fraction': 0.001, 'chunks': 20},
-        'p8_ee_Zcc_ecm91': {'fraction': 0.001, 'chunks': 20},
-        'p8_ee_Zss_ecm91': {'fraction': 0.001, 'chunks': 20},
-        'p8_ee_Zud_ecm91': {'fraction': 0.001, 'chunks': 20},
-        }
+processList = cfg.processList['stage0']
 
 #Mandatory: Production tag when running over EDM4Hep centrally produced events, this points to the yaml files for getting sample statistics
-prodTag     = "FCCee/winter2023/IDEA/"
+prodTag     = cfg.fccana_opts['prodTag']
 
 #Optional: output directory, default is local running directory
-outputDir   = "/r01/lhcb/rrm42/fcc/stage0/"
+outputDir   = cfg.fccana_opts['outputDir']['stage0']
 
 #Optional: analysisName, default is ""
-analysisName = "B2Inv"
+analysisName = cfg.fccana_opts['analysisName']
 
 #Optional: ncpus, default is 4
-nCPUS       = 8
+nCPUS       = cfg.fccana_opts['nCPUs']
 
 #Optional running on HTCondor, default is False
-runBatch    = True
+runBatch    = cfg.fccana_opts['runBatch']
 
 #Optional batch queue name when running on HTCondor, default is workday
-#batchQueue = "longlunch"
+batchQueue = cfg.fccana_opts['runBatch']
 
 #Optional computing account when running on HTCondor, default is group_u_FCC.local_gen
-#compGroup = "group_u_FCC.local_gen"
+compGroup = cfg.fccana_opts['compGroup']
 
 #Optional test file
-testFile = "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/events_026683563.root"
-#testFile = "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91/events_000083138.root"
-#testFile = "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zcc_ecm91/events_000046867.root"
-#testFile = "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zss_ecm91/events_000099129.root"
-#testFile = "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zud_ecm91/events_000071896.root"
+testFile = cfg.fccana_opts['testFile']['bb']
+
+print("----> INFO: Using config.py file from:")
+print(f"{15*' '}{os.path.abspath(configPath)}")
+print("----> INFO: Using branch names from:")
+print(f"{15*' '}{cfg.fccana_opts['yamlPath']}")
 
 #Mandatory: RDFanalysis class where the use defines the operations on the TTree
 class RDFanalysis():
@@ -50,32 +56,6 @@ class RDFanalysis():
             .Alias("MCRecoAssociationsGen", "MCRecoAssociations#1.index") # points to Particle
             .Alias("ParticleParents",       "Particle#0.index") # gen particle parents
             .Alias("ParticleChildren",      "Particle#1.index") # gen particle children
-
-
-            # --------------------------------------- #
-            #        List of intermediates used       #
-            #
-            # MC_ee
-            # MC_Z
-            # MC_qq
-            # MC_FS
-            # MC_PrimaryVertex
-            # MC_VertexObject
-            # Rec_PrimaryTracks
-            # Rec_PrimaryVertexObject
-            # Rec_VertexObject
-            # -- RecoParticlesPID : NOT USED EXCEPT TO DEFINE RECOPARTICLESPIDATVERTEX
-            # RecoParticlesPIDAtVertex
-            # EVT_ThrustInfo
-            # EVT_ThrustInfoMin_N
-            # EVT_ThrustInfoMax_N
-            # EVT_ThrustInfoMin_E
-            # EVT_ThrustInfoMax_E
-            # SecondaryVertexThrustAngle
-            # EVT_EminPartInfo
-            # EVT_EmaxPartInfo
-            # --------------------------------------- #
-
 
             #############################################
             ##             MC IDs and Status           ##
@@ -254,9 +234,9 @@ class RDFanalysis():
             # MCParticle variable that needed MC_VertexObject
             .Define("MC_orivtx_ind",  "myUtils::get_MCVertex_fromMC(Particle, MC_VertexObject)")
             
-            # --------------------------------------- #
-            #           Rec_vtx intermediates         #
-            # --------------------------------------- #
+            #############################################
+            ##       Crucial Intermediate Objects      ##
+            #############################################
             # Get collection of tracks consistent with a PV (i.e. not downstream Ks, Lb etc. tracks)
             # using the get_PrimaryTracks() method with a beam spot constraint under the following parameters
             # bsc_sigma(x,y,z) = (4.5, 20e-3, 300)
@@ -268,20 +248,43 @@ class RDFanalysis():
             # function to get all reco vertices (uses MC vertex to seed the vertexing)
             .Define("Rec_VertexObject",         "myUtils::get_VertexObject(MC_VertexObject, ReconstructedParticles, EFlowTrack_1, MCRecoAssociationsRec, MCRecoAssociationsGen)")
 
-
-            # --------------------------------------- #
-            #            Rec intermediates            #
-            # --------------------------------------- #
             # actually add the PID hypothesis info to the RecParticles (based on MC truth)
             # ie we assume perfect PID here
             .Define("RecoParticlesPID",          "myUtils::PID(ReconstructedParticles, MCRecoAssociationsRec, MCRecoAssociationsGen, Particle)")
             # now update reco momentum based on the rec vertex
             .Define("RecoParticlesPIDAtVertex",  "myUtils::get_RP_atVertex(RecoParticlesPID, Rec_VertexObject)")
 
-
             #############################################
             ##         Reconstructed Particles         ##
             #############################################
+            # MC associated with RecoP
+            .Define("MC_fromRP",           "myUtils::get_MCObject_fromRP(MCRecoAssociationsRec, MCRecoAssociationsGen, RecoParticlesPIDAtVertex, Particle)")  # INTERMEDIATE
+
+            .Define("Rec_true_PDG",        "MCParticle::get_pdg(MC_fromRP)")
+            .Define("Rec_true_e",          "MCParticle::get_e(MC_fromRP)")
+            .Define("Rec_true_m",          "MCParticle::get_mass(MC_fromRP)")
+            .Define("Rec_true_q",          "MCParticle::get_charge(MC_fromRP)")
+            .Define("Rec_true_p",          "MCParticle::get_p(MC_fromRP)")
+            .Define("Rec_true_pt",         "MCParticle::get_pt(MC_fromRP)")
+            .Define("Rec_true_px",         "MCParticle::get_px(MC_fromRP)")
+            .Define("Rec_true_py",         "MCParticle::get_py(MC_fromRP)")
+            .Define("Rec_true_pz",         "MCParticle::get_pz(MC_fromRP)")
+            .Define("Rec_true_eta",        "MCParticle::get_eta(MC_fromRP)")
+            .Define("Rec_true_phi",        "MCParticle::get_phi(MC_fromRP)")
+            .Define("Rec_true_orivtx_x",   "MCParticle::get_vertex_x(MC_fromRP)")
+            .Define("Rec_true_orivtx_y",   "MCParticle::get_vertex_y(MC_fromRP)")
+            .Define("Rec_true_orivtx_z",   "MCParticle::get_vertex_z(MC_fromRP)")
+
+            # RecoP true history (mothers and gmothers)
+            .Define("True_ParentInfo",     "myUtils::get_MCParentandGParent_fromRP(MCRecoAssociationsRec, MCRecoAssociationsGen, ParticleParents, RecoParticlesPIDAtVertex, Particle)")   # INTERMEDIATE
+            .Define("Rec_true_M1",         "True_ParentInfo.at(0)")
+            .Define("Rec_true_M2",         "True_ParentInfo.at(1)")
+            .Define("Rec_true_M1ofM1",     "True_ParentInfo.at(2)")
+            .Define("Rec_true_M2ofM1",     "True_ParentInfo.at(3)")
+            .Define("Rec_true_M1ofM2",     "True_ParentInfo.at(4)")
+            .Define("Rec_true_M2ofM2",     "True_ParentInfo.at(5)")
+            
+            # ReconstructedParticle variables
             .Define("Rec_n",         "ReconstructedParticle::get_n(RecoParticlesPIDAtVertex)")
             .Define("Rec_type",      "ReconstructedParticle::get_type(RecoParticlesPIDAtVertex)")
             .Define("Rec_indMC",     "ReconstructedParticle2MC::getRP2MC_index(MCRecoAssociationsRec,MCRecoAssociationsGen,RecoParticlesPIDAtVertex)")
@@ -298,9 +301,9 @@ class RDFanalysis():
             .Define("Rec_eta",       "ReconstructedParticle::get_eta(RecoParticlesPIDAtVertex)")
             .Define("Rec_phi",       "ReconstructedParticle::get_phi(RecoParticlesPIDAtVertex)")
 
-            # --------------------------------------- #
-            #            EVT intermediates            #
-            # --------------------------------------- #
+            #############################################
+            ##   EVT -- Needed for angular variables   ##
+            #############################################
             .Define("EVT_ThrustInfoNoPointing",     'Algorithms::minimize_thrust("Minuit2","Migrad")(Rec_px, Rec_py, Rec_pz)')
             .Define("EVT_ThrustCosThetaNoPointing", "Algorithms::getAxisCosTheta(EVT_ThrustInfoNoPointing, Rec_px, Rec_py, Rec_pz)")
             .Define("EVT_ThrustInfo",               "Algorithms::getThrustPointing(1.)(EVT_ThrustCosThetaNoPointing, Rec_e, EVT_ThrustInfoNoPointing)")
@@ -309,7 +312,6 @@ class RDFanalysis():
             .Define("Rec_thrustCosTheta",  "Algorithms::getAxisCosTheta(EVT_ThrustInfo, Rec_px, Rec_py, Rec_pz)")
             .Define("Rec_in_hemisEmin",    "myUtils::get_RP_inHemis(1)(Rec_thrustCosTheta)")
             .Define("Rec_in_hemisEmax",    "myUtils::get_RP_inHemis(0)(Rec_thrustCosTheta)") # Not saved because redundant but used for other variables
-
 
             #############################################
             ##       Reconstructed PrimaryVertex       ##
@@ -382,9 +384,6 @@ class RDFanalysis():
             #############################################
             ##         Emin and Emax Hemispheres       ##
             #############################################
-            # --------------------------------------- #
-            #           Hemis intermediates           #
-            # --------------------------------------- #
             .Define("EVT_ThrustInfoMax_N",     "Algorithms::getAxisN(0)(Rec_thrustCosTheta, Rec_q)")
             .Define("EVT_ThrustInfoMin_N",     "Algorithms::getAxisN(1)(Rec_thrustCosTheta, Rec_q)")
             .Define("EVT_ThrustInfoMax_E",     "Algorithms::getAxisEnergy(0)(Rec_thrustCosTheta, Rec_q, Rec_e)")
@@ -408,6 +407,10 @@ class RDFanalysis():
             .Define("EVT_hemisEmin_nDV",     "myUtils::get_Npos(SecondaryVertexThrustAngle)")
             .Define("EVT_hemisEmax_nDV",     "myUtils::get_Nneg(SecondaryVertexThrustAngle)")
             
+            .Define("EVT_hemisEmin_Emiss",  f"{0.5*cfg.mass_Z} - (EVT_hemisEmin_e)")
+            .Define("EVT_hemisEmax_Emiss",  f"{0.5*cfg.mass_Z} - (EVT_hemisEmax_e)")
+            .Define("EVT_Thrust_deltaE",     "(EVT_hemisEmax_e) - (EVT_hemisEmin_e)")
+
             #############################################
             ##      Hemisphere Particle variables      ##
             #############################################
@@ -446,253 +449,19 @@ class RDFanalysis():
             #############################################
             ##  Thrust hemispheres energy difference   ##
             #############################################
-            .Define("EVT_Thrust_deltaE",            "(EVT_hemisEmax_e) - (EVT_hemisEmin_e)")
+            .Define("EVT_hemisEmin_containsTau23Pi", "myUtils::get_hemis_containstau23pi(Rec_in_hemisEmin, Rec_true_PDG, Rec_true_M1, Rec_indvtx, Rec_vtx_ntracks)")
         )
         
-        # Pre-selecton cuts ---> moved to stage1
-        #df3 = df2.Filter("EVT_hemisEmin_e < 20").Filter("EVT_hemisEmin_nLept == 0")
         return df2
 
     #__________________________________________________________
     #Mandatory: output function, please make sure you return the branchlist as a python list
     def output():
-        branchList = [
-            "MC_n",
-            "MC_genStatus",
-            "MC_PDG",
-            "MC_M1", 
-            "MC_M2",
-            "MC_D1", 
-            "MC_D2", 
-            "MC_D3", 
-            "MC_D4",
+        # Get the output branchList from the config YAML file
+        with open(cfg.fccana_opts['yamlPath']) as stream:
+            yaml = safe_load(stream)
+            branchList = yaml[cfg.fccana_opts['outBranchList0']]
+            print(f"----> INFO:")
+            print(f"            Output branch list used = {cfg.fccana_opts['outBranchList0']}")
 
-            "MC_e", 
-            "MC_m", 
-            "MC_q",
-            "MC_p", 
-            "MC_pt", 
-            "MC_px", 
-            "MC_py", 
-            "MC_pz",
-            "MC_eta",
-            "MC_phi",
-            "MC_orivtx_x", 
-            "MC_orivtx_y", 
-            "MC_orivtx_z", 
-            "MC_orivtx_ind",
-
-            "MCem_e",
-            "MCem_m",
-            "MCem_q",
-            "MCem_p", 
-            "MCem_pt", 
-            "MCem_px", 
-            "MCem_py", 
-            "MCem_pz",
-            "MCem_eta",
-            "MCem_phi",
-            "MCem_orivtx_x", 
-            "MCem_orivtx_y", 
-            "MCem_orivtx_z",         
-            #"MCem_orivtx_ind",
-            "MCep_e",
-            "MCep_m",
-            "MCep_q",
-            "MCep_p",
-            "MCep_pt",
-            "MCep_px",
-            "MCep_py",
-            "MCep_pz",
-            "MCep_eta",
-            "MCep_phi",
-            "MCep_orivtx_x",
-            "MCep_orivtx_y",
-            "MCep_orivtx_z",
-            #"MCep_orivtx_ind",
-
-            "MCZ_e",
-            "MCZ_m",
-            "MCZ_q",
-            "MCZ_p",
-            "MCZ_pt",
-            "MCZ_px",
-            "MCZ_py",
-            "MCZ_pz",
-            "MCZ_eta",
-            "MCZ_phi",
-            "MCZ_orivtx_x",
-            "MCZ_orivtx_y",
-            "MCZ_orivtx_z",
-            #"MCZ_orivtx_ind",
-
-            "MCq1_PDG",
-            "MCq1_e",
-            "MCq1_m",
-            "MCq1_q",
-            "MCq1_p",
-            "MCq1_pt",
-            "MCq1_px",
-            "MCq1_py",
-            "MCq1_pz",
-            "MCq1_eta",
-            "MCq1_phi",
-            "MCq1_orivtx_x",
-            "MCq1_orivtx_y",
-            "MCq1_orivtx_z",
-            #"MCq1_orivtx_ind",
-            "MCq2_PDG",
-            "MCq2_e",
-            "MCq2_m",
-            "MCq2_q",
-            "MCq2_p",
-            "MCq2_pt",
-            "MCq2_px",
-            "MCq2_py",
-            "MCq2_pz",
-            "MCq2_eta",
-            "MCq2_phi",
-            "MCq2_orivtx_x",
-            "MCq2_orivtx_y",
-            "MCq2_orivtx_z",
-            #"MCq2_orivtx_ind",
-
-            "MCfinal_PDG",
-            "MCfinal_e",
-            "MCfinal_m",
-            "MCfinal_q",
-            "MCfinal_p",
-            "MCfinal_pt",
-            "MCfinal_px",
-            "MCfinal_py",
-            "MCfinal_pz",
-            "MCfinal_eta",
-            "MCfinal_phi",
-            "MCfinal_orivtx_x",
-            "MCfinal_orivtx_y",
-            "MCfinal_orivtx_z",
-            #"MCfinal_orivtx_ind",
-
-            "MC_PV_x",
-            "MC_PV_y",
-            "MC_PV_z",
-            "MC_vtx_n",
-            "MC_vtx_ntracks",
-            "MC_vtx_indMC",
-            "MC_vtx_x",
-            "MC_vtx_y",
-            "MC_vtx_z",
-            
-            "Rec_n",
-            "Rec_type",
-            "Rec_indMC",
-            "Rec_indvtx",
-            "Rec_customid",
-            "Rec_e",
-            "Rec_m",
-            "Rec_q",
-            "Rec_p",
-            "Rec_pt",
-            "Rec_px",
-            "Rec_py",
-            "Rec_pz",
-            "Rec_eta",
-            "Rec_phi",
-            "Rec_thrustCosTheta",
-            "Rec_in_hemisEmin",
-
-            "Rec_track_n",
-            "Rec_track_d0",
-            "Rec_track_normd0",
-            "Rec_track_z0",
-            "Rec_track_normz0",
-            "Rec_PV_ntracks",
-            "Rec_PV_x",
-            "Rec_PV_y",
-            "Rec_PV_z",
-            "Rec_vtx_n",
-            "Rec_vtx_ntracks",
-            "Rec_vtx_indMCvtx",
-            "Rec_vtx_indRP",
-            "Rec_vtx_chi2",
-            "Rec_vtx_isPV",
-            "Rec_vtx_m",
-            "Rec_vtx_x",
-            "Rec_vtx_y",
-            "Rec_vtx_z",
-            "Rec_vtx_xerr",
-            "Rec_vtx_yerr",
-            "Rec_vtx_zerr",
-
-            "Rec_vtx_d2PV",
-            "Rec_vtx_d2PV_min",
-            "Rec_vtx_d2PV_max",
-            "Rec_vtx_d2PV_ave",
-            "Rec_vtx_d2PV_x",
-            "Rec_vtx_d2PV_y",
-            "Rec_vtx_d2PV_z",
-
-            "Rec_vtx_normd2PV",
-            "Rec_vtx_normd2PV_min",
-            "Rec_vtx_normd2PV_max",
-            "Rec_vtx_normd2PV_ave",
-            "Rec_vtx_normd2PV_x",
-            "Rec_vtx_normd2PV_y",
-            "Rec_vtx_normd2PV_z",
-            
-            "Rec_vtx_thrustCosTheta",
-            "Rec_vtx_in_hemisEmin",
-            "Rec_vtx_in_hemisEmax",
-
-            "EVT_Thrust_mag",
-            "EVT_Thrust_x",
-            "EVT_Thrust_y",
-            "EVT_Thrust_z",
-            "EVT_Thrust_xerr",
-            "EVT_Thrust_yerr",
-            "EVT_Thrust_zerr",
-            
-            "EVT_Thrust_deltaE",
-            
-            "EVT_hemisEmin_e",
-            "EVT_hemisEmin_eCharged",
-            "EVT_hemisEmin_eNeutral",
-            "EVT_hemisEmin_n",
-            "EVT_hemisEmin_nCharged",
-            "EVT_hemisEmin_nNeutral",
-            "EVT_hemisEmin_nDV",
-            "EVT_hemisEmax_e",
-            "EVT_hemisEmax_eCharged",
-            "EVT_hemisEmax_eNeutral",
-            "EVT_hemisEmax_n",
-            "EVT_hemisEmax_nCharged",
-            "EVT_hemisEmax_nNeutral",
-            "EVT_hemisEmax_nDV",
-
-            "EVT_hemisEmin_nLept",                
-            "EVT_hemisEmin_nKaon",                
-            "EVT_hemisEmin_nPion",                
-            "EVT_hemisEmin_maxeLept",                
-            "EVT_hemisEmin_maxeKaon",                
-            "EVT_hemisEmin_maxePion",                
-            "EVT_hemisEmin_maxeLept_fromtruePV",                
-            "EVT_hemisEmin_maxeKaon_fromtruePV",                
-            "EVT_hemisEmin_maxePion_fromtruePV",                
-            "EVT_hemisEmin_maxeLept_ind",                
-            "EVT_hemisEmin_maxeKaon_ind",                
-            "EVT_hemisEmin_maxePion_ind",                
-
-            "EVT_hemisEmax_nLept",                
-            "EVT_hemisEmax_nKaon",                
-            "EVT_hemisEmax_nPion",                
-            "EVT_hemisEmax_maxeLept",                
-            "EVT_hemisEmax_maxeKaon",                
-            "EVT_hemisEmax_maxePion",                
-            "EVT_hemisEmax_maxeLept_fromtruePV",                
-            "EVT_hemisEmax_maxeKaon_fromtruePV",                
-            "EVT_hemisEmax_maxePion_fromtruePV",                
-            "EVT_hemisEmax_maxeLept_ind",                 
-            "EVT_hemisEmax_maxeKaon_ind",                
-            "EVT_hemisEmax_maxePion_ind",                
-        ]
         return branchList

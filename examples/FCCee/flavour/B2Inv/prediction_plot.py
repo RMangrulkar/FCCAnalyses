@@ -148,7 +148,8 @@ SplusB = tot + S
 SplusB_err = np.sqrt(tot_err**2 + S_err**2 + SplusB)
 
 # Separation between B and S+B in the last bin
-sep_last_bin = (SplusB[-1] - tot[-1])/SplusB_err[-1]
+sep_bin = (SplusB - tot)/SplusB_err
+sep_total = np.sqrt(np.sum(sep_bin**2))
 
 fig2, ax2 = plt.subplots(figsize=(10, 8), tight_layout=True)
 # Background, B
@@ -174,7 +175,8 @@ ax2.set_ylabel('Counts', fontsize=14)
 SplusB_str = '\n'.join((
     rf'$\mathcal{{B}}(B_s\to\nu\bar{{\nu}}) = {args.signal_bf:.1e}$', 
     rf'BDT1 $>= {args.bdt1cut}$', 
-    rf'${sep_last_bin:.1f}\sigma$ separation in last bin'
+    rf'${sep_bin[-1]:.1f}\sigma$ separation in last bin',
+    rf'${sep_total:.1f}\sigma$ effective separation'
 ))
 props = dict(boxstyle='round', facecolor='white', alpha=0.8)
 ax2.text(0.16, 0.975, SplusB_str, transform=ax2.transAxes, fontsize=14, verticalalignment='top', bbox=props)

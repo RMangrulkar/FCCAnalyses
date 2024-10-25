@@ -145,7 +145,8 @@ def plot(varname,
          logy=False,
          total=["background"], 
          components=["signal", "background"],
-         verbose=True):
+         verbose=True,
+         title=None):
     
     """ 
     plot( varname, **opts ) will plot a variable
@@ -222,7 +223,8 @@ def plot(varname,
         #     density = False
         effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=args.inputpath, verbose=verbose)
         n_expect = efficiency_finder.get_sample_expectations(effs, signal_bf, save=None, verbose=verbose, cut=cut)
-        ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
+        if title is None:
+            ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
 
     for allocation in cfg.sample_allocations:
         if allocation not in components:
@@ -290,6 +292,9 @@ def plot(varname,
     
     if logy:
         ax.set_yscale('log')
+    
+    if title is not None:
+        ax.set_title(title)
 
     fig.tight_layout()
 

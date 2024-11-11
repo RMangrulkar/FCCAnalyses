@@ -1,0 +1,4 @@
+Optimum cuts: MVA1>=0.993 and MVA2>=0.97
+Significance_like figure at optimum:4.313774237679819
+S/sqrt(S+B) at optimum: 258.3446260512124
+MVA1 values tested: [0.992, 0.993, 0.994, 0.995, 0.996, 0.997]MVA2 values tested: [0.95, 0.96, 0.97]

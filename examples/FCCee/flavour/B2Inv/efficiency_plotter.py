@@ -86,9 +86,9 @@ def plot(BDTcuts,
     ## List of cut expressions to pass to uproot and get efficiencies and errors
     ##############################
     if othercut==None:
-        eff_cut = [f"({BDTcuts} > {i})" for i in cutvalues]
+        eff_cut = [f"({BDTcuts} >= {i})" for i in cutvalues]
     else:
-        eff_cut = [f"({BDTcuts} > {i}) & {othercut}" for i in cutvalues]
+        eff_cut = [f"({BDTcuts} >= {i}) & {othercut}" for i in cutvalues]
 
     eff = get_efficiencies(inputtype='stage2', cut=eff_cut, raw=raw, verbose=verbose)#, save=os.path.join(outputpath, f'{BDTcuts}_efficiency_dict.csv')
 

@@ -192,6 +192,13 @@ namespace myUtils{
 									 ROOT::VecOps::RVec<int> recin,
 									 ROOT::VecOps::RVec<int> mcin);
 
+  ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> get_VertexObject(ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertexMC> mcver,
+									 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,
+									 ROOT::VecOps::RVec<edm4hep::TrackState> tracks,
+									 ROOT::VecOps::RVec<int> recin,
+									 ROOT::VecOps::RVec<int> mcin,
+                                     double bsc_sigmax, double bsc_sigmay, double bsc_sigmaz);
+
   ROOT::VecOps::RVec<float> get_Vertex_mass(ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex,
 					    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco);
 

@@ -8,6 +8,13 @@ import os
 FCCAnalysesPath = "/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 
+# RUNNING MODE
+run_mode_choices = [ 'stage1_training', 'stage2_training', 'stage2' ]
+run_mode = 'stage1_training'
+if run_mode not in run_mode_choices:
+    raise RuntimeError(f'{run_mode} is not a valid run mode')
+
+
 ##############################
 ## CONFIG DICTS
 ##############################
@@ -21,21 +28,30 @@ processList = {
     # p8_ee_Zud_ecm91                == 3.3T
     "stage1_training": {  # ~2G or ~500k events per sample
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.3, "chunks": 10},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.01, "chunks": 50},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.01, "chunks": 50},
-        "p8_ee_Zss_ecm91": {"fraction": 0.01, "chunks": 50},
-        "p8_ee_Zud_ecm91": {"fraction": 0.01, "chunks": 50},
-    },
-    "stage1": {  # ~10G or 2M events per sample after preselection and a loose BDT1 cut
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 1000},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.5, "chunks": 3000},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.5, "chunks": 3000},
-        "p8_ee_Zss_ecm91": {"fraction": 0.5, "chunks": 3000},
-        "p8_ee_Zud_ecm91": {"fraction": 0.5, "chunks": 3000},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.3, "chunks": 10},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.05, "chunks": 100},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.05, "chunks": 100},
+        "p8_ee_Zss_ecm91": {"fraction": 0.05, "chunks": 100},
+        "p8_ee_Zud_ecm91": {"fraction": 0.05, "chunks": 100},
     },
     "stage2_training": {
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.5, "chunks": 10},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.5, "chunks": 10},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zss_ecm91": {"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zud_ecm91": {"fraction": 0.2, "chunks": 200},
     },
     "stage2": {
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 100},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1, "chunks": 100},
+        "p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 500},
+        "p8_ee_Zcc_ecm91": {"fraction": 1, "chunks": 500},
+        "p8_ee_Zss_ecm91": {"fraction": 1, "chunks": 500},
+        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 500},
+        "p8_ee_Zee_ecm91": {"fraction": 1, "chunks": 500},
+        "p8_ee_Zmumu_ecm91": {"fraction": 1, "chunks": 500},
+        "p8_ee_Ztautau_ecm91": {"fraction": 1, "chunks": 500}
     },
 }
 
@@ -44,19 +60,19 @@ fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
-        "stage1":          os.path.join(FCCAnalysesPath, "outputs/stage1/"),
-        "stage2_training": os.path.join(FCCAnalysesPath, "outputs/stage1/"),  # By default stage2 trained on output of stage1
+        "stage2_training": os.path.join(FCCAnalysesPath, "outputs/stage2_training/"),  # By default stage2 trained on output of stage1
         "stage2":          os.path.join(FCCAnalysesPath, "outputs/stage2/"),
     },
     "testFile": {
         "Bs": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/events_026683563.root",
+        "Bd": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu/events_004838962.root",
         "bb": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91/events_000083138.root",
         "cc": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zcc_ecm91/events_000046867.root",
         "ss": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zss_ecm91/events_000099129.root",
         "ud": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zud_ecm91/events_000071896.root",
     },
-    "analysisName":   "",
-    "nCPUs":          8,
+    "analysisName":   "b2inv",
+    "nCPUs":          16,
     "runBatch":       True,
     "batchQueue":     "workday",
     "compGroup":      "group_u_FCC.local_gen",
@@ -64,11 +80,14 @@ fccana_opts = {
     "outBranchList0": "stage0-vars",  # key in the yaml file that gives stage0 branches
     "outBranchList1": "stage1-vars",  # ---- " ---- stage1 branches
     "outBranchList2": "stage2-vars",  # ---- " ---- stage2 branches
+    "outputBranches": {
+        "stage1_training": "stage1-vars",
+    },
 }
 
 # TMVA options
 bdt1_opts = {
-    "training":           True,                  # True == stage1 does not use BDT1
+    "training":           False,                  # True == stage1 does not use BDT1
     "inputPath":          fccana_opts['outputDir']['stage1_training'],
     "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdt1out/"),
     "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdt1out/bdt1.json"),
@@ -89,6 +108,8 @@ bdt2_opts = {
     "mvaPath":            os.path.join(FCCAnalysesPath, "outputs/bdt2out/tmva2.root"),
     "mvaRBDTName":        "bdt",
     "mvaCut":             0.2,
+    "mvaCut1":            0.5,
+    "mvaCut2":            0.5,
     "mvaBranchList":      "bdt2-training-vars",
     "efficiencyKey":      "presel+bdt1>0.2",     # Efficiency key to use to calculate weights
     "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdt2out/best_params_bdt2.yaml"),

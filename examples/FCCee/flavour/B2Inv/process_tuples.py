@@ -34,6 +34,9 @@ processList = cfg.processList[ cfg.run_mode ]
 #Mandatory: Production tag when running over EDM4Hep centrally produced events, this points to the yaml files for getting sample statistics
 prodTag = cfg.fccana_opts['prodTag']
 
+#Mandatory: BSC for vertexing
+bsc = cfg.BSC_opts['winter2023'] # list of sigmax,sigmay,sigmaz
+
 #Optional: output directory, default is local running directory
 outputDir = cfg.fccana_opts['outputDir'][cfg.run_mode]
 
@@ -59,7 +62,7 @@ class RDFanalysis():
 
     #__________________________________________________________
     def analysers(df):
-        bsc = [ 6, 25e-3, 400 ]
+        #bsc = [ 6, 25e-3, 400 ]
 
         df2 = (
             df

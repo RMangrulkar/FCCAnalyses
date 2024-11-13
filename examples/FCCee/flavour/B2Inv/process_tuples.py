@@ -20,8 +20,9 @@ import sys
 
 # Config and yaml file must be in this directory by default
 # Absolute path must be supplied for the script to work in batch mode
-configPath = os.getcwd() 
+configPath = '/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv'
 sys.path.append(os.path.abspath(configPath))
+
 
 import ROOT
 from yaml import safe_load

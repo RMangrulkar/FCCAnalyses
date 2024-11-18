@@ -64,7 +64,7 @@ def create_condor_config(log_dir: str,
     cfg += f'Error            = {log_dir}/condor_job.{process_name}.'
     cfg += '$(ClusterId).$(ProcId).error\n'
 
-    cfg += 'getenv           = False\n'
+    cfg += 'getenv           = True\n'
 
     cfg += 'environment      = "LS_SUBCWD={log_dir}"\n'  # not sure
 

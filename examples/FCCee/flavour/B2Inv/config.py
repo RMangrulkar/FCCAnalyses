@@ -27,12 +27,12 @@ processList = {
     # p8_ee_Zss_ecm91                == 3.3T
     # p8_ee_Zud_ecm91                == 3.3T
     "stage1_training": {  # ~2G or ~500k events per sample
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.3, "chunks": 10},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.3, "chunks": 10},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.05, "chunks": 100},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.05, "chunks": 100},
-        "p8_ee_Zss_ecm91": {"fraction": 0.05, "chunks": 100},
-        "p8_ee_Zud_ecm91": {"fraction": 0.05, "chunks": 100},
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.28, "chunks": 5},#{"fraction": 0.3, "chunks": 10}, test: {"fraction": 0.01, "chunks": 1},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.25, "chunks": 5},#{"fraction": 0.3, "chunks": 10}, test: {"fraction": 0.01, "chunks": 1},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.015, "chunks": 5},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.015, "chunks": 8},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
+        "p8_ee_Zss_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
+        "p8_ee_Zud_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
     },
     "stage2_training": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.5, "chunks": 10},
@@ -72,7 +72,7 @@ fccana_opts = {
         "ud": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zud_ecm91/events_000071896.root",
     },
     "analysisName":   "b2inv",
-    "nCPUs":          16,
+    "nCPUS":          8,
     "runBatch":       True,
     "batchQueue":     "workday",
     "compGroup":      "group_u_FCC.local_gen",

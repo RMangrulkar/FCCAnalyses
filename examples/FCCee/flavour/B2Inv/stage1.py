@@ -54,6 +54,9 @@ class RDFanalysis():
 
     #__________________________________________________________
     def analysers(df):
+        #BSC for vertexing
+        bsc = cfg.BSC_opts['winter2023']
+            
         df2 = (
             df
             #############################################
@@ -69,11 +72,11 @@ class RDFanalysis():
             #############################################
             # Get collection of tracks consistent with a PV (i.e. not downstream Ks, Lb etc. tracks)
             # using the get_PrimaryTracks() method with a beam spot constraint under the following parameters
-            # bsc_sigma(x,y,z) = (4.5, 20e-3, 300)
+            # bsc_sigma(x,y,z) = (5.96,2.38e-2,3.97e3)mum for winter2023 - get from config file
             # bsc_(x,y,z) = (0,0,0)
-            .Define("Rec_PrimaryTracks",        "VertexFitterSimple::get_PrimaryTracks( EFlowTrack_1, true, 4.5, 20e-3, 300, 0., 0., 0. )")
+            .Define("Rec_PrimaryTracks",        f"VertexFitterSimple::get_PrimaryTracks( EFlowTrack_1, true, {bsc[0]}, {bsc[1]}, {bsc[2]}, 0., 0., 0. )")
             # Run the vertex fit using only the primary tracks with the same beamspot constraint
-            .Define("Rec_PrimaryVertexObject",  "VertexFitterSimple::VertexFitter_Tk( 1, Rec_PrimaryTracks, true, 4.5, 20e-3, 300 )")
+            .Define("Rec_PrimaryVertexObject",  f"VertexFitterSimple::VertexFitter_Tk( 1, Rec_PrimaryTracks, true, {bsc[0]}, {bsc[1]}, {bsc[2]})")
             .Define("Rec_PrimaryVertex",        "Rec_PrimaryVertexObject.vertex")
             # function to get all reco vertices (uses MC vertex to seed the vertexing)
             .Define("MC_VertexObject",          "myUtils::get_MCVertexObject(Particle, ParticleParents)")

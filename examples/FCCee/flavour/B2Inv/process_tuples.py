@@ -35,9 +35,6 @@ processList = cfg.processList[ cfg.run_mode ]
 #Mandatory: Production tag when running over EDM4Hep centrally produced events, this points to the yaml files for getting sample statistics
 prodTag = cfg.fccana_opts['prodTag']
 
-#Mandatory: BSC for vertexing
-bsc = cfg.BSC_opts['winter2023'] # list of sigmax,sigmay,sigmaz
-
 #Optional: output directory, default is local running directory
 outputDir = cfg.fccana_opts['outputDir'][cfg.run_mode]
 
@@ -45,13 +42,13 @@ outputDir = cfg.fccana_opts['outputDir'][cfg.run_mode]
 analysisName = cfg.fccana_opts['analysisName']
 
 #Optional: ncpus, default is 4
-nCPUs = cfg.fccana_opts['nCPUs']
+nCPUS = cfg.fccana_opts['nCPUS']
 
 #Optional running on HTCondor, default is False
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['bb']
+testFile = cfg.fccana_opts['testFile']['Bd']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -63,7 +60,11 @@ class RDFanalysis():
 
     #__________________________________________________________
     def analysers(df):
+        
+        #BSC for vertexing
         #bsc = [ 6, 25e-3, 400 ]
+        bsc = cfg.BSC_opts['winter2023'] # list of sigmax,sigmay,sigmaz
+
 
         df2 = (
             df

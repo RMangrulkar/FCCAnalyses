@@ -168,7 +168,7 @@ def plot(varname,
         multiplied by efficiency. Default: True
     density : bool, optional
         Normalise histograms so that they represent a probability
-        density. Default: False
+        density. 'weight' must be False if density True. Default: False
     remove_outliers : bool, optional
         Remove severe outliers from the distribution. Default: True
     interactive : bool, optional
@@ -191,6 +191,10 @@ def plot(varname,
     verbose : bool, optional
         Print out some useful stuff. Default: True
     """
+    if density:
+        if weight:
+            raise RuntimeError( f"Cannot have both density and weight True. Please change one to False." )
+    
     # If nchunks is a list, use corresponding elements
     if remove_outliers:
         if isinstance(nchunks, list):

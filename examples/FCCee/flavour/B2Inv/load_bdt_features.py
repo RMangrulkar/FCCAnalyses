@@ -31,14 +31,14 @@ bdt2vars= vars_fromyaml(yamlpath, cfg.bdt2_opts['mvaBranchList'])
 
 # Load the model
 model1=xgb.XGBClassifier()
-model1.load_model('outputs/Ritwik_models/bdt1.json')
+model1.load_model('/r02/lhcb/rrm42/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/bdt1out/bdt1.json')
 feature_importance_dict1 = dict(zip(bdt1vars, model1.feature_importances_))
 # Sort by importance
 sorted_importance1 = sorted(feature_importance_dict1.items(), key=lambda kv: kv[1], reverse=True)
 
 # Load the model
 model2=xgb.XGBClassifier()
-model2.load_model('outputs/Ritwik_models/bdt2.json')
+model2.load_model('/r02/lhcb/rrm42/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/bdt2out/bdt2.json')
 feature_importance_dict2 = dict(zip(bdt2vars, model2.feature_importances_))
 # Sort by importance 
 sorted_importance2 = sorted(feature_importance_dict2.items(), key=lambda kv: kv[1], reverse=True)

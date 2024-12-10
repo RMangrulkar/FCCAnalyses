@@ -30,7 +30,7 @@ else:
 analysisName = cfg.fccana_opts['analysisName']
 
 #Optional: ncpus, default is 4
-nCPUs = cfg.fccana_opts['nCPUs']
+nCPUS = cfg.fccana_opts['nCPUs']
 
 #Optional running on HTCondor, default is False
 runBatch = cfg.fccana_opts['runBatch']

@@ -184,268 +184,64 @@ bdtComb-training-vars: # Same as BDT2 except includes EVT_MVA1
 stage2-vars:
   # BDT scores
   - EVT_MVA1
-  - EVT_MVA2
-  - EVT_MVAComb
-  # MC beam electron variables
-  - MCem_e
-  - MCem_m
-  - MCem_q
-  - MCem_p
-  - MCem_pt
-  - MCem_px
-  - MCem_py
-  - MCem_pz
-  - MCem_eta
-  - MCem_phi
-  - MCem_orivtx_x
-  - MCem_orivtx_y
-  - MCem_orivtx_z 
-  # MC beam positron variables
-  - MCep_e
-  - MCep_m
-  - MCep_q
-  - MCep_p
-  - MCep_pt
-  - MCep_px
-  - MCep_py
-  - MCep_pz
-  - MCep_eta
-  - MCep_phi
-  - MCep_orivtx_x
-  - MCep_orivtx_y
-  - MCep_orivtx_z
 
-  # MC Z boson variables
-  - MCZ_e
-  - MCZ_m
-  - MCZ_q
-  - MCZ_p
-  - MCZ_pt
-  - MCZ_px
-  - MCZ_py
-  - MCZ_pz
-  - MCZ_eta
-  - MCZ_phi
-  - MCZ_orivtx_x
-  - MCZ_orivtx_y
-  - MCZ_orivtx_z
-  
-  # MC Quark variables
-  - MCq1_PDG
-  - MCq1_e
-  - MCq1_m
-  - MCq1_q 
-  - MCq1_p
-  - MCq1_pt
-  - MCq1_px
-  - MCq1_py
-  - MCq1_pz
-  - MCq1_eta     
-  - MCq1_phi     
-  - MCq1_orivtx_x
-  - MCq1_orivtx_y
-  - MCq1_orivtx_z
-  - MCq2_PDG
-  - MCq2_e
-  - MCq2_m
-  - MCq2_q 
-  - MCq2_p
-  - MCq2_pt
-  - MCq2_px
-  - MCq2_py
-  - MCq2_pz
-  - MCq2_eta     
-  - MCq2_phi     
-  - MCq2_orivtx_x
-  - MCq2_orivtx_y
-  - MCq2_orivtx_z
+  #variables from Ritwiks BDT2 which are helpful
 
-  # MC variables of MCParticle matched to ReconstructedParticle
-  - Rec_true_PDG
-  - Rec_true_e
-  - Rec_true_m
-  - Rec_true_q
-  - Rec_true_p
-  - Rec_true_pt
-  - Rec_true_px
-  - Rec_true_py
-  - Rec_true_pz
-  - Rec_true_eta
-  - Rec_true_phi
-  - Rec_true_orivtx_x
-  - Rec_true_orivtx_y
-  - Rec_true_orivtx_z
-  - Rec_true_M1
-  - Rec_true_M2
-  - Rec_true_M1ofM1
-  - Rec_true_M2ofM1
-  - Rec_true_M1ofM2
-  - Rec_true_M2ofM2
+  #############################
+  #Ella new vars for testing
+  ############################
 
-  # ReconstructedParticle variables
-  - Rec_n
-  - Rec_type
-  - Rec_indvtx
-  - Rec_customid
-  - Rec_e
-  - Rec_m
-  - Rec_q
-  - Rec_p
-  - Rec_pt
-  - Rec_px
-  - Rec_py
-  - Rec_pz
-  - Rec_eta
-  - Rec_phi
-  - Rec_thrustCosTheta
-  - Rec_in_hemisEmin
+  - PV_Rec_vtx_m
+  - EVT_sum_Rec_vtx_ntracks_exclPV 
+  - EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV
+  - EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV
 
-  # Reconstructed Particle stats for BDT2
-  - Rec_thrustCosTheta_min_hemisEmin
-  - Rec_thrustCosTheta_max_hemisEmin
-  - Rec_thrustCosTheta_ave_hemisEmin
-  - Rec_thrustCosTheta_min_hemisEmax
-  - Rec_thrustCosTheta_max_hemisEmax
-  - Rec_thrustCosTheta_ave_hemisEmax
-  - Rec_thrustCosTheta_min_hemisEmin_noBrem
-  - Rec_thrustCosTheta_max_hemisEmin_noBrem
-  - Rec_thrustCosTheta_ave_hemisEmin_noBrem
-  - Rec_thrustCosTheta_min_hemisEmax_noBrem
-  - Rec_thrustCosTheta_max_hemisEmax_noBrem
-  - Rec_thrustCosTheta_ave_hemisEmax_noBrem
+  # dont intend to use all of these but would quite like to plot just in case - expect just max ones to be useful!
+  - Rec_track_absd0_min_hemisEmin
+  - Rec_track_absd0_max_hemisEmin
+  - Rec_track_absd0_ave_hemisEmin
+  - Rec_track_absd0_min_hemisEmax
+  - Rec_track_absd0_max_hemisEmax
+  - Rec_track_absd0_ave_hemisEmax
+  - Rec_track_absd0chi2_min_hemisEmin
+  - Rec_track_absd0chi2_max_hemisEmin
+  - Rec_track_absd0chi2_ave_hemisEmin
+  - Rec_track_absd0chi2_min_hemisEmax
+  - Rec_track_absd0chi2_max_hemisEmax
+  - Rec_track_absd0chi2_ave_hemisEmax
+  - Rec_track_absz0_min_hemisEmin
+  - Rec_track_absz0_max_hemisEmin
+  - Rec_track_absz0_ave_hemisEmin
+  - Rec_track_absz0_min_hemisEmax
+  - Rec_track_absz0_max_hemisEmax
+  - Rec_track_absz0_ave_hemisEmax
+  - Rec_track_absz0chi2_min_hemisEmin
+  - Rec_track_absz0chi2_max_hemisEmin
+  - Rec_track_absz0chi2_ave_hemisEmin
+  - Rec_track_absz0chi2_min_hemisEmax
+  - Rec_track_absz0chi2_max_hemisEmax
+  - Rec_track_absz0chi2_ave_hemisEmax
 
-  # Reconstructed particle - track parameters
-  - Rec_track_n
-  - Rec_track_d0
-  - Rec_track_z0
-  - Rec_track_normd0
-  - Rec_track_normz0
 
-  # Reconstructed particle - track stats for BDT2
-  - Rec_track_d0_min_hemisEmin
-  - Rec_track_d0_max_hemisEmin
-  - Rec_track_d0_ave_hemisEmin
-  - Rec_track_z0_min_hemisEmin
-  - Rec_track_z0_max_hemisEmin
-  - Rec_track_z0_ave_hemisEmin
-  - Rec_track_d0_min_hemisEmax
-  - Rec_track_d0_max_hemisEmax
-  - Rec_track_d0_ave_hemisEmax
-  - Rec_track_z0_min_hemisEmax
-  - Rec_track_z0_max_hemisEmax
-  - Rec_track_z0_ave_hemisEmax
+#max e charge RP variables
+  - EVT_hemisEmin_maxeChargedRP_e
+  - EVT_hemisEmin_maxeChargedRP_PDG
+  - EVT_hemisEmin_maxeChargedRP_q
+  - EVT_hemisEmin_maxeChargedRP_px
+  - EVT_hemisEmin_maxeChargedRP_py
+  - EVT_hemisEmin_maxeChargedRP_pz
+  - EVT_hemisEmin_maxeChargedRP_fromPV
+  - EVT_hemisEmax_maxeChargedRP_e
+  - EVT_hemisEmax_maxeChargedRP_PDG
+  - EVT_hemisEmax_maxeChargedRP_q
+  - EVT_hemisEmax_maxeChargedRP_px
+  - EVT_hemisEmax_maxeChargedRP_py
+  - EVT_hemisEmax_maxeChargedRP_pz
+  - EVT_hemisEmax_maxeChargedRP_fromPV
 
-  # Reconstructed vertex variables
-  - Rec_PV_ntracks
-  - Rec_PV_x
-  - Rec_PV_y
-  - Rec_PV_z
-
-  - Rec_vtx_n
-  - Rec_vtx_ntracks         
-  - Rec_vtx_indRP
-  - Rec_vtx_chi2
-  - Rec_vtx_isPV
-  - Rec_vtx_m
-  - Rec_vtx_x
-  - Rec_vtx_y
-  - Rec_vtx_z
-  - Rec_vtx_xerr
-  - Rec_vtx_yerr
-  - Rec_vtx_zerr
-
-  - Rec_vtx_d2PV_signed  # In place of the distance: pos == in Emin, neg == in Emax
-  - Rec_vtx_d2PV_x
-  - Rec_vtx_d2PV_y
-  - Rec_vtx_d2PV_z
-  - Rec_vtx_d2PV_err
-  - Rec_vtx_d2PV_xerr
-  - Rec_vtx_d2PV_yerr
-  - Rec_vtx_d2PV_zerr
-  - Rec_vtx_normd2PV_signed  # In place of the normalised distance: pos == Emin, neg == Emax
-  - Rec_vtx_normd2PV_x
-  - Rec_vtx_normd2PV_y
-  - Rec_vtx_normd2PV_z
-  
-  - Rec_vtx_thrustCosTheta
-  - Rec_vtx_in_hemisEmin
-  
-  # Reconstructed vertex stats for BDT2
-  - Rec_vtx_d2PV_min_hemisEmin
-  - Rec_vtx_d2PV_max_hemisEmin
-  - Rec_vtx_d2PV_ave_hemisEmin
-  - Rec_vtx_d2PV_min_hemisEmax
-  - Rec_vtx_d2PV_max_hemisEmax
-  - Rec_vtx_d2PV_ave_hemisEmax
-  - Rec_vtx_ntracks_min_hemisEmin
-  - Rec_vtx_ntracks_max_hemisEmin
-  - Rec_vtx_ntracks_ave_hemisEmin
-  - Rec_vtx_ntracks_min_hemisEmax
-  - Rec_vtx_ntracks_max_hemisEmax
-  - Rec_vtx_ntracks_ave_hemisEmax
-  - Rec_vtx_thrustCosTheta_min_hemisEmin
-  - Rec_vtx_thrustCosTheta_max_hemisEmin
-  - Rec_vtx_thrustCosTheta_ave_hemisEmin
-  - Rec_vtx_thrustCosTheta_min_hemisEmax
-  - Rec_vtx_thrustCosTheta_max_hemisEmax
-  - Rec_vtx_thrustCosTheta_ave_hemisEmax
-
-  # Event variables -- thrust
-  - EVT_Thrust_mag
-  - EVT_Thrust_x
-  - EVT_Thrust_y
-  - EVT_Thrust_z
-  - EVT_Thrust_xerr
-  - EVT_Thrust_yerr
-  - EVT_Thrust_zerr
-  - EVT_Thrust_deltaE
-  - EVT_hemisEmin_Emiss
-  - EVT_hemisEmax_Emiss
-  
-  # Event variables -- hemisphere
-  - EVT_hemisEmin_e
-  - EVT_hemisEmin_eCharged
-  - EVT_hemisEmin_eNeutral
-  - EVT_hemisEmin_n
-  - EVT_hemisEmin_nCharged
-  - EVT_hemisEmin_nNeutral
-  - EVT_hemisEmin_nDV
-
-  - EVT_hemisEmax_e
-  - EVT_hemisEmax_eCharged
-  - EVT_hemisEmax_eNeutral
-  - EVT_hemisEmax_n
-  - EVT_hemisEmax_nCharged
-  - EVT_hemisEmax_nNeutral
-  - EVT_hemisEmax_nDV
-
-    # Lepton variables not stored because selected 0 leptons in Emin
-    #- EVT_hemisEmin_nLept
-  - EVT_hemisEmin_nKaon
-  - EVT_hemisEmin_nPion
-    #- EVT_hemisEmin_maxeLept
-  - EVT_hemisEmin_maxeKaon
-  - EVT_hemisEmin_maxePion
-    #- EVT_hemisEmin_maxeLept_fromtruePV
-  - EVT_hemisEmin_maxeKaon_fromtruePV
-  - EVT_hemisEmin_maxePion_fromtruePV
-    #- EVT_hemisEmin_maxeLept_ind
-  - EVT_hemisEmin_maxeKaon_ind
-  - EVT_hemisEmin_maxePion_ind
-  - EVT_hemisEmax_nLept
-  - EVT_hemisEmax_nKaon
-  - EVT_hemisEmax_nPion
-  - EVT_hemisEmax_maxeLept
-  - EVT_hemisEmax_maxeKaon
-  - EVT_hemisEmax_maxePion
-  - EVT_hemisEmax_maxeLept_fromtruePV
-  - EVT_hemisEmax_maxeKaon_fromtruePV
-  - EVT_hemisEmax_maxePion_fromtruePV
-  - EVT_hemisEmax_maxeLept_ind
-  - EVT_hemisEmax_maxeKaon_ind
-  - EVT_hemisEmax_maxePion_ind
-
-  - EVT_hemisEmin_containsTau23Pi
+  ############################
+  # End Ella vars for testing
+  ############################
 
 ###############
 # STAGE1
@@ -456,6 +252,7 @@ stage1-vars:
   - Rec_PV_x
   - Rec_PV_y
   - Rec_PV_z
+
   # Reconstructed vertex variables
   - Rec_vtx_n
   - Rec_vtx_ntracks         

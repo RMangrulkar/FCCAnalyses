@@ -85,6 +85,19 @@ namespace myUtils{
     int fromPV = -999; // Default value to check for errors
   };
 
+  // For B2INV Ella
+  struct maxe_HemisParticleInfo {
+    int num = 0;
+    float maxE = 0.;
+    int index = -999;
+    int PDG = -999;
+    float charge = -999;
+    float px = -999;
+    float py = -999;
+    float pz = -999;
+    int fromPV = -999; // Default value to check for errors
+  };
+
   /********************************** 
     B2INV ADDITIONAL STAGE0 FUNCTIONS
   ***********************************/
@@ -153,6 +166,27 @@ namespace myUtils{
   // Remove neutral particles from an array in which their value is true
   ROOT::VecOps::RVec<int> remove_Neutrals_fromTrackStats(ROOT::VecOps::RVec<int> should_eval,
       ROOT::VecOps::RVec<float> charge);
+
+  /**********************************
+  Additional Ella functions
+ ***********************************/
+  // Define PV variable from filtered vertex variables in which Rec_vtx_isPV is True
+  ROOT::VecOps::RVec<float> filter_vtx_variable_onisPV(ROOT::VecOps::RVec<int> isPV, ROOT::VecOps::RVec<float> var);
+
+  // Define function to sum entries within an event if should_eval is true
+  ROOT::VecOps::RVec<float> sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values); 
+
+  // function to sum RVec components with a condition
+  ROOT::VecOps::RVec<float> sum_RVec_with2cond(ROOT::VecOps::RVec<int> should_eval1, ROOT::VecOps::RVec<int> should_eval2, ROOT::VecOps::RVec<float> values);
+ 
+  // Define function that calculates everything to do with general max E RP
+  ROOT::VecOps::RVec<maxe_HemisParticleInfo> get_maxe_RP_HemisInfo(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+    ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex, ROOT::VecOps::RVec<int> should_eval);
+  
+  // Function to get the absolute values of an RVec<float>
+  ROOT::VecOps::RVec<float> abs_RVec(const ROOT::VecOps::RVec<float> values);
+  
+  
   /********************************** 
     END OF B2INV FUNCTIONS
   ***********************************/

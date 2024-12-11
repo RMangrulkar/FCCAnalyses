@@ -236,12 +236,123 @@ class RDFanalysis():
             .Define("EVT_EmaxPartInfo",    "myUtils::get_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmax)")
             .Define("EVT_hemisEmin_nLept", "(EVT_EminPartInfo.at(0)).num")
             
+
+            #################################################
+            ## Ella extra variables to add for S2 Training ##
+            #################################################
+            .Define("PV_Rec_vtx_m_vec", "myUtils::filter_vtx_variable_onisPV(Rec_vtx_isPV, Rec_vtx_m)") #intermediate
+            .Define("PV_Rec_vtx_m","PV_Rec_vtx_m_vec.at(0)") 
+            
+            #global to event sum ntracks over non-PV vertices
+            .Define("EVT_sum_Rec_vtx_ntracks_exclPV_vec", "myUtils::sum_RVec_withcond(1-(Rec_vtx_isPV), Rec_vtx_ntracks)") #Intermediate
+            
+            #Equivalent for different hemispheres
+            # Vertex relations to thrust
+            .Define("Rec_vtx_thrustCosTheta",  "myUtils::get_Vertex_thrusthemis_angle(Rec_VertexObject, RecoParticlesPIDAtVertex, EVT_ThrustInfo)")
+            # Flag vertex in max or min hemisphere
+            .Define("Rec_vtx_in_hemisEmin",    "myUtils::get_Vertex_thrusthemis(Rec_vtx_thrustCosTheta, 1)")
+            .Define("Rec_vtx_in_hemisEmax",    "myUtils::get_Vertex_thrusthemis(Rec_vtx_thrustCosTheta, 0)")  # FLAG - NOT SAVED
+
+            #Sum over vertices in given hemis that are not PV
+            .Define("EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV_vec", "myUtils::sum_RVec_with2cond(1-(Rec_vtx_isPV), Rec_vtx_in_hemisEmin, Rec_vtx_ntracks)") #Intermediate
+            .Define("EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV_vec", "myUtils::sum_RVec_with2cond(1-(Rec_vtx_isPV), Rec_vtx_in_hemisEmax, Rec_vtx_ntracks)") #Intermediate
+            
+            #Overall three sum_Rec_vtx_exclPV vars
+            .Define("EVT_sum_Rec_vtx_ntracks_exclPV","EVT_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
+            .Define("EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV", "EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
+            .Define("EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV", "EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
+            
+            #############################################
+            ##           IP-like track vars            ##
+            #############################################
+            .Define("Rec_track_d0",      "ReconstructedParticle2Track::getRP2TRK_D0(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+            .Define("Rec_track_normd0",  "ReconstructedParticle2Track::getRP2TRK_D0_sig(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+            .Define("Rec_track_z0",      "ReconstructedParticle2Track::getRP2TRK_Z0(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+            .Define("Rec_track_normz0",  "ReconstructedParticle2Track::getRP2TRK_Z0_sig(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+
+
+            .Define("Rec_track_absd0",      "myUtils::abs_RVec(Rec_track_d0)")
+            .Define("Rec_track_absnormd0",  "myUtils::abs_RVec(Rec_track_normd0)")
+            .Define("Rec_track_absz0",      "myUtils::abs_RVec(Rec_track_z0)")
+            .Define("Rec_track_absnormz0",  "myUtils::abs_RVec(Rec_track_normz0)")
+
+
+            # Reco track stats
+            .Define("RecoP_inhemisEminAndCharged",   "myUtils::remove_Neutrals_fromTrackStats(Rec_in_hemisEmin, Rec_q)")        # FLAG - NOT SAVED
+            .Define("RecoP_inhemisEmaxAndCharged",   "myUtils::remove_Neutrals_fromTrackStats(Rec_in_hemisEmax, Rec_q)")        # FLAG - NOT SAVED
+            .Define("Rec_track_absd0StatsEmin",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEminAndCharged, Rec_track_absd0)")  # INTERMEDIATE
+            .Define("Rec_track_absd0StatsEmax",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEmaxAndCharged, Rec_track_absd0)")  # INTERMEDIATE
+            .Define("Rec_track_absnormd0StatsEmin",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEminAndCharged, Rec_track_absnormd0)")  # INTERMEDIATE
+            .Define("Rec_track_absnormd0StatsEmax",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEmaxAndCharged, Rec_track_absnormd0)")  # INTERMEDIATE
+            .Define("Rec_track_absz0StatsEmin",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEminAndCharged, Rec_track_absz0)")  # INTERMEDIATE
+            .Define("Rec_track_absz0StatsEmax",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEmaxAndCharged, Rec_track_absz0)")  # INTERMEDIATE
+            .Define("Rec_track_absnormz0StatsEmin",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEminAndCharged, Rec_track_absnormz0)")  # INTERMEDIATE
+            .Define("Rec_track_absnormz0StatsEmax",         "myUtils::get_Stats_fromRVec(RecoP_inhemisEmaxAndCharged, Rec_track_absnormz0)")  # INTERMEDIATE
+
+
+            .Define("Rec_track_absd0_min_hemisEmin",    "Rec_track_absd0StatsEmin.at(0)")
+            .Define("Rec_track_absd0_max_hemisEmin",    "Rec_track_absd0StatsEmin.at(1)")
+            .Define("Rec_track_absd0_ave_hemisEmin",    "Rec_track_absd0StatsEmin.at(2)")
+
+            .Define("Rec_track_absd0_min_hemisEmax",    "Rec_track_absd0StatsEmax.at(0)")
+            .Define("Rec_track_absd0_max_hemisEmax",    "Rec_track_absd0StatsEmax.at(1)")
+            .Define("Rec_track_absd0_ave_hemisEmax",    "Rec_track_absd0StatsEmax.at(2)")
+            
+            .Define("Rec_track_absd0chi2_min_hemisEmin",    "Rec_track_absnormd0StatsEmin.at(0)")
+            .Define("Rec_track_absd0chi2_max_hemisEmin",    "Rec_track_absnormd0StatsEmin.at(1)")
+            .Define("Rec_track_absd0chi2_ave_hemisEmin",    "Rec_track_absnormd0StatsEmin.at(2)")
+
+            .Define("Rec_track_absd0chi2_min_hemisEmax",    "Rec_track_absnormd0StatsEmax.at(0)")
+            .Define("Rec_track_absd0chi2_max_hemisEmax",    "Rec_track_absnormd0StatsEmax.at(1)")
+            .Define("Rec_track_absd0chi2_ave_hemisEmax",    "Rec_track_absnormd0StatsEmax.at(2)")
+
+            .Define("Rec_track_absz0_min_hemisEmin",    "Rec_track_absz0StatsEmin.at(0)")
+            .Define("Rec_track_absz0_max_hemisEmin",    "Rec_track_absz0StatsEmin.at(1)")
+            .Define("Rec_track_absz0_ave_hemisEmin",    "Rec_track_absz0StatsEmin.at(2)")
+
+            .Define("Rec_track_absz0_min_hemisEmax",    "Rec_track_absz0StatsEmax.at(0)")
+            .Define("Rec_track_absz0_max_hemisEmax",    "Rec_track_absz0StatsEmax.at(1)")
+            .Define("Rec_track_absz0_ave_hemisEmax",    "Rec_track_absz0StatsEmax.at(2)")
+            
+            .Define("Rec_track_absz0chi2_min_hemisEmin",    "Rec_track_absnormz0StatsEmin.at(0)")
+            .Define("Rec_track_absz0chi2_max_hemisEmin",    "Rec_track_absnormz0StatsEmin.at(1)")
+            .Define("Rec_track_absz0chi2_ave_hemisEmin",    "Rec_track_absnormz0StatsEmin.at(2)")
+
+            .Define("Rec_track_absz0chi2_min_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(0)")
+            .Define("Rec_track_absz0chi2_max_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(1)")
+            .Define("Rec_track_absz0chi2_ave_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(2)")
+
+
+            #############################################
+            ##     for max e charged RP vars           ##
+            #############################################
+
+            .Define("EVT_hemisEmin_maxeChargedRPInfo",    "myUtils::get_maxe_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmin)")  # INTERMEDIATE
+            .Define("EVT_hemisEmax_maxeChargedRPInfo",    "myUtils::get_maxe_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmax)")  # INTERMEDIATE
+            
+            .Define("EVT_hemisEmin_maxeChargedRP_e",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).maxE")
+            .Define("EVT_hemisEmin_maxeChargedRP_PDG",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).PDG")
+            .Define("EVT_hemisEmin_maxeChargedRP_q",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).charge")
+            .Define("EVT_hemisEmin_maxeChargedRP_px",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).px")
+            .Define("EVT_hemisEmin_maxeChargedRP_py",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).py")
+            .Define("EVT_hemisEmin_maxeChargedRP_pz",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).pz")
+            .Define("EVT_hemisEmin_maxeChargedRP_fromPV",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).fromPV")
+            
+            .Define("EVT_hemisEmax_maxeChargedRP_e",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).maxE")
+            .Define("EVT_hemisEmax_maxeChargedRP_PDG",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).PDG")
+            .Define("EVT_hemisEmax_maxeChargedRP_q",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).charge")
+            .Define("EVT_hemisEmax_maxeChargedRP_px",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).px")
+            .Define("EVT_hemisEmax_maxeChargedRP_py",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).py")
+            .Define("EVT_hemisEmax_maxeChargedRP_pz",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).pz")
+            .Define("EVT_hemisEmax_maxeChargedRP_fromPV",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).fromPV")
+
             #############################################
             ##                  Filters                ##
             #############################################
             .Filter("EVT_hemisEmin_e < 40")        # Energy on the signal side must be < 40 GeV
             .Filter("EVT_hemisEmin_nCharged > 0")  # Signal side must have at least one charged reco particle
             .Filter("EVT_hemisEmin_nLept == 0")    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
+
 
         )
 

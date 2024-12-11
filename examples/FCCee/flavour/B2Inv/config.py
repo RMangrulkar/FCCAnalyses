@@ -7,10 +7,10 @@ import os
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
 FCCAnalysesPath = "/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
-
+SavedOutputsPath = "/r02/lhcb/ejnw2/FCC/outputs"
 # RUNNING MODE
 run_mode_choices = [ 'stage1_training', 'stage2_training', 'stage2' ]
-run_mode = 'stage1_training'
+run_mode = 'stage2_training'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -82,6 +82,8 @@ fccana_opts = {
     "outBranchList2": "stage2-vars",  # ---- " ---- stage2 branches
     "outputBranches": {
         "stage1_training": "stage1-vars",
+        "stage2_training": "stage2-vars", 
+        "stage2": "check-on-these-variables",
     },
 }
 
@@ -90,10 +92,10 @@ bdt1_opts = {
     "training":           False,                  # True == stage1 does not use BDT1
     "inputPath":          fccana_opts['outputDir']['stage1_training'],
     "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdt1out/"),
-    "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdt1out/bdt1.json"),
-    "mvaPath":            os.path.join(FCCAnalysesPath, "outputs/bdt1out/tmva1.root"),
+    "jsonPath":           os.path.join(SavedOutputsPath, "bdt1out/bdt1.json"),
+    "mvaPath":            os.path.join(SavedOutputsPath, "bdt1out/tmva1.root"),
     "mvaRBDTName":        "bdt",                 # Name of the TMVA TObject in the .root file
-    "mvaCut":             0.2,
+    "mvaCut":             0.6,
     "mvaBranchList":      "bdt1-training-vars",  # key in the yaml file pointing to the feature list
     "efficiencyKey":      "presel",              # efficiencies used to calculate sample weights
     "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdt1out/best_params_bdt1.yaml"),
@@ -129,7 +131,7 @@ bdtComb_opts = {
     "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdtCombout/best_params_bdtComb.yaml"),
 }
 
-# Options for post stage2 analysis (efficiency maps, maximising FOM, final limit on bf etc)
+# Options for post stage2 analysis (efficiency maps, maxrooimising FOM, final limit on bf etc)
 poststage2_opts = {
     "inputPath":  fccana_opts['outputDir']['stage2'],
     "outputPath": os.path.join(FCCAnalysesPath, "outputs/post_stage2"),

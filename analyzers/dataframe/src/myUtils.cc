@@ -311,7 +311,7 @@ ROOT::VecOps::RVec<float> get_VertexFeature_signed(ROOT::VecOps::RVec<int> sign,
 ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> get_VertexObject_withcond(ROOT::VecOps::RVec<int> should_eval, 
     ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex){
   ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> result;
-  for (size_t i = 0; i < vertex.size(); ++i) {
+    for (size_t i = 0; i < vertex.size(); ++i) {
     if (should_eval.at(i) == 1) result.push_back(vertex.at(i));
   }
   return result;
@@ -370,6 +370,99 @@ ROOT::VecOps::RVec<int> remove_Neutrals_fromTrackStats(ROOT::VecOps::RVec<int> s
 
   return result;
 }
+
+/**********************************
+  Additional Ella functions
+ *********************************/
+
+
+// Define a function that filters Rec_vtx_m based on Rec_vtx_isPV
+ROOT::VecOps::RVec<float> filter_vtx_variable_onisPV(ROOT::VecOps::RVec<int> isPV, ROOT::VecOps::RVec<float> var ) {
+  ROOT::VecOps::RVec<float> result;
+    for (size_t i = 0; i < var.size(); ++i) {
+      if (isPV[i] == 1) {
+          result.push_back(var.at(i));
+      }
+    }
+    return result;
+}
+
+// Function to get the absolute values of an RVec<float>
+ROOT::VecOps::RVec<float> abs_RVec(const ROOT::VecOps::RVec<float> values) {
+    ROOT::VecOps::RVec<float> abs_values(values.size());
+    for (size_t i = 0; i < values.size(); ++i) {
+        abs_values[i] = std::abs(values[i]);
+    }
+    return abs_values;
+}
+
+
+// function to sum RVec components with a condition
+ROOT::VecOps::RVec<float> sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values) {
+  ROOT::VecOps::RVec<float> values_to_eval;
+  for (size_t i = 0; i < values.size(); ++i) {
+    if (should_eval.at(i) == 1) values_to_eval.push_back(values.at(i));
+  }
+
+  auto sum = ROOT::VecOps::Sum(values_to_eval);
+
+  ROOT::VecOps::RVec<float> result; 
+  result.push_back(float(sum));
+  return result;
+}
+
+// function to sum RVec components with a condition
+ROOT::VecOps::RVec<float> sum_RVec_with2cond(ROOT::VecOps::RVec<int> should_eval1, ROOT::VecOps::RVec<int> should_eval2, ROOT::VecOps::RVec<float> values) {
+  ROOT::VecOps::RVec<float> values_to_eval;
+  for (size_t i = 0; i < values.size(); ++i) {
+    if (should_eval1.at(i) == 1 && should_eval2.at(i) == 1) values_to_eval.push_back(values.at(i));
+  }
+
+  auto sum = ROOT::VecOps::Sum(values_to_eval);
+
+  ROOT::VecOps::RVec<float> result; 
+  result.push_back(float(sum));
+  return result;
+}
+
+// get max energy charged particle and its info
+ROOT::VecOps::RVec<maxe_HemisParticleInfo> get_maxe_RP_HemisInfo(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+    ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex, ROOT::VecOps::RVec<int> should_eval) {
+  maxe_HemisParticleInfo RP_charged;
+
+  for (size_t i = 0; i < recop.size(); ++i) {
+    // Check for 0 (dont evaluate) or -1 (error)
+    if (should_eval.at(i) != 1) continue;
+    #if edm4hep_VERSION > EDM4HEP_VERSION(0, 10, 5)
+      int pid = recop.at(i).PDG;
+    #else
+      int pid = recop.at(i).type;
+    #endif
+
+    if (recop.at(i).charge !=0){
+      RP_charged.num++;
+      if (recop.at(i).energy > RP_charged.maxE) {
+        RP_charged.maxE = recop.at(i).energy;
+        RP_charged.index = i;
+        RP_charged.PDG = pid;
+        RP_charged.charge = recop.at(i).charge;
+        RP_charged.px = recop.at(i).momentum.x;
+        RP_charged.py = recop.at(i).momentum.y;
+        RP_charged.pz = recop.at(i).momentum.z;
+      }
+    }
+  }
+
+  int RP_vtxind = get_Vertex_fromRPindex(RP_charged.index, vertex);
+
+  // -999 indicates that the corresponding vertex is not found
+  if (RP_vtxind != -999) RP_charged.fromPV = vertex.at(RP_vtxind).vertex.primary;
+
+  ROOT::VecOps::RVec<maxe_HemisParticleInfo> result {RP_charged};
+  return result;
+}
+
+
 /**********************************
   END OF B2INV FUNCTIONS
 ***********************************/

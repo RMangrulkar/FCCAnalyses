@@ -185,7 +185,13 @@ namespace myUtils{
   
   // Function to get the absolute values of an RVec<float>
   ROOT::VecOps::RVec<float> abs_RVec(const ROOT::VecOps::RVec<float> values);
-  
+
+  // Get vtx d2PV thrust CosTheta for hemis assignment - similar to function in algorithms but returns 0 for PV if put shouldeval=1-isPV
+  ROOT::VecOps::RVec<float> getAxisCosTheta_withcond(const ROOT::VecOps::RVec<float> & axis,
+	                                                    const ROOT::VecOps::RVec<float> & px,
+																											const ROOT::VecOps::RVec<float> & py,
+																											const ROOT::VecOps::RVec<float> & pz,
+                                                      const ROOT::VecOps::RVec<int> & should_eval);
   
   /********************************** 
     END OF B2INV FUNCTIONS

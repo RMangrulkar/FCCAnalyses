@@ -462,6 +462,28 @@ ROOT::VecOps::RVec<maxe_HemisParticleInfo> get_maxe_RP_HemisInfo(ROOT::VecOps::R
   return result;
 }
 
+// Get vtx d2PV thrust CosTheta for hemis assignment - similar to function in algorithms but returns 0 for PV if put shouldeval=1-isPV
+ROOT::VecOps::RVec<float> getAxisCosTheta_withcond(const ROOT::VecOps::RVec<float> & axis,
+	                                                    const ROOT::VecOps::RVec<float> & px,
+																											const ROOT::VecOps::RVec<float> & py,
+																											const ROOT::VecOps::RVec<float> & pz,
+                                                      const ROOT::VecOps::RVec<int> & should_eval){
+
+  float thrust_mag = sqrt(axis[1]*axis[1] + axis[3]*axis[3] + axis[5]*axis[5]);
+  ROOT::VecOps::RVec<float> result;
+  for (unsigned int i =0; i<px.size(); i++){
+    if (should_eval[i]==0){
+      float value = 0;
+      result.push_back(value);
+    }
+    else{
+      float value = (px[i]*axis[1] + py[i]*axis[3] + pz[i]*axis[5])/(sqrt(px[i]*px[i]+py[i]*py[i]+pz[i]*pz[i])*thrust_mag);
+      result.push_back(value);    
+    }
+  }
+  return result;
+}
+
 
 /**********************************
   END OF B2INV FUNCTIONS

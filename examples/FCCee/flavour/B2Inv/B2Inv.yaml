@@ -184,7 +184,6 @@ bdtComb-training-vars: # Same as BDT2 except includes EVT_MVA1
 stage2-vars:
   # BDT scores
   - EVT_MVA1
-
   #variables from Ritwiks BDT2 which are helpful
 
   #############################
@@ -239,9 +238,90 @@ stage2-vars:
   - EVT_hemisEmax_maxeChargedRP_pz
   - EVT_hemisEmax_maxeChargedRP_fromPV
 
+  #variables relating to new hemisphere assignment
+  - Rec_vtx_d2PV_x
+  - Rec_vtx_d2PV_y
+  - Rec_vtx_d2PV_z
+  - Rec_vtx_thrustCosTheta_d2PV
+  - Rec_vtx_in_hemisEmin_d2PV
+  - Rec_vtx_in_hemisEmax_d2PV #to remove later - in now just as a check!
+  #for check
+  - Rec_vtx_thrustCosTheta
+  - Rec_vtx_in_hemisEmin
+
+
   ############################
   # End Ella vars for testing
   ############################
+
+
+  ###########################################
+  # Variables to look at for BDT2 generally
+  ############################################
+
+  - EVT_hemisEmin_containsTau23Pi
+  - Rec_thrustCosTheta_min_hemisEmin
+  - Rec_thrustCosTheta_max_hemisEmin
+  - Rec_thrustCosTheta_ave_hemisEmin
+  - Rec_thrustCosTheta_min_hemisEmax
+  - Rec_thrustCosTheta_max_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
+  #some d2pv vtx variables as a check
+  - Rec_vtx_d2PV
+  - Rec_vtx_d2PV_err
+  - Rec_vtx_normd2PV
+  - Rec_vtx_normd2PV_x
+  - Rec_vtx_normd2PV_y
+  - Rec_vtx_normd2PV_z
+  - Rec_vtx_d2PV_signed #currently not used - I'm not sure how much sense they make either but let's see
+  - Rec_vtx_normd2PV_signed
+
+  #overall reco vtx stats
+  - Rec_vtx_ntracks_max_hemisEmin
+  - Rec_vtx_ntracks_max_hemisEmax
+  - Rec_vtx_d2PV_min_hemisEmin
+  - Rec_vtx_d2PV_max_hemisEmin
+  - Rec_vtx_d2PV_ave_hemisEmin
+  - Rec_vtx_d2PV_min_hemisEmax
+  - Rec_vtx_d2PV_max_hemisEmax
+  - Rec_vtx_d2PV_ave_hemisEmax
+  - Rec_vtx_thrustCosTheta_min_hemisEmin
+  - Rec_vtx_thrustCosTheta_max_hemisEmin
+  - Rec_vtx_thrustCosTheta_ave_hemisEmin
+  - Rec_vtx_thrustCosTheta_min_hemisEmax
+  - Rec_vtx_thrustCosTheta_max_hemisEmax
+  - Rec_vtx_thrustCosTheta_ave_hemisEmax
+  
+###other helpful evt variable
+  # Event variables -- thrust
+  - EVT_Thrust_mag
+  - EVT_Thrust_x
+  - EVT_Thrust_y
+  - EVT_Thrust_z
+  - EVT_Thrust_xerr
+  - EVT_Thrust_yerr
+  - EVT_Thrust_zerr
+  - EVT_Thrust_deltaE
+  - EVT_hemisEmin_Emiss
+  - EVT_hemisEmax_Emiss
+  
+  # Event variables -- hemisphere
+  - EVT_hemisEmin_e
+  - EVT_hemisEmin_eCharged
+  - EVT_hemisEmin_eNeutral
+  - EVT_hemisEmin_n
+  - EVT_hemisEmin_nCharged
+  - EVT_hemisEmin_nNeutral
+  - EVT_hemisEmin_nDV
+
+  - EVT_hemisEmax_e
+  - EVT_hemisEmax_eCharged
+  - EVT_hemisEmax_eNeutral
+  - EVT_hemisEmax_n
+  - EVT_hemisEmax_nCharged
+  - EVT_hemisEmax_nNeutral
+  - EVT_hemisEmax_nDV
+
 
 ###############
 # STAGE1

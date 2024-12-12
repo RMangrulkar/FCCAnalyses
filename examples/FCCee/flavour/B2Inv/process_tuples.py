@@ -236,6 +236,13 @@ class RDFanalysis():
             .Define("EVT_EmaxPartInfo",    "myUtils::get_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmax)")
             .Define("EVT_hemisEmin_nLept", "(EVT_EminPartInfo.at(0)).num")
             
+            #############################################
+            ##                  Filters                ##
+            #############################################
+            .Filter("EVT_hemisEmin_e < 40")        # Energy on the signal side must be < 40 GeV
+            .Filter("EVT_hemisEmin_nCharged > 0")  # Signal side must have at least one charged reco particle
+            .Filter("EVT_hemisEmin_nLept == 0")    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
+            .Filter("ROOT::VecOps::Any(Rec_vtx_isPV > 0)")  # Remove events that fail to reconstruct a PV
 
             #################################################
             ## Ella extra variables to add for S2 Training ##
@@ -346,12 +353,88 @@ class RDFanalysis():
             .Define("EVT_hemisEmax_maxeChargedRP_pz",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).pz")
             .Define("EVT_hemisEmax_maxeChargedRP_fromPV",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).fromPV")
 
+            ##################################################################
+            ##     Variables for position-based assignment of vtx to hemis  ##        ##
+            ##################################################################
+
+            #d2PV variable - want for BDT2 and vtx assignment
+            .Define("Rec_vtx_d2PV_x",          "myUtils::get_Vertex_d2PV(Rec_VertexObject, 0)")
+            .Define("Rec_vtx_d2PV_y",          "myUtils::get_Vertex_d2PV(Rec_VertexObject, 1)")
+            .Define("Rec_vtx_d2PV_z",          "myUtils::get_Vertex_d2PV(Rec_VertexObject, 2)")
+            
+            #calculate costheta for thrust to d2pv vector - returns 0 if vertex is a PV - not minus signs infront of d2pv variabls as d2PV defined in source code as PV-SV [the vector we want is SV-PV]
+            .Define("Rec_vtx_thrustCosTheta_d2PV",           "myUtils::getAxisCosTheta_withcond(EVT_ThrustInfo, (-Rec_vtx_d2PV_x), (-Rec_vtx_d2PV_y), (-Rec_vtx_d2PV_z),1-(Rec_vtx_isPV))")
+
+            # Flag vertex in max or min hemisphere - use get_RP_inHemis as gives '-1' if costheta==0
+            .Define("Rec_vtx_in_hemisEmin_d2PV",             "myUtils::get_RP_inHemis(1)(Rec_vtx_thrustCosTheta_d2PV)")
+            .Define("Rec_vtx_in_hemisEmax_d2PV",             "myUtils::get_RP_inHemis(0)(Rec_vtx_thrustCosTheta_d2PV)")
+
+            ###########################################################
+            ## others of Ritwiks S1 variables                       ###
+            ###########################################################
+
             #############################################
-            ##                  Filters                ##
+            ##  Tau -> 3 pi vertex on the signal side  ##
             #############################################
-            .Filter("EVT_hemisEmin_e < 40")        # Energy on the signal side must be < 40 GeV
-            .Filter("EVT_hemisEmin_nCharged > 0")  # Signal side must have at least one charged reco particle
-            .Filter("EVT_hemisEmin_nLept == 0")    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
+            .Define("Rec_vtx_ntracks_int",   "myUtils::get_Vertex_ntracks(Rec_VertexObject)")
+            .Define("EVT_hemisEmin_containsTau23Pi",   "myUtils::get_hemis_containstau23pi(Rec_in_hemisEmin, Rec_true_PDG, Rec_true_M1, Rec_indvtx, Rec_vtx_ntracks_int)")
+
+            ###########################
+            ##  thrustcostheta stats ##
+            ###########################
+
+            .Define("Rec_thrustCosThetaEminStats", "myUtils::get_Stats_fromRVec(Rec_in_hemisEmin, Rec_thrustCosTheta)")                                              # INTERMEDIATE
+            .Define("Rec_thrustCosThetaEmaxStats", "myUtils::get_Stats_fromRVec(Rec_in_hemisEmax, Rec_thrustCosTheta)")                                              # INTERMEDIATE
+
+            .Define("Rec_thrustCosTheta_min_hemisEmin", "Rec_thrustCosThetaEminStats.at(0)")
+            .Define("Rec_thrustCosTheta_max_hemisEmin", "Rec_thrustCosThetaEminStats.at(1)")
+            .Define("Rec_thrustCosTheta_ave_hemisEmin", "Rec_thrustCosThetaEminStats.at(2)")
+            .Define("Rec_thrustCosTheta_min_hemisEmax", "Rec_thrustCosThetaEmaxStats.at(0)")
+            .Define("Rec_thrustCosTheta_max_hemisEmax", "Rec_thrustCosThetaEmaxStats.at(1)")
+            .Define("Rec_thrustCosTheta_ave_hemisEmax", "Rec_thrustCosThetaEmaxStats.at(2)")
+
+            #############################################
+            ##        Remaining reco vertex vars       ##
+            #############################################
+
+            .Define("Rec_vtx_d2PV",            "myUtils::get_Vertex_d2PV(Rec_VertexObject,-1)")   # INTERMEDIATE
+            .Define("Rec_vtx_d2PV_err",        "myUtils::get_Vertex_d2PVError(Rec_VertexObject,-1)")
+            .Define("Rec_vtx_d2PV_xerr",       "myUtils::get_Vertex_d2PVError(Rec_VertexObject, 0)")
+            .Define("Rec_vtx_d2PV_yerr",       "myUtils::get_Vertex_d2PVError(Rec_VertexObject, 1)")
+            .Define("Rec_vtx_d2PV_zerr",       "myUtils::get_Vertex_d2PVError(Rec_VertexObject, 2)")
+            .Define("Rec_vtx_normd2PV",        "Rec_vtx_d2PV / Rec_vtx_d2PV_err")   # INTERMEDIATE
+            .Define("Rec_vtx_normd2PV_x",      "Rec_vtx_d2PV_x / Rec_vtx_d2PV_xerr")
+            .Define("Rec_vtx_normd2PV_y",      "Rec_vtx_d2PV_y / Rec_vtx_d2PV_yerr")
+            .Define("Rec_vtx_normd2PV_z",      "Rec_vtx_d2PV_z / Rec_vtx_d2PV_zerr")
+
+            # Reco vertex stats
+            .Define("Rec_vtx_in_hemisEmin_andNotPV",   "myUtils::remove_PV_fromVertexStats(Rec_vtx_in_hemisEmin, Rec_VertexObject)")            # FLAG - NOT SAVED
+            .Define("Rec_vtx_in_hemisEmax_andNotPV",   "myUtils::remove_PV_fromVertexStats(Rec_vtx_in_hemisEmax, Rec_VertexObject)")            # FLAG - NOT SAVED
+            .Define("Rec_vtx_d2PV_signed",             "myUtils::get_VertexFeature_signed(Rec_in_hemisEmin, Rec_vtx_d2PV)")
+            .Define("Rec_vtx_normd2PV_signed",         "myUtils::get_VertexFeature_signed(Rec_in_hemisEmin, Rec_vtx_normd2PV)")
+
+            .Define("Rec_vtx_ntracksStatsEmin",               "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmin_andNotPV, Rec_vtx_ntracks)")  # INTERMEDIATE
+            .Define("Rec_vtx_ntracksStatsEmax",               "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmax_andNotPV, Rec_vtx_ntracks)")  # INTERMEDIATE
+            .Define("Rec_vtx_ntracks_max_hemisEmin",          "Rec_vtx_ntracksStatsEmin.at(1)")
+            .Define("Rec_vtx_ntracks_max_hemisEmax",          "Rec_vtx_ntracksStatsEmax.at(1)")
+      
+            .Define("Rec_vtx_d2PVStatsEmin",                  "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmin_andNotPV, Rec_vtx_d2PV)")  # INTERMEDIATE
+            .Define("Rec_vtx_d2PVStatsEmax",                  "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmax_andNotPV, Rec_vtx_d2PV)")  # INTERMEDIATE
+            .Define("Rec_vtx_d2PV_min_hemisEmin",             "Rec_vtx_d2PVStatsEmin.at(0)")
+            .Define("Rec_vtx_d2PV_max_hemisEmin",             "Rec_vtx_d2PVStatsEmin.at(1)")
+            .Define("Rec_vtx_d2PV_ave_hemisEmin",             "Rec_vtx_d2PVStatsEmin.at(2)")
+            .Define("Rec_vtx_d2PV_min_hemisEmax",             "Rec_vtx_d2PVStatsEmax.at(0)")
+            .Define("Rec_vtx_d2PV_max_hemisEmax",             "Rec_vtx_d2PVStatsEmax.at(1)")
+            .Define("Rec_vtx_d2PV_ave_hemisEmax",             "Rec_vtx_d2PVStatsEmax.at(2)")
+
+            .Define("Rec_vtx_thrustCosThetaStatsEmin",        "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmin_andNotPV, Rec_vtx_thrustCosTheta)")  # INTERMEDIATE
+            .Define("Rec_vtx_thrustCosThetaStatsEmax",        "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmax_andNotPV, Rec_vtx_thrustCosTheta)")  # INTERMEDIATE
+            .Define("Rec_vtx_thrustCosTheta_min_hemisEmin",   "Rec_vtx_thrustCosThetaStatsEmin.at(0)")
+            .Define("Rec_vtx_thrustCosTheta_max_hemisEmin",   "Rec_vtx_thrustCosThetaStatsEmin.at(1)")
+            .Define("Rec_vtx_thrustCosTheta_ave_hemisEmin",   "Rec_vtx_thrustCosThetaStatsEmin.at(2)")
+            .Define("Rec_vtx_thrustCosTheta_min_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(0)")
+            .Define("Rec_vtx_thrustCosTheta_max_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(1)")
+            .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
 
 
         )

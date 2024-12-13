@@ -130,13 +130,16 @@ def get_weights(cut=None):
     return hist_weights
 
 def plot(varname,
+         var1=None,
+         var2=None,
+         composition=None,
          signal_bf=1e-6,
          cut=None,
          nchunks=None,
          stacked=True, 
          weight=True, 
          density=False, 
-         remove_outliers=True, 
+         remove_outliers=False, 
          interactive=False, 
          save=None, 
          bins=50,
@@ -153,8 +156,16 @@ def plot(varname,
     Parameters
     ----------
     varname : str
-        The variable to plot (must be branchname in tree). 
+        The variable to plot (must be branchname in tree). or 'composition'
         If not available those that are will be listed.
+    var1 : str
+        The first variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
+        If not available those that are will be listed. Default=None
+    var2 : str
+        The second variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
+        If not available those that are will be listed. Default=None
+    composition:str
+        Operator to be used in composition. Currently must be '+','-','*','/'. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     cut : str, optional
@@ -195,17 +206,46 @@ def plot(varname,
         if weight:
             raise RuntimeError( f"Cannot have both density and weight True. Please change one to False." )
     
-    # If nchunks is a list, use corresponding elements
-    if remove_outliers:
-        if isinstance(nchunks, list):
-            values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i])) for i, sample in enumerate(cfg.samples) }
+    if varname == 'composition':
+        if var1 ==None or var2 ==None or composition ==None:
+            raise RuntimeError( f"For composition need to specift var1,var2 and composition inputs" )
+
+        if remove_outliers:
+            raise RuntimeError( f"cannot have remove_outliers=True for composition" )
         else:
-            values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks)) for sample in cfg.samples }
+            if isinstance(nchunks, list):
+                values1 = { sample: as_array(sample, var1, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+            else:
+                values1 = { sample: as_array(sample, var1, cut, nchunks) for sample in cfg.samples }
+                values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in cfg.samples }
+       
+        if composition == '+':
+            values = { sample: (values1[sample] + values2[sample]) for sample in cfg.samples }
+        elif composition == '-':
+            values =  { sample: (values1[sample] - values2[sample]) for sample in cfg.samples }
+        elif composition == '/':
+            values =  { sample: values1[sample] /values2[sample] for sample in cfg.samples }
+        elif composition == '*':
+            values =  { sample: values1[sample] * values2[sample] for sample in cfg.samples }
+        else:
+            raise RuntimeError( f"No such composition {composition}" )
+
     else:
-        if isinstance(nchunks, list):
-            values = { sample: as_array(sample, varname, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+        if var1 !=None or var2 !=None or composition !=None:
+            print(f'var1,var2,composition inputs ignored unless varname=="composition". Currently using varname={varname}')
+    
+        # If nchunks is a list, use corresponding elements
+        if remove_outliers:
+            if isinstance(nchunks, list):
+                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i])) for i, sample in enumerate(cfg.samples) }
+            else:
+                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks)) for sample in cfg.samples }
         else:
-            values = { sample: as_array(sample, varname, cut, nchunks) for sample in cfg.samples }
+            if isinstance(nchunks, list):
+                values = { sample: as_array(sample, varname, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+            else:
+                values = { sample: as_array(sample, varname, cut, nchunks) for sample in cfg.samples }
 
     if range is None:
         xmin = min( [ min(values[sample]) for sample in values ] )
@@ -284,7 +324,10 @@ def plot(varname,
     if xtitle is not None:
         ax.set_xlabel(xtitle)
     else:
-        ax.set_xlabel(f'{varname} (cut={cut})')
+        if varname=='composition':
+            ax.set_xlabel(f'{var1+ composition+var2}(cut={cut})')
+        else:
+            ax.set_xlabel(f'{varname} (cut={cut})')
 
     if density:
         ax.set_ylabel('Density')

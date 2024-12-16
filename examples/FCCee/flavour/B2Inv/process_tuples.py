@@ -48,7 +48,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['Bd']
+testFile = cfg.fccana_opts['testFile']['ud']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -203,6 +203,7 @@ class RDFanalysis():
             .Define("EVT_hemisEmin_nCharged",  "float(EVT_ThrustInfoMin_N.at(1))")
             .Define("EVT_hemisEmin_nNeutral",  "float(EVT_ThrustInfoMin_N.at(2))")
 
+
             #############################################
             ##           Remaining Thrust Vars         ##
             #############################################
@@ -220,6 +221,8 @@ class RDFanalysis():
             .Define("EVT_hemisEmax_n",         "float(EVT_ThrustInfoMax_N.at(0))")
             .Define("EVT_hemisEmax_nCharged",  "float(EVT_ThrustInfoMax_N.at(1))")
             .Define("EVT_hemisEmax_nNeutral",  "float(EVT_ThrustInfoMax_N.at(2))")
+
+            .Define("EVT_e", "(EVT_hemisEmin_e)+(EVT_hemisEmax_e)")
 
             # Count secondary vertices in each hemisphere
             .Define("SecondaryVertexThrustAngle",  "myUtils::get_DVertex_thrusthemis_angle(Rec_VertexObject, RecoParticlesPIDAtVertex, EVT_ThrustInfo)")

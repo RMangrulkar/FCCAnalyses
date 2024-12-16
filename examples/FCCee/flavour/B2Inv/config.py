@@ -35,12 +35,12 @@ processList = {
         "p8_ee_Zud_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
     },
     "stage2_training": {
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.5, "chunks": 10},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.5, "chunks": 10},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zss_ecm91": {"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zud_ecm91": {"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.4, "chunks": 10}, #{"fraction": 0.5, "chunks": 10},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.4, "chunks": 10},#{"fraction": 0.5, "chunks": 10},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.4, "chunks": 100},#{"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.4, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zss_ecm91": {"fraction": 0.3, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 400}, #{"fraction": 0.2, "chunks": 200},
     },
     "stage2": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 100},
@@ -95,7 +95,7 @@ bdt1_opts = {
     "jsonPath":           os.path.join(SavedOutputsPath, "bdt1out/bdt1.json"),
     "mvaPath":            os.path.join(SavedOutputsPath, "bdt1out/tmva1.root"),
     "mvaRBDTName":        "bdt",                 # Name of the TMVA TObject in the .root file
-    "mvaCut":             0.6,
+    "mvaCut":             0.3,
     "mvaBranchList":      "bdt1-training-vars",  # key in the yaml file pointing to the feature list
     "efficiencyKey":      "presel",              # efficiencies used to calculate sample weights
     "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdt1out/best_params_bdt1.yaml"),

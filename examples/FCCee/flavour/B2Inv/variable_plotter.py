@@ -89,6 +89,9 @@ def histogram_settings():
         if sample in cfg.sample_allocations["signal"]:
             hist_settings[sample]["histtype"] = "bar"
 
+        elif sample in cfg.sample_allocations["Bdsignal"]:
+            hist_settings[sample]["histtype"] = "bar"
+
         elif sample in cfg.sample_allocations["background"]:
             hist_settings[sample]["histtype"] = "step"
 
@@ -105,7 +108,7 @@ def get_efficiencies():
             raise RuntimeError( f"Tried passed efficiency dictionary key {args.efficiencies} which does not exist in config" )
         return cfg.efficiencies[args.efficiencies]
 
-def get_weights(cut=None):
+def get_weights(cut=None,signal_bf=1e-6,Bdsignal_bf = 1e-6):
     """
     Returns a dictionary of weights for each sample
     Assumes a placeholder branching fraction of 1e-6 for Bs2NuNu
@@ -115,7 +118,10 @@ def get_weights(cut=None):
     for sample in cfg.samples:
         hist_weights[sample] = effs[sample][0] * cfg.branching_fractions[sample][0]
         if sample in cfg.sample_allocations['signal']:
-            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*1e-6
+            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*signal_bf
+        if sample in cfg.sample_allocations['Bdsignal']:
+            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bdsignal_bf
+    
     
     if cut is not None:
         cut_efficiency = efficiency_finder.get_efficiencies('custom',
@@ -134,6 +140,7 @@ def plot(varname,
          var2=None,
          composition=None,
          signal_bf=1e-6,
+         Bd_signal_bf=1e-6,
          cut=None,
          nchunks=None,
          stacked=True, 
@@ -168,6 +175,8 @@ def plot(varname,
         Operator to be used in composition. Currently must be '+','-','*','/'. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
+    Bd_signal_bf : float, optional
+        The assumed signal branching fraction to use with the weights. Default = 10^-6
     cut : str, optional
         Cut branch varname according to a (valid) UPROOT expression. Default: None
     nchunks : int or list of ints, optional
@@ -198,7 +207,7 @@ def plot(varname,
     total : list of str, optional
         Provide a key of config.sample_allocations to stack. Default: ['background']
     components : list of str, optional
-        Distinguish the samples according to cfg.sample_allocations. Default: ['signal', 'background']
+        Distinguish the samples according to cfg.sample_allocations. Default: ['signal', 'background'] - can also add Bd_signal
     verbose : bool, optional
         Print out some useful stuff. Default: True
     """
@@ -288,6 +297,11 @@ def plot(varname,
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
             hist_opts['color'] = 'cornflowerblue'
+            hist_opts['hatch'] = '////'
+        elif allocation=='Bdsignal':
+            hist_opts['histtype'] = 'step'
+            hist_opts['lw'] = 2
+            hist_opts['color'] = 'royalblue'
             hist_opts['hatch'] = '////'
         elif allocation=='background':
             reds = mpl.colormaps['Reds_r']

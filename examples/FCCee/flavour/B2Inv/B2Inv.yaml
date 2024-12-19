@@ -321,7 +321,77 @@ stage2-vars:
   - EVT_hemisEmax_nCharged
   - EVT_hemisEmax_nNeutral
   - EVT_hemisEmax_nDV
+  - EVT_e  
 
+
+  ##############################
+  ##other vars to keep from s1##
+  ##############################
+    # PV 
+  - Rec_PV_ntracks
+  - Rec_PV_x
+  - Rec_PV_y
+  - Rec_PV_z
+
+  # Reconstructed vertex variables
+  - Rec_vtx_n
+  - Rec_vtx_ntracks         
+  - Rec_vtx_indRP
+  - Rec_vtx_chi2
+  - Rec_vtx_isPV
+  - Rec_vtx_m
+  - Rec_vtx_x
+  - Rec_vtx_y
+  - Rec_vtx_z
+  - Rec_vtx_xerr
+  - Rec_vtx_yerr
+  - Rec_vtx_zerr
+  
+  # nRecTracks
+  - Rec_track_n
+
+  # ReconstructedParticle variables
+  - Rec_n
+  - Rec_type
+  - Rec_indvtx
+  - Rec_customid
+  - Rec_e
+  - Rec_m
+  - Rec_q
+  - Rec_p
+  - Rec_pt
+  - Rec_px
+  - Rec_py
+  - Rec_pz
+  - Rec_eta
+  - Rec_phi
+  - Rec_thrustCosTheta
+  - Rec_in_hemisEmin
+  - Rec_in_hemisEmax
+  
+  # MC variables of MCParticle matched to ReconstructedParticle
+  - Rec_true_PDG
+  - Rec_true_e
+  - Rec_true_m
+  - Rec_true_q
+  - Rec_true_p
+  - Rec_true_pt
+  - Rec_true_px
+  - Rec_true_py
+  - Rec_true_pz
+  - Rec_true_eta
+  - Rec_true_phi
+  - Rec_true_orivtx_x
+  - Rec_true_orivtx_y
+  - Rec_true_orivtx_z
+  - Rec_true_M1
+  - Rec_true_M2
+  - Rec_true_M1ofM1
+  - Rec_true_M2ofM1
+  - Rec_true_M1ofM2
+  - Rec_true_M2ofM2
+
+  
 
 ###############
 # STAGE1

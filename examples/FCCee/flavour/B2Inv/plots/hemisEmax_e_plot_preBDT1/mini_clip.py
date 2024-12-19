@@ -7,7 +7,7 @@ import numpy as np
 
 def create_video_from_images(image_folder, output_video, fps=30):
     images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
-    images.sort(reverse=True)  # Ensure the images are in the correct order
+    images.sort()  # reverse=True would ensure the images are in the correct order
 
     # Read the first image to get the frame size
     first_image = cv2.imread(os.path.join(image_folder, images[0]))

@@ -35,152 +35,106 @@ bdt1-training-vars:
   - Rec_PV_y
   - Rec_PV_z
 
-bdt2-training-vars:
-  # Reconstructed vertex - track info
-  - Rec_vtx_ntracks_min_hemisEmin
-  - Rec_vtx_ntracks_max_hemisEmin
-  - Rec_vtx_ntracks_ave_hemisEmin
-  - Rec_vtx_ntracks_min_hemisEmax
-  - Rec_vtx_ntracks_max_hemisEmax
-  - Rec_vtx_ntracks_ave_hemisEmax
 
-  # Reconstructed vertex - distance to primary vertex
-  - Rec_vtx_d2PV_min_hemisEmin
-  - Rec_vtx_d2PV_max_hemisEmin
-  - Rec_vtx_d2PV_ave_hemisEmin
-  - Rec_vtx_d2PV_min_hemisEmax
-  - Rec_vtx_d2PV_max_hemisEmax
-  - Rec_vtx_d2PV_ave_hemisEmax
+##############################################
+#      Ella's BDT2 training variables       ##
+##############################################
+bdt2-training-vars: #probably dont want BDT score in here as going to cut on both
+
+############################################# Variables helpful for all bkgs
+# nSV tracks dont want all these three (keep for now and see highest importance)
+  - EVT_sum_Rec_vtx_ntracks_exclPV  
+  - EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV
+  - EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV
+# keep nSV as correclated with this for now
+  - EVT_hemisEmax_nDV
+
+#IP_like - plan to look at importances and remove some of these
+  - Rec_track_absd0_max_hemisEmin
+  - Rec_track_absd0_ave_hemisEmin
+  - Rec_track_absd0chi2_max_hemisEmin
+  - Rec_track_absd0chi2_ave_hemisEmin
+  - Rec_track_absz0_max_hemisEmin
+  - Rec_track_absz0_ave_hemisEmin
+  - Rec_track_absz0chi2_max_hemisEmin
+  - Rec_track_absz0chi2_ave_hemisEmin
+#some descrimination - to understand physics of why
+  - Rec_track_absz0_min_hemisEmin
+  - Rec_track_absz0chi2_min_hemisEmin
+
+#maximum energy particle - TO CHANGE TO MAXIMUM MOMENTUM SO PID INDEPENDENT
+  - EVT_hemisEmin_maxeChargedRP_e
+  - EVT_hemisEmin_maxeChargedRP_fromPV
+  #maybe helpful but not great discrimination - alos not quite sure on why get separation!
+  - EVT_hemisEmax_maxeChargedRP_e
+  - EVT_hemisEmax_maxeChargedRP_fromPV
   
-  # Reconstructed vertex - angular distribution
-  - Rec_vtx_thrustCosTheta_min_hemisEmin
+  # to look at for now - but probably will remove and just have total p
+  - EVT_hemisEmin_maxeChargedRP_px
+  - EVT_hemisEmin_maxeChargedRP_py
+  - EVT_hemisEmin_maxeChargedRP_pz
+  #for now have these to look at correlation - will probably remove
+  - EVT_Thrust_x
+  - EVT_Thrust_y
+  - EVT_Thrust_z
+
+  #Variables from old BDT that look helpful
+    
+  - Rec_vtx_ntracks_max_hemisEmin
+  - Rec_vtx_ntracks_max_hemisEmax
+
+  #again max and ave but expect quite a lot of overlap here
+  - Rec_thrustCosTheta_max_hemisEmin
+  - Rec_thrustCosTheta_ave_hemisEmin
+  - Rec_thrustCosTheta_max_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
+
   - Rec_vtx_thrustCosTheta_max_hemisEmin
   - Rec_vtx_thrustCosTheta_ave_hemisEmin
-  - Rec_vtx_thrustCosTheta_min_hemisEmax
   - Rec_vtx_thrustCosTheta_max_hemisEmax
   - Rec_vtx_thrustCosTheta_ave_hemisEmax
   
-  # Reconstructed particle - angular distribution
-  - Rec_thrustCosTheta_min_hemisEmin
-  - Rec_thrustCosTheta_max_hemisEmin
-  - Rec_thrustCosTheta_ave_hemisEmin
-  - Rec_thrustCosTheta_min_hemisEmax
-  - Rec_thrustCosTheta_max_hemisEmax
-  - Rec_thrustCosTheta_ave_hemisEmax
-  - Rec_thrustCosTheta_min_hemisEmin_noBrem
-  - Rec_thrustCosTheta_max_hemisEmin_noBrem
-  - Rec_thrustCosTheta_ave_hemisEmin_noBrem
-  - Rec_thrustCosTheta_min_hemisEmax_noBrem
-  - Rec_thrustCosTheta_max_hemisEmax_noBrem
-  - Rec_thrustCosTheta_ave_hemisEmax_noBrem
-
-  # Reconstructed particle - track impact parameters
-  - Rec_track_d0_min_hemisEmin
-  - Rec_track_d0_max_hemisEmin
-  - Rec_track_d0_ave_hemisEmin
-  - Rec_track_z0_min_hemisEmin
-  - Rec_track_z0_max_hemisEmin
-  - Rec_track_z0_ave_hemisEmin
-  - Rec_track_d0_min_hemisEmax
-  - Rec_track_d0_max_hemisEmax
-  - Rec_track_d0_ave_hemisEmax
-  - Rec_track_z0_min_hemisEmax
-  - Rec_track_z0_max_hemisEmax
-  - Rec_track_z0_ave_hemisEmax
-
-  # EVT level - special properties of each hemisphere
-  - EVT_hemisEmin_nKaon
-  - EVT_hemisEmin_nPion
-  - EVT_hemisEmin_maxeKaon
-  - EVT_hemisEmin_maxePion
-  - EVT_hemisEmin_maxeKaon_fromtruePV
-  - EVT_hemisEmin_maxePion_fromtruePV
-
-  - EVT_hemisEmax_nLept
-  - EVT_hemisEmax_nKaon
-  - EVT_hemisEmax_nPion 
-  - EVT_hemisEmax_maxeLept
-  - EVT_hemisEmax_maxeKaon
-  - EVT_hemisEmax_maxePion
-  - EVT_hemisEmax_maxeLept_fromtruePV
-  - EVT_hemisEmax_maxeKaon_fromtruePV
-  - EVT_hemisEmax_maxePion_fromtruePV
-
-bdtComb-training-vars: # Same as BDT2 except includes EVT_MVA1
-  - EVT_MVA1
-  # Reconstructed vertex - track info
-  - Rec_vtx_ntracks_min_hemisEmin
-  - Rec_vtx_ntracks_max_hemisEmin
-  - Rec_vtx_ntracks_ave_hemisEmin
-  - Rec_vtx_ntracks_min_hemisEmax
-  - Rec_vtx_ntracks_max_hemisEmax
-  - Rec_vtx_ntracks_ave_hemisEmax
-
-  # Reconstructed vertex - distance to primary vertex
-  - Rec_vtx_d2PV_min_hemisEmin
+  #a lot of overlap with nDV in min hemis
   - Rec_vtx_d2PV_max_hemisEmin
-  - Rec_vtx_d2PV_ave_hemisEmin
-  - Rec_vtx_d2PV_min_hemisEmax
+
+  #still somewhat descrepant - keep for now for correlation
+  - EVT_Thrust_deltaE # if this is still high suggests possibly better to just combine BDTs
+  - EVT_hemisEmin_Emiss
+  - EVT_e 
+
+############################################### Variables helpful for non-bb bkgs
+# keep nSV as correclated with this for now
+  - EVT_hemisEmax_nDV
+
+# vertex mass - good for light ones
+  - PV_Rec_vtx_m
+  
+  #IP_like - plan to look at importances and remove some of these
+  - Rec_track_absd0_max_hemisEmax
+  - Rec_track_absd0_ave_hemisEmax
+  - Rec_track_absd0chi2_max_hemisEmax
+  - Rec_track_absd0chi2_ave_hemisEmax
+  - Rec_track_absz0_max_hemisEmax
+  - Rec_track_absz0_ave_hemisEmax
+  - Rec_track_absz0chi2_max_hemisEmax
+  - Rec_track_absz0chi2_ave_hemisEmax
+
+  #from old BDT probably to keep - again probably not all of these
   - Rec_vtx_d2PV_max_hemisEmax
   - Rec_vtx_d2PV_ave_hemisEmax
-  
-  # Reconstructed vertex - angular distribution
-  - Rec_vtx_thrustCosTheta_min_hemisEmin
-  - Rec_vtx_thrustCosTheta_max_hemisEmin
-  - Rec_vtx_thrustCosTheta_ave_hemisEmin
-  - Rec_vtx_thrustCosTheta_min_hemisEmax
-  - Rec_vtx_thrustCosTheta_max_hemisEmax
-  - Rec_vtx_thrustCosTheta_ave_hemisEmax
-  
-  # Reconstructed particle - angular distribution
-  - Rec_thrustCosTheta_min_hemisEmin
-  - Rec_thrustCosTheta_max_hemisEmin
-  - Rec_thrustCosTheta_ave_hemisEmin
-  - Rec_thrustCosTheta_min_hemisEmax
-  - Rec_thrustCosTheta_max_hemisEmax
-  - Rec_thrustCosTheta_ave_hemisEmax
-  - Rec_thrustCosTheta_min_hemisEmin_noBrem
-  - Rec_thrustCosTheta_max_hemisEmin_noBrem
-  - Rec_thrustCosTheta_ave_hemisEmin_noBrem
-  - Rec_thrustCosTheta_min_hemisEmax_noBrem
-  - Rec_thrustCosTheta_max_hemisEmax_noBrem
-  - Rec_thrustCosTheta_ave_hemisEmax_noBrem
+  - Rec_vtx_d2PV_min_hemisEmax
 
-  # Reconstructed particle - track impact parameters
-  - Rec_track_d0_min_hemisEmin
-  - Rec_track_d0_max_hemisEmin
-  - Rec_track_d0_ave_hemisEmin
-  - Rec_track_z0_min_hemisEmin
-  - Rec_track_z0_max_hemisEmin
-  - Rec_track_z0_ave_hemisEmin
-  - Rec_track_d0_min_hemisEmax
-  - Rec_track_d0_max_hemisEmax
-  - Rec_track_d0_ave_hemisEmax
-  - Rec_track_z0_min_hemisEmax
-  - Rec_track_z0_max_hemisEmax
-  - Rec_track_z0_ave_hemisEmax
+################################################## Probably to remove but check correlation first
+  - Rec_track_absd0_min_hemisEmin
+  - Rec_track_absd0chi2_min_hemisEmin
+  - Rec_track_absz0chi2_min_hemisEmax
+  - Rec_track_absd0chi2_min_hemisEmax
+  - Rec_track_absd0_min_hemisEmax
+  - Rec_track_absz0_min_hemisEmax
 
-  # EVT level - special properties of each hemisphere
-  - EVT_hemisEmin_nKaon
-  - EVT_hemisEmin_nPion
-  - EVT_hemisEmin_maxeKaon
-  - EVT_hemisEmin_maxePion
-  - EVT_hemisEmin_maxeKaon_fromtruePV
-  - EVT_hemisEmin_maxePion_fromtruePV
-
-  - EVT_hemisEmax_nLept
-  - EVT_hemisEmax_nKaon
-  - EVT_hemisEmax_nPion 
-  - EVT_hemisEmax_maxeLept
-  - EVT_hemisEmax_maxeKaon
-  - EVT_hemisEmax_maxePion
-  - EVT_hemisEmax_maxeLept_fromtruePV
-  - EVT_hemisEmax_maxeKaon_fromtruePV
-  - EVT_hemisEmax_maxePion_fromtruePV
-
-###############
+################################################################
 # STAGE2 (== STAGE1 + the BDT scores)
-###############
+################################################################
 stage2-vars:
   # BDT scores
   - EVT_MVA1
@@ -1010,3 +964,152 @@ stage0-vars-old:
   - EVT_hemisEmin_containsTau23Pi
   - EVT_hemisEmin_Emiss
   - EVT_hemisEmax_Emiss
+
+
+########################################
+##         Ritwik old BDTS            ##
+########################################
+ritwik_bdt2-training-vars:
+  # Reconstructed vertex - track info
+  - Rec_vtx_ntracks_min_hemisEmin
+  - Rec_vtx_ntracks_max_hemisEmin
+  - Rec_vtx_ntracks_ave_hemisEmin
+  - Rec_vtx_ntracks_min_hemisEmax
+  - Rec_vtx_ntracks_max_hemisEmax
+  - Rec_vtx_ntracks_ave_hemisEmax
+
+  # Reconstructed vertex - distance to primary vertex
+  - Rec_vtx_d2PV_min_hemisEmin
+  - Rec_vtx_d2PV_max_hemisEmin
+  - Rec_vtx_d2PV_ave_hemisEmin
+  - Rec_vtx_d2PV_min_hemisEmax
+  - Rec_vtx_d2PV_max_hemisEmax
+  - Rec_vtx_d2PV_ave_hemisEmax
+  
+  # Reconstructed vertex - angular distribution
+  - Rec_vtx_thrustCosTheta_min_hemisEmin
+  - Rec_vtx_thrustCosTheta_max_hemisEmin
+  - Rec_vtx_thrustCosTheta_ave_hemisEmin
+  - Rec_vtx_thrustCosTheta_min_hemisEmax
+  - Rec_vtx_thrustCosTheta_max_hemisEmax
+  - Rec_vtx_thrustCosTheta_ave_hemisEmax
+  
+  # Reconstructed particle - angular distribution
+  - Rec_thrustCosTheta_min_hemisEmin
+  - Rec_thrustCosTheta_max_hemisEmin
+  - Rec_thrustCosTheta_ave_hemisEmin
+  - Rec_thrustCosTheta_min_hemisEmax
+  - Rec_thrustCosTheta_max_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
+  - Rec_thrustCosTheta_min_hemisEmin_noBrem
+  - Rec_thrustCosTheta_max_hemisEmin_noBrem
+  - Rec_thrustCosTheta_ave_hemisEmin_noBrem
+  - Rec_thrustCosTheta_min_hemisEmax_noBrem
+  - Rec_thrustCosTheta_max_hemisEmax_noBrem
+  - Rec_thrustCosTheta_ave_hemisEmax_noBrem
+
+  # Reconstructed particle - track impact parameters
+  - Rec_track_d0_min_hemisEmin
+  - Rec_track_d0_max_hemisEmin
+  - Rec_track_d0_ave_hemisEmin
+  - Rec_track_z0_min_hemisEmin
+  - Rec_track_z0_max_hemisEmin
+  - Rec_track_z0_ave_hemisEmin
+  - Rec_track_d0_min_hemisEmax
+  - Rec_track_d0_max_hemisEmax
+  - Rec_track_d0_ave_hemisEmax
+  - Rec_track_z0_min_hemisEmax
+  - Rec_track_z0_max_hemisEmax
+  - Rec_track_z0_ave_hemisEmax
+
+  # EVT level - special properties of each hemisphere
+  - EVT_hemisEmin_nKaon
+  - EVT_hemisEmin_nPion
+  - EVT_hemisEmin_maxeKaon
+  - EVT_hemisEmin_maxePion
+  - EVT_hemisEmin_maxeKaon_fromtruePV
+  - EVT_hemisEmin_maxePion_fromtruePV
+
+  - EVT_hemisEmax_nLept
+  - EVT_hemisEmax_nKaon
+  - EVT_hemisEmax_nPion 
+  - EVT_hemisEmax_maxeLept
+  - EVT_hemisEmax_maxeKaon
+  - EVT_hemisEmax_maxePion
+  - EVT_hemisEmax_maxeLept_fromtruePV
+  - EVT_hemisEmax_maxeKaon_fromtruePV
+  - EVT_hemisEmax_maxePion_fromtruePV
+
+ritwik-bdtComb-training-vars: # Same as BDT2 except includes EVT_MVA1
+  - EVT_MVA1
+  # Reconstructed vertex - track info
+  - Rec_vtx_ntracks_min_hemisEmin
+  - Rec_vtx_ntracks_max_hemisEmin
+  - Rec_vtx_ntracks_ave_hemisEmin
+  - Rec_vtx_ntracks_min_hemisEmax
+  - Rec_vtx_ntracks_max_hemisEmax
+  - Rec_vtx_ntracks_ave_hemisEmax
+
+  # Reconstructed vertex - distance to primary vertex
+  - Rec_vtx_d2PV_min_hemisEmin
+  - Rec_vtx_d2PV_max_hemisEmin
+  - Rec_vtx_d2PV_ave_hemisEmin
+  - Rec_vtx_d2PV_min_hemisEmax
+  - Rec_vtx_d2PV_max_hemisEmax
+  - Rec_vtx_d2PV_ave_hemisEmax
+  
+  # Reconstructed vertex - angular distribution
+  - Rec_vtx_thrustCosTheta_min_hemisEmin
+  - Rec_vtx_thrustCosTheta_max_hemisEmin
+  - Rec_vtx_thrustCosTheta_ave_hemisEmin
+  - Rec_vtx_thrustCosTheta_min_hemisEmax
+  - Rec_vtx_thrustCosTheta_max_hemisEmax
+  - Rec_vtx_thrustCosTheta_ave_hemisEmax
+  
+  # Reconstructed particle - angular distribution
+  - Rec_thrustCosTheta_min_hemisEmin
+  - Rec_thrustCosTheta_max_hemisEmin
+  - Rec_thrustCosTheta_ave_hemisEmin
+  - Rec_thrustCosTheta_min_hemisEmax
+  - Rec_thrustCosTheta_max_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
+  - Rec_thrustCosTheta_min_hemisEmin_noBrem
+  - Rec_thrustCosTheta_max_hemisEmin_noBrem
+  - Rec_thrustCosTheta_ave_hemisEmin_noBrem
+  - Rec_thrustCosTheta_min_hemisEmax_noBrem
+  - Rec_thrustCosTheta_max_hemisEmax_noBrem
+  - Rec_thrustCosTheta_ave_hemisEmax_noBrem
+
+  # Reconstructed particle - track impact parameters
+  - Rec_track_d0_min_hemisEmin
+  - Rec_track_d0_max_hemisEmin
+  - Rec_track_d0_ave_hemisEmin
+  - Rec_track_z0_min_hemisEmin
+  - Rec_track_z0_max_hemisEmin
+  - Rec_track_z0_ave_hemisEmin
+  - Rec_track_d0_min_hemisEmax
+  - Rec_track_d0_max_hemisEmax
+  - Rec_track_d0_ave_hemisEmax
+  - Rec_track_z0_min_hemisEmax
+  - Rec_track_z0_max_hemisEmax
+  - Rec_track_z0_ave_hemisEmax
+
+  # EVT level - special properties of each hemisphere
+  - EVT_hemisEmin_nKaon
+  - EVT_hemisEmin_nPion
+  - EVT_hemisEmin_maxeKaon
+  - EVT_hemisEmin_maxePion
+  - EVT_hemisEmin_maxeKaon_fromtruePV
+  - EVT_hemisEmin_maxePion_fromtruePV
+
+  - EVT_hemisEmax_nLept
+  - EVT_hemisEmax_nKaon
+  - EVT_hemisEmax_nPion 
+  - EVT_hemisEmax_maxeLept
+  - EVT_hemisEmax_maxeKaon
+  - EVT_hemisEmax_maxePion
+  - EVT_hemisEmax_maxeLept_fromtruePV
+  - EVT_hemisEmax_maxeKaon_fromtruePV
+  - EVT_hemisEmax_maxePion_fromtruePV
+
+

@@ -138,6 +138,7 @@ def get_weights(cut=None,signal_bf=1e-6,Bdsignal_bf = 1e-6):
 def plot(varname,
          var1=None,
          var2=None,
+         var3=None, #only used for vector sumquad
          composition=None,
          signal_bf=1e-6,
          Bd_signal_bf=1e-6,
@@ -171,8 +172,11 @@ def plot(varname,
     var2 : str
         The second variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
         If not available those that are will be listed. Default=None
+    var3 : str
+        The third variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
+        If not available those that are will be listed. Default=None
     composition:str
-        Operator to be used in composition. Currently must be '+','-','*','/'. If varname='composition'. Otherwise ignored. Default=None
+        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad'. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     Bd_signal_bf : float, optional
@@ -225,9 +229,11 @@ def plot(varname,
             if isinstance(nchunks, list):
                 values1 = { sample: as_array(sample, var1, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
                 values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                values3 = { sample: as_array(sample, var3, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
             else:
                 values1 = { sample: as_array(sample, var1, cut, nchunks) for sample in cfg.samples }
                 values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in cfg.samples }
+                values3 = { sample: as_array(sample, var3, cut, nchunks) for sample in cfg.samples }
        
         if composition == '+':
             values = { sample: (values1[sample] + values2[sample]) for sample in cfg.samples }
@@ -237,11 +243,14 @@ def plot(varname,
             values =  { sample: values1[sample] /values2[sample] for sample in cfg.samples }
         elif composition == '*':
             values =  { sample: values1[sample] * values2[sample] for sample in cfg.samples }
+        elif composition == 'sumquad':
+            values =  { sample: np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2) for sample in cfg.samples }
+        
         else:
             raise RuntimeError( f"No such composition {composition}" )
 
     else:
-        if var1 !=None or var2 !=None or composition !=None:
+        if var1 !=None or var2 !=None or var3 !=None or composition !=None:
             print(f'var1,var2,composition inputs ignored unless varname=="composition". Currently using varname={varname}')
     
         # If nchunks is a list, use corresponding elements
@@ -339,7 +348,9 @@ def plot(varname,
         ax.set_xlabel(xtitle)
     else:
         if varname=='composition':
-            ax.set_xlabel(f'{var1+ composition+var2}(cut={cut})')
+            if composition=='sumquad':
+                ax.set_xlabel(f'$\sqrt({var1}^2+{var2}^2+{var3}^2)(cut={cut})$')
+            else: ax.set_xlabel(f'{var1+ composition+var2}(cut={cut})')
         else:
             ax.set_xlabel(f'{varname} (cut={cut})')
 

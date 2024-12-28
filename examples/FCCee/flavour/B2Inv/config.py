@@ -154,13 +154,13 @@ samples = [
     "p8_ee_Zbb_ecm91",
     "p8_ee_Zcc_ecm91",
     "p8_ee_Zss_ecm91",
-    #"p8_ee_Zud_ecm91",
+    "p8_ee_Zud_ecm91",
 ]
 
 sample_allocations = {
     "signal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
     "Bdsignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
-    "background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", ],#"p8_ee_Zud_ecm91"],
+    "background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
     "bb only":    ["p8_ee_Zbb_ecm91"],
 }
 
@@ -170,7 +170,7 @@ sample_shorthand = {
     "p8_ee_Zbb_ecm91":                "Z2bb",
     "p8_ee_Zcc_ecm91":                "Z2cc",
     "p8_ee_Zss_ecm91":                "Z2ss",
-    #"p8_ee_Zud_ecm91":                "Z2ud",
+    "p8_ee_Zud_ecm91":                "Z2ud",
 }
 
 titles = {

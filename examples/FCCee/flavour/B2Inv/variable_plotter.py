@@ -176,7 +176,7 @@ def plot(varname,
         The third variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
         If not available those that are will be listed. Default=None
     composition:str
-        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad'. If varname='composition'. Otherwise ignored. Default=None
+        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad','normvect'. For 'normvect' var1, var2, var 3 should be the x,y,z components of the depired variable where var1 is the normlaised component desired. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     Bd_signal_bf : float, optional
@@ -245,6 +245,8 @@ def plot(varname,
             values =  { sample: values1[sample] * values2[sample] for sample in cfg.samples }
         elif composition == 'sumquad':
             values =  { sample: np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2) for sample in cfg.samples }
+        elif composition == 'normvect':
+            values =  { sample: values1[sample]/(np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2)) for sample in cfg.samples }
         
         else:
             raise RuntimeError( f"No such composition {composition}" )
@@ -350,6 +352,8 @@ def plot(varname,
         if varname=='composition':
             if composition=='sumquad':
                 ax.set_xlabel(f'$\sqrt({var1}^2+{var2}^2+{var3}^2)(cut={cut})$')
+            if composition=='normvect':
+                ax.set_xlabel(f'Normalised {var1} (cut={cut})$')
             else: ax.set_xlabel(f'{var1+ composition+var2}(cut={cut})')
         else:
             ax.set_xlabel(f'{varname} (cut={cut})')

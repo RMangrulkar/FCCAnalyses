@@ -98,6 +98,21 @@ namespace myUtils{
     int fromPV = -999; // Default value to check for errors
   };
 
+ // equivalent for max p particle
+  struct maxp_HemisParticleInfo {
+    int num = 0;
+    float maxp = 0.;
+    float energy = -999;
+    int index = -999;
+    int PDG = -999;
+    float charge = -999;
+    float px = -999;
+    float py = -999;
+    float pz = -999;
+    int fromPV = -999; // Default value to check for errors
+  };
+
+
   /********************************** 
     B2INV ADDITIONAL STAGE0 FUNCTIONS
   ***********************************/
@@ -182,7 +197,13 @@ namespace myUtils{
   // Define function that calculates everything to do with general max E RP
   ROOT::VecOps::RVec<maxe_HemisParticleInfo> get_maxe_RP_HemisInfo(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
     ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex, ROOT::VecOps::RVec<int> should_eval);
+
+  // Define function that calculates everything to do with general max p RP
+  ROOT::VecOps::RVec<maxp_HemisParticleInfo> get_maxp_RP_HemisInfo(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+    ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex, ROOT::VecOps::RVec<int> should_eval);
   
+  // Function to normalise 3-vector thrust components
+  float norm_RVec_x(float x, float y,float z);
   // Function to get the absolute values of an RVec<float>
   ROOT::VecOps::RVec<float> abs_RVec(const ROOT::VecOps::RVec<float> values);
 

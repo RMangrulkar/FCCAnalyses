@@ -62,7 +62,7 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - Rec_track_absz0_min_hemisEmin
   - Rec_track_absz0chi2_min_hemisEmin
 
-#maximum energy particle - TO CHANGE TO MAXIMUM MOMENTUM SO PID INDEPENDENT
+#maximum energy particle - wANT TO USE MAX MOMENTUM BUT KEPT THIS FOR COMPARISON
   - EVT_hemisEmin_maxeChargedRP_e
   - EVT_hemisEmin_maxeChargedRP_fromPV
   #maybe helpful but not great discrimination - alos not quite sure on why get separation!
@@ -73,12 +73,25 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - EVT_hemisEmin_maxeChargedRP_px
   - EVT_hemisEmin_maxeChargedRP_py
   - EVT_hemisEmin_maxeChargedRP_pz
-  #for now have these to look at correlation - will probably remove
+
+#maximum momentum particle 
+  - EVT_hemisEmin_maxpChargedRP_p
+  - EVT_hemisEmin_maxpChargedRP_fromPV
+  #maybe helpful but not great discrimination - also not quite sure on why get separation!
+  - EVT_hemisEmax_maxpChargedRP_p
+  - EVT_hemisEmax_maxpChargedRP_fromPV
+  
+  # to look at for now - but probably will remove and just have total p
+  - EVT_hemisEmin_maxpChargedRP_px
+  - EVT_hemisEmin_maxpChargedRP_py
+  - EVT_hemisEmin_maxpChargedRP_pz
+
+#for now have these to look at correlation - will probably remove
   - EVT_Thrust_x
   - EVT_Thrust_y
   - EVT_Thrust_z
 
-  #Variables from old BDT that look helpful
+#Variables from old BDT that look helpful
     
   - Rec_vtx_ntracks_max_hemisEmin
   - Rec_vtx_ntracks_max_hemisEmax
@@ -149,6 +162,18 @@ stage2-vars:
   - EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV
   - EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV
 
+  #sum momenta based
+  - EVT_hemisEmin_sum_Rec_p
+  - EVT_hemisEmax_sum_Rec_p
+  - EVT_hemisEmin_p
+  - EVT_hemisEmax_p
+
+  - EVT_sum_Rec_px
+  - EVT_sum_Rec_py
+  - EVT_sum_Rec_pz
+  - EVT_p
+
+
   # dont intend to use all of these but would quite like to plot just in case - expect just max ones to be useful!
   - Rec_track_absd0_min_hemisEmin
   - Rec_track_absd0_max_hemisEmin
@@ -191,6 +216,24 @@ stage2-vars:
   - EVT_hemisEmax_maxeChargedRP_py
   - EVT_hemisEmax_maxeChargedRP_pz
   - EVT_hemisEmax_maxeChargedRP_fromPV
+
+#max p charge RP variables
+  - EVT_hemisEmin_maxpChargedRP_p
+  - EVT_hemisEmin_maxpChargedRP_e
+  - EVT_hemisEmin_maxpChargedRP_PDG
+  - EVT_hemisEmin_maxpChargedRP_q
+  - EVT_hemisEmin_maxpChargedRP_px
+  - EVT_hemisEmin_maxpChargedRP_py
+  - EVT_hemisEmin_maxpChargedRP_pz
+  - EVT_hemisEmin_maxpChargedRP_fromPV
+  - EVT_hemisEmax_maxpChargedRP_p
+  - EVT_hemisEmax_maxpChargedRP_e
+  - EVT_hemisEmax_maxpChargedRP_PDG
+  - EVT_hemisEmax_maxpChargedRP_q
+  - EVT_hemisEmax_maxpChargedRP_px
+  - EVT_hemisEmax_maxpChargedRP_py
+  - EVT_hemisEmax_maxpChargedRP_pz
+  - EVT_hemisEmax_maxpChargedRP_fromPV
 
   #variables relating to new hemisphere assignment
   - Rec_vtx_d2PV_x
@@ -258,6 +301,11 @@ stage2-vars:
   - EVT_Thrust_deltaE
   - EVT_hemisEmin_Emiss
   - EVT_hemisEmax_Emiss
+
+  ######Ella vars derived from this #######
+  - EVT_unitThrust_x
+  - EVT_unitThrust_y
+  - EVT_unitThrust_z 
   
   # Event variables -- hemisphere
   - EVT_hemisEmin_e

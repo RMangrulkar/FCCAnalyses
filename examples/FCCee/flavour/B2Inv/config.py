@@ -9,7 +9,7 @@ FCCAnalysesPath = "/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 SavedOutputsPath = "/r02/lhcb/ejnw2/FCC/outputs"
 # RUNNING MODE
-run_mode_choices = [ 'stage1_training', 'stage2_training', 'stage2' ]
+run_mode_choices = [ 'stage1_training', 'stage2_training', 'stage2' ,'tautest']
 run_mode = 'stage2_training'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
@@ -26,6 +26,7 @@ processList = {
     # p8_ee_Zcc_ecm91                == 3.5T
     # p8_ee_Zss_ecm91                == 3.3T
     # p8_ee_Zud_ecm91                == 3.3T
+    # p8_ee_Ztautau_ecm91            == 140G 
     "stage1_training": {  # ~2G or ~500k events per sample
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.28, "chunks": 5},#{"fraction": 0.3, "chunks": 10}, test: {"fraction": 0.01, "chunks": 1},
         "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.25, "chunks": 5},#{"fraction": 0.3, "chunks": 10}, test: {"fraction": 0.01, "chunks": 1},
@@ -33,6 +34,7 @@ processList = {
         "p8_ee_Zcc_ecm91": {"fraction": 0.015, "chunks": 8},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
         "p8_ee_Zss_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
         "p8_ee_Zud_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
+        #note no tau sample
     },
     "stage2_training": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.4, "chunks": 10}, #{"fraction": 0.5, "chunks": 10},
@@ -40,7 +42,8 @@ processList = {
         "p8_ee_Zbb_ecm91": {"fraction": 0.4, "chunks": 100},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zcc_ecm91": {"fraction": 0.4, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zss_ecm91": {"fraction": 0.3, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 400}, #{"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 500}, #{"fraction": 0.2, "chunks": 200},
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.3, "chunks": 40},
     },
     "stage2": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 100},
@@ -53,6 +56,9 @@ processList = {
         "p8_ee_Zmumu_ecm91": {"fraction": 1, "chunks": 500},
         "p8_ee_Ztautau_ecm91": {"fraction": 1, "chunks": 500}
     },
+    "tautest": {
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.0004, "chunks": 1}
+    },
 }
 
 # Default options to pass to `fccanalysis run`
@@ -62,6 +68,7 @@ fccana_opts = {
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
         "stage2_training": os.path.join(FCCAnalysesPath, "outputs/stage2_training/"),  # By default stage2 trained on output of stage1
         "stage2":          os.path.join(FCCAnalysesPath, "outputs/stage2/"),
+        "tautest":          os.path.join(FCCAnalysesPath, "outputs/tautest/"),
     },
     "testFile": {
         "Bs": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/events_026683563.root",
@@ -70,6 +77,7 @@ fccana_opts = {
         "cc": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zcc_ecm91/events_000046867.root",
         "ss": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zss_ecm91/events_000099129.root",
         "ud": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zud_ecm91/events_000071896.root",
+        "tautau": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Ztautau_ecm91/events_000143148.root",
     },
     "analysisName":   "b2inv",
     "nCPUS":          8,
@@ -82,7 +90,8 @@ fccana_opts = {
     "outBranchList2": "stage2-vars",  # ---- " ---- stage2 branches
     "outputBranches": {
         "stage1_training": "stage1-vars",
-        "stage2_training": "stage2-vars", 
+        "stage2_training": "stage2-vars",
+        "tautest": "stage2-vars",  
         "stage2": "check-on-these-variables",
     },
 }
@@ -155,12 +164,14 @@ samples = [
     "p8_ee_Zcc_ecm91",
     "p8_ee_Zss_ecm91",
     "p8_ee_Zud_ecm91",
+    "p8_ee_Ztautau_ecm91",
 ]
 
 sample_allocations = {
     "signal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
-    "Bdsignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
-    "background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+    "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "background_exclTau": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+    "background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91","p8_ee_Ztautau_ecm91"],
     "bb only":    ["p8_ee_Zbb_ecm91"],
 }
 
@@ -171,6 +182,7 @@ sample_shorthand = {
     "p8_ee_Zcc_ecm91":                "Z2cc",
     "p8_ee_Zss_ecm91":                "Z2ss",
     "p8_ee_Zud_ecm91":                "Z2ud",
+    "p8_ee_Ztautau_ecm91":            "Z2tautau",
 }
 
 titles = {
@@ -180,6 +192,7 @@ titles = {
     "p8_ee_Zcc_ecm91": r"$Z \to c \bar{c}$",
     "p8_ee_Zss_ecm91": r"$Z \to s \bar{s}$",
     "p8_ee_Zud_ecm91": r"$Z \to q \bar{q}$, $q \in [u,d]$",
+    "p8_ee_Ztautau_ecm91":r"$Z \to \tau^{+} \tau^{-}$",
 }
 
 ##############################
@@ -203,6 +216,7 @@ prod_frac = {
 # Z->ss = (Z->dd+ss+bb)/3 * 3 - Z->bb / 2
 # Z->uu/cc = 2 * (11.6 +/- 0.6) = 23.2 +/- 1.2
 # Z->dd/ss/bb = 3 * (15.6 +/- 0.4) = 46.8 +/- 1.2
+#Z->τ+τ− = (3.3696±0.0083) %
 branching_fractions = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (1, 0),  # a dummy value
     "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (1, 0),  # a dummy value
@@ -210,12 +224,14 @@ branching_fractions = {
     "p8_ee_Zcc_ecm91": (0.1203, 0.0021),
     "p8_ee_Zss_ecm91": (0.1584, 0.0060),
     "p8_ee_Zud_ecm91": (0.2701, 0.0136),
+    "p8_ee_Ztautau_ecm91":(0.033696,0.000083),
 }
 
 mass_Z = 91.188  # Ecm used in the winter2023 samples
 EVT_hemisEmin_e_withpresel_min = 0.5*mass_Z - 40
 EVT_hemisEmin_e_withpresel_max = 0.5*mass_Z
 
+####### I don't believe this section is used - to check #########
 efficiencies = {
     "unity": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1,
@@ -224,6 +240,7 @@ efficiencies = {
         "p8_ee_Zcc_ecm91": 1,
         "p8_ee_Zss_ecm91": 1,
         "p8_ee_Zud_ecm91": 1,
+        "p8_ee_Ztautau_ecm91":1,
     },
     "presel": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.9315, 0.0003),
@@ -232,14 +249,16 @@ efficiencies = {
         "p8_ee_Zcc_ecm91": (0.08470, 0.00012),
         "p8_ee_Zss_ecm91": (0.1144,   0.0001),
         "p8_ee_Zud_ecm91": (0.08720, 0.00013),
+    # no tau tau yet
     },
     "presel+bdt1>0.2": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.8851, 0.0002),
-       #no bd here
+    #no bd here
         "p8_ee_Zbb_ecm91": (0.008701, 0.000006),
         "p8_ee_Zcc_ecm91": (0.005605, 0.000005),
         "p8_ee_Zss_ecm91": (0.007871, 0.000006),
         "p8_ee_Zud_ecm91": (0.002103, 0.000003),
+    #no tau tau either yet
     },
 }
 

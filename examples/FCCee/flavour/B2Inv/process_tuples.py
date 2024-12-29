@@ -26,6 +26,7 @@ sys.path.append(os.path.abspath(configPath))
 
 import ROOT
 from yaml import safe_load
+from math import sqrt
 
 import config as cfg
 
@@ -48,7 +49,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['ud']
+testFile = cfg.fccana_opts['testFile']['Bs']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -215,6 +216,10 @@ class RDFanalysis():
             .Define("EVT_Thrust_z",            "EVT_ThrustInfo.at(5)")
             .Define("EVT_Thrust_zerr",         "EVT_ThrustInfo.at(6)")
 
+            .Define("EVT_unitThrust_x",            "myUtils::norm_RVec_x(EVT_ThrustInfo.at(1),EVT_ThrustInfo.at(3),EVT_ThrustInfo.at(5))")
+            .Define("EVT_unitThrust_y",            "myUtils::norm_RVec_x(EVT_ThrustInfo.at(3),EVT_ThrustInfo.at(1),EVT_ThrustInfo.at(5))")
+            .Define("EVT_unitThrust_z",            "myUtils::norm_RVec_x(EVT_ThrustInfo.at(5),EVT_ThrustInfo.at(3),EVT_ThrustInfo.at(1))")
+
             .Define("EVT_hemisEmax_e",         "EVT_ThrustInfoMax_E.at(0)")
             .Define("EVT_hemisEmax_eCharged",  "EVT_ThrustInfoMax_E.at(1)")
             .Define("EVT_hemisEmax_eNeutral",  "EVT_ThrustInfoMax_E.at(2)")
@@ -272,6 +277,28 @@ class RDFanalysis():
             .Define("EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV", "EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
             .Define("EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV", "EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
             
+
+            #Sum all particle momenta over given hemisphere
+            .Define("EVT_hemisEmin_sum_Rec_p",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmin,Rec_p)")
+            .Define("EVT_hemisEmax_sum_Rec_p",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmax,Rec_p)")
+
+            .Define("EVT_hemisEmin_sum_Rec_px",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmin,Rec_px)")
+            .Define("EVT_hemisEmin_sum_Rec_py",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmin,Rec_py)")
+            .Define("EVT_hemisEmin_sum_Rec_pz",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmin,Rec_pz)")
+            .Define("EVT_hemisEmin_p",  "sqrt(EVT_hemisEmin_sum_Rec_px*EVT_hemisEmin_sum_Rec_px+EVT_hemisEmin_sum_Rec_py*EVT_hemisEmin_sum_Rec_py+EVT_hemisEmin_sum_Rec_pz*EVT_hemisEmin_sum_Rec_pz)")
+            
+            .Define("EVT_hemisEmax_sum_Rec_px",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmax,Rec_px)")
+            .Define("EVT_hemisEmax_sum_Rec_py",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmax,Rec_py)")
+            .Define("EVT_hemisEmax_sum_Rec_pz",  "myUtils::sum_RVec_withcond(Rec_in_hemisEmax,Rec_pz)")
+            .Define("EVT_hemisEmax_p",  "sqrt(EVT_hemisEmax_sum_Rec_px*EVT_hemisEmax_sum_Rec_px+EVT_hemisEmax_sum_Rec_py*EVT_hemisEmax_sum_Rec_py+EVT_hemisEmax_sum_Rec_pz*EVT_hemisEmax_sum_Rec_pz)")
+            
+            .Define("EVT_sum_Rec_px",  "EVT_hemisEmin_sum_Rec_px+EVT_hemisEmax_sum_Rec_px")
+            .Define("EVT_sum_Rec_py",  "EVT_hemisEmin_sum_Rec_py+EVT_hemisEmax_sum_Rec_py")
+            .Define("EVT_sum_Rec_pz",  "EVT_hemisEmin_sum_Rec_pz+EVT_hemisEmax_sum_Rec_pz")
+            .Define("EVT_p",  "sqrt(EVT_sum_Rec_px*EVT_sum_Rec_px+EVT_sum_Rec_py*EVT_sum_Rec_py+EVT_sum_Rec_pz*EVT_sum_Rec_pz)")
+
+            
+
             #############################################
             ##           IP-like track vars            ##
             #############################################
@@ -356,8 +383,34 @@ class RDFanalysis():
             .Define("EVT_hemisEmax_maxeChargedRP_pz",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).pz")
             .Define("EVT_hemisEmax_maxeChargedRP_fromPV",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).fromPV")
 
+            #############################################
+            ##     for max P charged RP vars           ##
+            #############################################
+
+            .Define("EVT_hemisEmin_maxpChargedRPInfo",    "myUtils::get_maxp_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmin)")  # INTERMEDIATE
+            .Define("EVT_hemisEmax_maxpChargedRPInfo",    "myUtils::get_maxp_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmax)")  # INTERMEDIATE
+            
+            .Define("EVT_hemisEmin_maxpChargedRP_p",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).maxp")
+            .Define("EVT_hemisEmin_maxpChargedRP_e",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).energy")
+            .Define("EVT_hemisEmin_maxpChargedRP_PDG",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).PDG")
+            .Define("EVT_hemisEmin_maxpChargedRP_q",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).charge")
+            .Define("EVT_hemisEmin_maxpChargedRP_px",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).px")
+            .Define("EVT_hemisEmin_maxpChargedRP_py",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).py")
+            .Define("EVT_hemisEmin_maxpChargedRP_pz",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).pz")
+            .Define("EVT_hemisEmin_maxpChargedRP_fromPV",             "(EVT_hemisEmin_maxpChargedRPInfo.at(0)).fromPV")
+            
+            .Define("EVT_hemisEmax_maxpChargedRP_p",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).maxp")
+            .Define("EVT_hemisEmax_maxpChargedRP_e",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).energy")
+            .Define("EVT_hemisEmax_maxpChargedRP_PDG",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).PDG")
+            .Define("EVT_hemisEmax_maxpChargedRP_q",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).charge")
+            .Define("EVT_hemisEmax_maxpChargedRP_px",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).px")
+            .Define("EVT_hemisEmax_maxpChargedRP_py",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).py")
+            .Define("EVT_hemisEmax_maxpChargedRP_pz",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).pz")
+            .Define("EVT_hemisEmax_maxpChargedRP_fromPV",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).fromPV")
+
+
             ##################################################################
-            ##     Variables for position-based assignment of vtx to hemis  ##        ##
+            ##     Variables for position-based assignment of vtx to hemis  ##        
             ##################################################################
 
             #d2PV variable - want for BDT2 and vtx assignment

@@ -396,6 +396,13 @@ ROOT::VecOps::RVec<float> abs_RVec(const ROOT::VecOps::RVec<float> values) {
     return abs_values;
 }
 
+// Function to normalise 3-vector thrust components
+float norm_RVec_x(float x, float y,float z) {
+    float normalised_x;
+    normalised_x = x/sqrt(x*x+y*y+z*z);
+    return normalised_x;
+}
+
 
 // function to sum RVec components with a condition
 ROOT::VecOps::RVec<float> sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values) {
@@ -461,6 +468,46 @@ ROOT::VecOps::RVec<maxe_HemisParticleInfo> get_maxe_RP_HemisInfo(ROOT::VecOps::R
   ROOT::VecOps::RVec<maxe_HemisParticleInfo> result {RP_charged};
   return result;
 }
+
+// get max momentum charged particle and its info
+ROOT::VecOps::RVec<maxp_HemisParticleInfo> get_maxp_RP_HemisInfo(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+    ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex, ROOT::VecOps::RVec<int> should_eval) {
+  maxp_HemisParticleInfo RP_charged;
+
+  for (size_t i = 0; i < recop.size(); ++i) {
+    // Check for 0 (dont evaluate) or -1 (error)
+    if (should_eval.at(i) != 1) continue;
+    #if edm4hep_VERSION > EDM4HEP_VERSION(0, 10, 5)
+      int pid = recop.at(i).PDG;
+    #else
+      int pid = recop.at(i).type;
+    #endif
+
+    if (recop.at(i).charge !=0){
+      RP_charged.num++;
+      float momentum = sqrt(recop.at(i).momentum.x*recop.at(i).momentum.x+recop.at(i).momentum.y*recop.at(i).momentum.y+recop.at(i).momentum.z*recop.at(i).momentum.z);
+      if (momentum > RP_charged.maxp) {
+        RP_charged.maxp = momentum;
+        RP_charged.energy = recop.at(i).energy;
+        RP_charged.index = i;
+        RP_charged.PDG = pid;
+        RP_charged.charge = recop.at(i).charge;
+        RP_charged.px = recop.at(i).momentum.x;
+        RP_charged.py = recop.at(i).momentum.y;
+        RP_charged.pz = recop.at(i).momentum.z;
+      }
+    }
+  }
+
+  int RP_vtxind = get_Vertex_fromRPindex(RP_charged.index, vertex);
+
+  // -999 indicates that the corresponding vertex is not found
+  if (RP_vtxind != -999) RP_charged.fromPV = vertex.at(RP_vtxind).vertex.primary;
+
+  ROOT::VecOps::RVec<maxp_HemisParticleInfo> result {RP_charged};
+  return result;
+}
+
 
 // Get vtx d2PV thrust CosTheta for hemis assignment - similar to function in algorithms but returns 0 for PV if put shouldeval=1-isPV
 ROOT::VecOps::RVec<float> getAxisCosTheta_withcond(const ROOT::VecOps::RVec<float> & axis,

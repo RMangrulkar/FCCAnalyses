@@ -95,6 +95,9 @@ def histogram_settings():
         elif sample in cfg.sample_allocations["background"]:
             hist_settings[sample]["histtype"] = "step"
 
+        elif sample in cfg.sample_allocations["background_exclTau"]:
+            hist_settings[sample]["histtype"] = "step"
+
     return hist_settings
 
 def get_efficiencies():
@@ -108,7 +111,7 @@ def get_efficiencies():
             raise RuntimeError( f"Tried passed efficiency dictionary key {args.efficiencies} which does not exist in config" )
         return cfg.efficiencies[args.efficiencies]
 
-def get_weights(cut=None,signal_bf=1e-6,Bdsignal_bf = 1e-6):
+def get_weights(cut=None,signal_bf=1e-6,Bd_signal_bf = 1e-6):
     """
     Returns a dictionary of weights for each sample
     Assumes a placeholder branching fraction of 1e-6 for Bs2NuNu
@@ -120,7 +123,7 @@ def get_weights(cut=None,signal_bf=1e-6,Bdsignal_bf = 1e-6):
         if sample in cfg.sample_allocations['signal']:
             hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*signal_bf
         if sample in cfg.sample_allocations['Bdsignal']:
-            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bdsignal_bf
+            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bd_signal_bf
     
     
     if cut is not None:
@@ -314,7 +317,7 @@ def plot(varname,
             hist_opts['lw'] = 2
             hist_opts['color'] = 'royalblue'
             hist_opts['hatch'] = '////'
-        elif allocation=='background':
+        elif allocation=='background_exclTau':
             reds = mpl.colormaps['Reds_r']
             hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
         

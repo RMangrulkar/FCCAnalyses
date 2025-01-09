@@ -86,17 +86,20 @@ def histogram_settings():
 
     for sample in cfg.samples:
 
-        if sample in cfg.sample_allocations["signal"]:
+        if sample in cfg.sample_allocations["Bssignal"]:
             hist_settings[sample]["histtype"] = "bar"
 
         elif sample in cfg.sample_allocations["Bdsignal"]:
             hist_settings[sample]["histtype"] = "bar"
 
-        elif sample in cfg.sample_allocations["background"]:
+        elif sample in cfg.sample_allocations["full_background"]:
             hist_settings[sample]["histtype"] = "step"
 
-        elif sample in cfg.sample_allocations["background_exclTau"]:
+        elif sample in cfg.sample_allocations["hadronic_background"]:
             hist_settings[sample]["histtype"] = "step"
+
+        elif sample in cfg.sample_allocations["tau_background"]:
+            hist_settings[sample]["histtype"] = "bar"
 
     return hist_settings
 
@@ -120,7 +123,7 @@ def get_weights(cut=None,signal_bf=1e-6,Bd_signal_bf = 1e-6):
     effs = get_efficiencies()
     for sample in cfg.samples:
         hist_weights[sample] = effs[sample][0] * cfg.branching_fractions[sample][0]
-        if sample in cfg.sample_allocations['signal']:
+        if sample in cfg.sample_allocations['Bssignal']:
             hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*signal_bf
         if sample in cfg.sample_allocations['Bdsignal']:
             hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bd_signal_bf
@@ -137,6 +140,13 @@ def get_weights(cut=None,signal_bf=1e-6,Bd_signal_bf = 1e-6):
         hist_weights = {sample: hist_weights[sample]*cut_efficiency[sample+'_eff'] for sample in hist_weights}
 
     return hist_weights
+
+#Function to enable automatic xtitle with > or <
+def replace_all(s, old_char, new_char):
+    # Replace all occurrences of the old character with the new character
+    s = s.replace(old_char, new_char)
+    return s
+
 
 def plot(varname,
          var1=None,
@@ -157,8 +167,8 @@ def plot(varname,
          xtitle=None,
          range=None, 
          logy=False,
-         total=["background"], 
-         components=["signal", "background"],
+         total=["hadronic_background"], 
+         components=["Bs_signal", "hadronic_background"],
          verbose=True):
     
     """ 
@@ -212,9 +222,9 @@ def plot(varname,
     logy : bool, optional
         Use log scale for the y axis. Default: False
     total : list of str, optional
-        Provide a key of config.sample_allocations to stack. Default: ['background']
+        Provide a key of config.sample_allocations to stack. Default: ['hadronic_background']
     components : list of str, optional
-        Distinguish the samples according to cfg.sample_allocations. Default: ['signal', 'background'] - can also add Bd_signal
+        Distinguish the samples according to cfg.sample_allocations. Default: ['Bssignal', 'hadronic_background'] - can also add Bd_signal
     verbose : bool, optional
         Print out some useful stuff. Default: True
     """
@@ -307,7 +317,7 @@ def plot(varname,
         else:
             hist_opts = dict( stacked=False, histtype='step', lw=2 )
 
-        if allocation=='signal':
+        if allocation=='Bssignal':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
             hist_opts['color'] = 'cornflowerblue'
@@ -317,9 +327,28 @@ def plot(varname,
             hist_opts['lw'] = 2
             hist_opts['color'] = 'royalblue'
             hist_opts['hatch'] = '////'
-        elif allocation=='background_exclTau':
+        elif allocation=='combined_signal':
+            hist_opts['lw'] = 2
+            hist_opts['color'] = ['cornflowerblue','royalblue']
+            hist_opts['alpha'] = 0.8
+        elif allocation=='hadronic_background':
             reds = mpl.colormaps['Reds_r']
             hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
+        elif allocation=='tau_background':
+            hist_opts['histtype'] = 'step'
+            hist_opts['lw'] = 2
+            hist_opts['color'] = 'mediumvioletred'
+            #hist_opts['facecolor'] = 'darkmagenta'
+            #hist_opts['fill'] = True
+            hist_opts['hatch'] = r'\\\\'
+            #hist_opts['alpha'] = 0.6
+        elif allocation=='full_background':
+            hist_opts['lw'] = 2
+            reds = mpl.colormaps['Reds_r']
+            hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
+
+
+
         
         ax.hist( 
             x = hist_x,
@@ -354,12 +383,25 @@ def plot(varname,
     else:
         if varname=='composition':
             if composition=='sumquad':
-                ax.set_xlabel(f'$\sqrt({var1}^2+{var2}^2+{var3}^2)(cut={cut})$')
+                if cut is not None:
+                    ax.set_xlabel(f"$\sqrt({var1}^2+{var2}^2+{var3}^2)$ (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+                else:
+                    ax.set_xlabel(f"$\sqrt({var1}^2+{var2}^2+{var3}^2)$ (cut={cut}")
             if composition=='normvect':
-                ax.set_xlabel(f'Normalised {var1} (cut={cut})$')
-            else: ax.set_xlabel(f'{var1+ composition+var2}(cut={cut})')
+                if cut is not None:
+                    ax.set_xlabel(f"Normalised {var1} (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+                else:
+                    ax.set_xlabel(f"Normalised {var1} (cut={cut})")
+            else: 
+                if cut is not None:
+                    ax.set_xlabel(f"{var1+ composition+var2}(cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+                else:
+                    ax.set_xlabel(f"{var1+ composition+var2}(cut={cut}")
         else:
-            ax.set_xlabel(f'{varname} (cut={cut})')
+            if cut is not None:
+                ax.set_xlabel(f"{varname} (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+            else:
+                ax.set_xlabel(f"{varname} (cut={cut})")
 
     if density:
         ax.set_ylabel('Density')

@@ -310,7 +310,7 @@ def get_sample_expectations(efficiencies, placeholder_bf, save=None, verbose=Tru
         else:
             relative_var = np.divide(bfs_err, bfs_val)**2 + np.divide(eff_err, eff_val)**2
 
-        if key in cfg.sample_allocations['signal']:
+        if key in cfg.sample_allocations['combined_signal']:
             num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[key][0]*placeholder_bf
             
             # If multiple efficiencies (i.e. multiple cuts) passed need to convert the scalars to ndarrays with the correct dimensions

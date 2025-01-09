@@ -168,11 +168,13 @@ samples = [
 ]
 
 sample_allocations = {
-    "signal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
+    "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
     "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
-    "background_exclTau": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
-    "background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91","p8_ee_Ztautau_ecm91"],
-    "bb only":    ["p8_ee_Zbb_ecm91"],
+    "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+    "tau_background":  ["p8_ee_Ztautau_ecm91"],
+    "full_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91","p8_ee_Ztautau_ecm91"],
+    "bb_only":    ["p8_ee_Zbb_ecm91"],   
 }
 
 sample_shorthand = {

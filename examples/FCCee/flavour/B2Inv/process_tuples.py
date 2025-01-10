@@ -49,7 +49,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['Bs']
+testFile = cfg.fccana_opts['testFile']['tautau']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")

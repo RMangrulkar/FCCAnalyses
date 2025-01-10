@@ -62,17 +62,6 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - Rec_track_absz0_min_hemisEmin
   - Rec_track_absz0chi2_min_hemisEmin
 
-#maximum energy particle - wANT TO USE MAX MOMENTUM BUT KEPT THIS FOR COMPARISON
-  - EVT_hemisEmin_maxeChargedRP_e
-  - EVT_hemisEmin_maxeChargedRP_fromPV
-  #maybe helpful but not great discrimination - alos not quite sure on why get separation!
-  - EVT_hemisEmax_maxeChargedRP_e
-  - EVT_hemisEmax_maxeChargedRP_fromPV
-  
-  # to look at for now - but probably will remove and just have total p
-  - EVT_hemisEmin_maxeChargedRP_px
-  - EVT_hemisEmin_maxeChargedRP_py
-  - EVT_hemisEmin_maxeChargedRP_pz
 
 #maximum momentum particle 
   - EVT_hemisEmin_maxpChargedRP_p
@@ -87,12 +76,11 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - EVT_hemisEmin_maxpChargedRP_pz
 
 #for now have these to look at correlation - will probably remove
-  - EVT_Thrust_x
-  - EVT_Thrust_y
-  - EVT_Thrust_z
+  - EVT_unitThrust_x
+  - EVT_unitThrust_y
+  - EVT_unitThrust_z 
 
 #Variables from old BDT that look helpful
-    
   - Rec_vtx_ntracks_max_hemisEmin
   - Rec_vtx_ntracks_max_hemisEmax
 
@@ -114,6 +102,14 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - EVT_Thrust_deltaE # if this is still high suggests possibly better to just combine BDTs
   - EVT_hemisEmin_Emiss
   - EVT_e 
+
+  #keep in to check correlations - again probably don't want all of them
+  - Rec_thrustCosTheta_min_hemisEmin
+  - Rec_thrustCosTheta_max_hemisEmin
+  - Rec_thrustCosTheta_ave_hemisEmin  
+  - Rec_thrustCosTheta_min_hemisEmax
+  - Rec_thrustCosTheta_max_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
 
 ############################################### Variables helpful for non-bb bkgs
 # keep nSV as correclated with this for now
@@ -144,6 +140,15 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - Rec_track_absd0chi2_min_hemisEmax
   - Rec_track_absd0_min_hemisEmax
   - Rec_track_absz0_min_hemisEmax
+
+############################Other variables that are helpful for Ztautau bkg (commented out ones already included)
+   #- Rec_vtx_ntracks_max_hemisEmax
+   #- EVT_hemisEmax_nDV
+  - Rec_PV_ntracks
+   #- PV_Rec_vtx_m
+  - Rec_track_n
+   #- EVT_sum_Rec_vtx_ntracks_exclPV
+
 
 ################################################################
 # STAGE2 (== STAGE1 + the BDT scores)

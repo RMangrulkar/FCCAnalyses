@@ -149,8 +149,8 @@ poststage2_opts = {
 #BSC taken from https://github.com/HEP-FCC/FCCeePhysicsPerformance/blob/master/General/README.md#generating-events-under-realistic-fcc-ee-environment-conditions and agreement checked with MC samples
 #nb. if spring2021 values used for winter2023, BSC is too tight --> error and slow fitting: `VertexFit::RegInv: null determinant for N = 2`
 BSC_opts = {
-    "winter2023": [5.96,2.38e-2,3.97e3], # vertex sigma [x,y,z] in micrometers
-    "spring2021": [4.5,2.0e-2,3.0e3],
+    "winter2023": [5.96,23.8e-3,0.397e3], # vertex sigma [x,y,z] in micrometers
+    "spring2021": [4.5,20e-3,0.3e3],
 }
 
 

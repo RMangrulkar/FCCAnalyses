@@ -39,11 +39,11 @@ processList = {
     "stage2_training": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.4, "chunks": 10}, #{"fraction": 0.5, "chunks": 10},
         "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.4, "chunks": 10},#{"fraction": 0.5, "chunks": 10},
+        "p8_ee_Ztautau_ecm91": {"fraction": 1, "chunks": 120},
         "p8_ee_Zbb_ecm91": {"fraction": 0.4, "chunks": 100},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zcc_ecm91": {"fraction": 0.4, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zss_ecm91": {"fraction": 0.3, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 500}, #{"fraction": 0.2, "chunks": 200},
-        "p8_ee_Ztautau_ecm91": {"fraction": 1, "chunks": 120},
     },
     "stage2": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 100},

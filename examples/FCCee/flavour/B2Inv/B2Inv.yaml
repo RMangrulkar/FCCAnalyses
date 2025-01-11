@@ -103,6 +103,12 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - EVT_hemisEmin_Emiss
   - EVT_e 
 
+  #Add to look for correlation ie. whether just Z not quite at rest or actual signal
+  - EVT_sum_Rec_px
+  - EVT_sum_Rec_py
+  - EVT_sum_Rec_pz
+  - EVT_p
+  
   #keep in to check correlations - again probably don't want all of them
   - Rec_thrustCosTheta_min_hemisEmin
   - Rec_thrustCosTheta_max_hemisEmin

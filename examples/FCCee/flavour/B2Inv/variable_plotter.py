@@ -434,3 +434,73 @@ def make_plots():
 if __name__=="__main__":
 
     print( plot.__doc__ )
+
+
+
+variable_list_BDT2_options = [ 'EVT_unitThrust_x',
+ 'EVT_unitThrust_y',
+ 'EVT_unitThrust_z',
+ 'EVT_hemisEmin_maxpChargedRP_px',
+ 'EVT_hemisEmin_maxpChargedRP_py',
+ 'EVT_hemisEmin_maxpChargedRP_pz', #from here and above basically no correlation, dont think will include
+'EVT_sum_Rec_vtx_ntracks_exclPV',
+ 'EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV',
+ 'EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV',
+ 'EVT_hemisEmax_nDV', #nb. was in twice
+ 'Rec_track_absd0_max_hemisEmin',
+ 'Rec_track_absd0_ave_hemisEmin',
+ 'Rec_track_absd0chi2_max_hemisEmin',
+ 'Rec_track_absd0chi2_ave_hemisEmin',
+ 'Rec_track_absz0_max_hemisEmin',
+ 'Rec_track_absz0_ave_hemisEmin',
+ 'Rec_track_absz0chi2_max_hemisEmin',
+ 'Rec_track_absz0chi2_ave_hemisEmin',
+ 'Rec_track_absz0_min_hemisEmin',
+ 'Rec_track_absz0chi2_min_hemisEmin',
+ 'EVT_hemisEmin_maxpChargedRP_p',
+ 'EVT_hemisEmin_maxpChargedRP_fromPV',
+ 'EVT_hemisEmax_maxpChargedRP_p',
+ 'EVT_hemisEmax_maxpChargedRP_fromPV',
+ 'Rec_vtx_ntracks_max_hemisEmin',
+ 'Rec_vtx_ntracks_max_hemisEmax',
+ 'Rec_thrustCosTheta_max_hemisEmin',
+ 'Rec_thrustCosTheta_ave_hemisEmin',
+ 'Rec_thrustCosTheta_max_hemisEmax',
+ 'Rec_thrustCosTheta_ave_hemisEmax',
+ 'Rec_vtx_thrustCosTheta_max_hemisEmin', #nb. was in twice
+ 'Rec_vtx_thrustCosTheta_ave_hemisEmin', #nb. was in twice
+ 'Rec_vtx_thrustCosTheta_max_hemisEmax', #nb. was in twice
+ 'Rec_vtx_thrustCosTheta_ave_hemisEmax', #nb. was in twice
+ 'Rec_vtx_d2PV_max_hemisEmin',
+ 'EVT_Thrust_deltaE',
+ 'EVT_hemisEmin_Emiss',
+ 'EVT_e',
+ 'Rec_thrustCosTheta_min_hemisEmin',
+ 'Rec_thrustCosTheta_min_hemisEmax',
+ 'PV_Rec_vtx_m',
+ 'Rec_PV_ntracks',
+ 'Rec_track_n',
+ 'Rec_track_absd0_max_hemisEmax',
+ 'Rec_track_absd0_ave_hemisEmax',
+ 'Rec_track_absd0chi2_max_hemisEmax',
+ 'Rec_track_absd0chi2_ave_hemisEmax',
+ 'Rec_track_absz0_max_hemisEmax',
+ 'Rec_track_absz0_ave_hemisEmax',
+ 'Rec_track_absz0chi2_max_hemisEmax',
+ 'Rec_track_absz0chi2_ave_hemisEmax',
+ 'Rec_vtx_d2PV_max_hemisEmax',
+ 'Rec_vtx_d2PV_ave_hemisEmax',
+ 'Rec_vtx_d2PV_min_hemisEmax',
+ 'Rec_track_absd0_min_hemisEmin',
+ 'Rec_track_absd0chi2_min_hemisEmin',
+ 'Rec_track_absz0chi2_min_hemisEmax',
+ 'Rec_track_absd0chi2_min_hemisEmax',
+ 'Rec_track_absd0_min_hemisEmax',
+ 'Rec_track_absz0_min_hemisEmax',
+ 'EVT_sum_Rec_px',
+ 'EVT_sum_Rec_py',
+ 'EVT_sum_Rec_pz',
+ 'EVT_p',]
+
+ #can now do command line for loop : for variable in variable_list_BDT2_options: plot(variable, save=f'plots/Data_with_incorrect_BSC_Dec2024/correlation_plot_variables/{variable}.pdf',weight=True,components=['hadronic_background','Bssignal'],total=["hadronic_background"], nchunks=12,signal_bf=1e-3)
+ #Would be nice to update variable plotted so doesnt need to use command line. ie. make argpass only  https://stackoverflow.com/questions/44283780/importing-a-python-script-module-that-uses-argparse-into-another-python-script

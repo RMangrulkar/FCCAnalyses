@@ -104,3 +104,10 @@ benchmark*json
 # Graphviz graphs
 *.dot
 *.png
+examples/FCCee/flavour/B2Inv/plots/
+
+#jupyter checkpoints
+*.ipynb_checkpoints
+
+#other files
+examples/FCCee/flavour/B2Inv/st1_submission.log

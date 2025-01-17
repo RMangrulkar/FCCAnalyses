@@ -189,7 +189,7 @@ def plot(varname,
         The third variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
         If not available those that are will be listed. Default=None
     composition:str
-        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad','normvect'. For 'normvect' var1, var2, var 3 should be the x,y,z components of the depired variable where var1 is the normlaised component desired. If varname='composition'. Otherwise ignored. Default=None
+        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad','normvect','log'. For 'normvect' var1, var2, var 3 should be the x,y,z components of the depired variable where var1 is the normlaised component desired. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     Bd_signal_bf : float, optional
@@ -233,20 +233,24 @@ def plot(varname,
             raise RuntimeError( f"Cannot have both density and weight True. Please change one to False." )
     
     if varname == 'composition':
-        if var1 ==None or var2 ==None or composition ==None:
-            raise RuntimeError( f"For composition need to specift var1,var2 and composition inputs" )
+        if var1 ==None or composition ==None:
+            raise RuntimeError( f"For composition need to specify at least var1 and composition inputs" )
 
         if remove_outliers:
             raise RuntimeError( f"cannot have remove_outliers=True for composition" )
         else:
             if isinstance(nchunks, list):
                 values1 = { sample: as_array(sample, var1, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
-                values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
-                values3 = { sample: as_array(sample, var3, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                if var2!=None:
+                    values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                if var3!=None:
+                    values3 = { sample: as_array(sample, var3, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
             else:
                 values1 = { sample: as_array(sample, var1, cut, nchunks) for sample in cfg.samples }
-                values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in cfg.samples }
-                values3 = { sample: as_array(sample, var3, cut, nchunks) for sample in cfg.samples }
+                if var2!=None:
+                    values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in cfg.samples }
+                if var3!=None:
+                    values3 = { sample: as_array(sample, var3, cut, nchunks) for sample in cfg.samples }
        
         if composition == '+':
             values = { sample: (values1[sample] + values2[sample]) for sample in cfg.samples }
@@ -260,6 +264,8 @@ def plot(varname,
             values =  { sample: np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2) for sample in cfg.samples }
         elif composition == 'normvect':
             values =  { sample: values1[sample]/(np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2)) for sample in cfg.samples }
+        elif composition == 'log':
+            values =  {sample: [np.log(elem) if elem != 0 else 10 for elem in values1[sample]] for sample in cfg.samples}#{sample: np.log(values1[sample])for sample in cfg.samples} #if values1[sample] != 0 else 0 for sample in cfg.samples}
         
         else:
             raise RuntimeError( f"No such composition {composition}" )
@@ -346,6 +352,15 @@ def plot(varname,
             hist_opts['lw'] = 2
             reds = mpl.colormaps['Reds_r']
             hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
+        elif allocation=='bb_only':
+            hist_opts['histtype'] = 'step'
+            hist_opts['lw'] = 2
+            reds = mpl.colormaps['Reds_r']
+            hist_opts['alpha'] = 0.6
+            hist_opts['color'] = reds(0.25)
+            hist_opts['hatch'] = r'\\\\'
+            hist_opts['fill'] = False
+
 
 
 
@@ -392,6 +407,11 @@ def plot(varname,
                     ax.set_xlabel(f"Normalised {var1} (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
                 else:
                     ax.set_xlabel(f"Normalised {var1} (cut={cut})")
+            if composition=='log':
+                if cut is not None:
+                    ax.set_xlabel(f" ln({var1}) (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+                else:
+                    ax.set_xlabel(f"ln({var1}) (cut={cut})")
             else: 
                 if cut is not None:
                     ax.set_xlabel(f"{var1+ composition+var2}(cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")

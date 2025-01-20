@@ -350,30 +350,6 @@ class RDFanalysis():
             .Define("Rec_track_absz0chi2_max_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(1)")
             .Define("Rec_track_absz0chi2_ave_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(2)")
 
-
-            #############################################
-            ##     for max e charged RP vars           ##
-            #############################################
-
-            .Define("EVT_hemisEmin_maxeChargedRPInfo",    "myUtils::get_maxe_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmin)")  # INTERMEDIATE
-            .Define("EVT_hemisEmax_maxeChargedRPInfo",    "myUtils::get_maxe_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmax)")  # INTERMEDIATE
-            
-            .Define("EVT_hemisEmin_maxeChargedRP_e",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).maxE")
-            .Define("EVT_hemisEmin_maxeChargedRP_PDG",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).PDG")
-            .Define("EVT_hemisEmin_maxeChargedRP_q",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).charge")
-            .Define("EVT_hemisEmin_maxeChargedRP_px",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).px")
-            .Define("EVT_hemisEmin_maxeChargedRP_py",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).py")
-            .Define("EVT_hemisEmin_maxeChargedRP_pz",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).pz")
-            .Define("EVT_hemisEmin_maxeChargedRP_fromPV",             "(EVT_hemisEmin_maxeChargedRPInfo.at(0)).fromPV")
-            
-            .Define("EVT_hemisEmax_maxeChargedRP_e",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).maxE")
-            .Define("EVT_hemisEmax_maxeChargedRP_PDG",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).PDG")
-            .Define("EVT_hemisEmax_maxeChargedRP_q",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).charge")
-            .Define("EVT_hemisEmax_maxeChargedRP_px",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).px")
-            .Define("EVT_hemisEmax_maxeChargedRP_py",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).py")
-            .Define("EVT_hemisEmax_maxeChargedRP_pz",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).pz")
-            .Define("EVT_hemisEmax_maxeChargedRP_fromPV",             "(EVT_hemisEmax_maxeChargedRPInfo.at(0)).fromPV")
-
             #############################################
             ##     for max P charged RP vars           ##
             #############################################

@@ -231,22 +231,6 @@ stage2-vars:
   - Rec_track_absz0chi2_ave_hemisEmax
 
 
-#max e charge RP variables
-  - EVT_hemisEmin_maxeChargedRP_e
-  - EVT_hemisEmin_maxeChargedRP_PDG
-  - EVT_hemisEmin_maxeChargedRP_q
-  - EVT_hemisEmin_maxeChargedRP_px
-  - EVT_hemisEmin_maxeChargedRP_py
-  - EVT_hemisEmin_maxeChargedRP_pz
-  - EVT_hemisEmin_maxeChargedRP_fromPV
-  - EVT_hemisEmax_maxeChargedRP_e
-  - EVT_hemisEmax_maxeChargedRP_PDG
-  - EVT_hemisEmax_maxeChargedRP_q
-  - EVT_hemisEmax_maxeChargedRP_px
-  - EVT_hemisEmax_maxeChargedRP_py
-  - EVT_hemisEmax_maxeChargedRP_pz
-  - EVT_hemisEmax_maxeChargedRP_fromPV
-
 #max p charge RP variables
   - EVT_hemisEmin_maxpChargedRP_p
   - EVT_hemisEmin_maxpChargedRP_e

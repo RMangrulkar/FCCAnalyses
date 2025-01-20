@@ -5,12 +5,18 @@
 import os
 
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
-FCCAnalysesPath = "/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
+FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
-SavedOutputsPath = "/r02/lhcb/ejnw2/FCC/outputs"
+SavedOutputsPath = "" #I'm not sure this is used anywhere!
 # RUNNING MODE
-run_mode_choices = [ 'stage1_training', 'stage2_training', 'stage2' ,'tautest']
-run_mode = 'stage2_training'
+run_mode_choices = ['no_selection','prelim_cuts'] #when add run mode, now need to add to processList, fccana_opts
+
+#BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
+#BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
+#BDTmE - BDT to look for missing energy events in events that pass BDTl
+
+
+run_mode = 'prelim_cuts'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -21,54 +27,39 @@ if run_mode not in run_mode_choices:
 # processList to pass to `fccanalysis run`
 processList = {
     # Size of winter2023 samples in /eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/:
-    # p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu == 13G
-    # p8_ee_Zbb_ecm91                == 3.3T
-    # p8_ee_Zcc_ecm91                == 3.5T
-    # p8_ee_Zss_ecm91                == 3.3T
-    # p8_ee_Zud_ecm91                == 3.3T
-    # p8_ee_Ztautau_ecm91            == 140G 
-    "stage1_training": {  # ~2G or ~500k events per sample
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.28, "chunks": 5},#{"fraction": 0.3, "chunks": 10}, test: {"fraction": 0.01, "chunks": 1},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.25, "chunks": 5},#{"fraction": 0.3, "chunks": 10}, test: {"fraction": 0.01, "chunks": 1},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.015, "chunks": 5},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.015, "chunks": 8},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
-        "p8_ee_Zss_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
-        "p8_ee_Zud_ecm91": {"fraction": 0.015, "chunks": 10},#{"fraction": 0.005, "chunks": 100}, test: {"fraction": 0.00005, "chunks": 1},
-        #note no tau sample
+    # p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu == 13G (2,000,000 events)
+    # p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu ~= 13G (2,200,000 events)
+    # p8_ee_Zbb_ecm91                == 3.3T (438,738,637 events)
+    # p8_ee_Zcc_ecm91                == 3.5T (499,786,495 events)
+    # p8_ee_Zss_ecm91                == 3.3T (499,842,440 events)
+    # p8_ee_Zud_ecm91                == 3.3T (497,658,654 events)
+    # p8_ee_Ztautau_ecm91            == 140G  (100,000,000 events)
+
+
+    "no_selection": {  # 100,000 events per sample just to look at
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.05, "chunks": 1},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.000228, "chunks": 1},
     },
-    "stage2_training": {
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 0.4, "chunks": 10}, #{"fraction": 0.5, "chunks": 10},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.4, "chunks": 10},#{"fraction": 0.5, "chunks": 10},
-        "p8_ee_Ztautau_ecm91": {"fraction": 1, "chunks": 120},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.4, "chunks": 100},#{"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.4, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zss_ecm91": {"fraction": 0.3, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 500}, #{"fraction": 0.2, "chunks": 200},
+    
+    '''NEED TO FILL IN NUMBERS HERE FROM TEST FILE RUN'''
+
+    "prelim_cuts": {  # ~2G or ~500k events per sample
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.28, "chunks": 5},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.25, "chunks": 5},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.015, "chunks": 5},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.015, "chunks": 8},
+        "p8_ee_Zss_ecm91": {"fraction": 0.015, "chunks": 10},
+        "p8_ee_Zud_ecm91": {"fraction": 0.015, "chunks": 10},
+        #note no tau sample as not training hadronic BDTs on Ztautau
     },
-    "stage2": {
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 100},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1, "chunks": 100},
-        "p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zcc_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zss_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zee_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zmumu_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Ztautau_ecm91": {"fraction": 1, "chunks": 500}
-    },
-    "tautest": {
-        "p8_ee_Ztautau_ecm91": {"fraction": 0.0004, "chunks": 1}
-    },
+
 }
 
 # Default options to pass to `fccanalysis run`
 fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
-        "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
-        "stage2_training": os.path.join(FCCAnalysesPath, "outputs/stage2_training/"),  # By default stage2 trained on output of stage1
-        "stage2":          os.path.join(FCCAnalysesPath, "outputs/stage2/"),
-        "tautest":          os.path.join(FCCAnalysesPath, "outputs/tautest/"),
+        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts/"),
     },
     "testFile": {
         "Bs": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/events_026683563.root",
@@ -85,17 +76,13 @@ fccana_opts = {
     "batchQueue":     "workday",
     "compGroup":      "group_u_FCC.local_gen",
     "yamlPath":       os.path.join(FCCAnalysesPath, "B2Inv.yaml"),  # Path to the YAML file containing feature names
-    "outBranchList0": "stage0-vars",  # key in the yaml file that gives stage0 branches
-    "outBranchList1": "stage1-vars",  # ---- " ---- stage1 branches
-    "outBranchList2": "stage2-vars",  # ---- " ---- stage2 branches
     "outputBranches": {
-        "stage1_training": "stage1-vars",
-        "stage2_training": "stage2-vars",
-        "tautest": "stage2-vars",  
-        "stage2": "check-on-these-variables",
+        "no_selection":"full_vars",
+        "prelim_cuts": "full_vars",
     },
 }
 
+''' to keep as example
 # TMVA options
 bdt1_opts = {
     "training":           False,                  # True == stage1 does not use BDT1
@@ -109,42 +96,7 @@ bdt1_opts = {
     "efficiencyKey":      "presel",              # efficiencies used to calculate sample weights
     "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdt1out/best_params_bdt1.yaml"),
 }
-
-# BDT2 does not use BDT1 as a feature
-bdt2_opts = {
-    "training":           True,
-    "inputPath":          fccana_opts['outputDir']['stage2_training'],
-    "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdt2out/"),
-    "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdt2out/bdt2.json"),
-    "mvaPath":            os.path.join(FCCAnalysesPath, "outputs/bdt2out/tmva2.root"),
-    "mvaRBDTName":        "bdt",
-    "mvaCut":             0.2,
-    "mvaCut1":            0.5,
-    "mvaCut2":            0.5,
-    "mvaBranchList":      "bdt2-training-vars",
-    "efficiencyKey":      "presel+bdt1>0.2",     # Efficiency key to use to calculate weights
-    "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdt2out/best_params_bdt2.yaml"),
-}
-
-# bdtComb is essentially BDT2 which also uses BDT1 score as a feature
-bdtComb_opts = {
-    "training":           True,
-    "inputPath":          fccana_opts['outputDir']['stage2_training'],
-    "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdtCombout/"),
-    "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdtCombout/bdtComb.json"),
-    "mvaPath":            os.path.join(FCCAnalysesPath, "outputs/bdtCombout/tmvaComb.root"),
-    "mvaRBDTName":        "bdt",
-    "mvaCut":             0.2,
-    "mvaBranchList":      "bdtComb-training-vars",
-    "efficiencyKey":      "presel+bdt1>0.2",
-    "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdtCombout/best_params_bdtComb.yaml"),
-}
-
-# Options for post stage2 analysis (efficiency maps, maxrooimising FOM, final limit on bf etc)
-poststage2_opts = {
-    "inputPath":  fccana_opts['outputDir']['stage2'],
-    "outputPath": os.path.join(FCCAnalysesPath, "outputs/post_stage2"),
-}
+'''
 
 #BSC taken from https://github.com/HEP-FCC/FCCeePhysicsPerformance/blob/master/General/README.md#generating-events-under-realistic-fcc-ee-environment-conditions and agreement checked with MC samples
 #nb. if spring2021 values used for winter2023, BSC is too tight --> error and slow fitting: `VertexFit::RegInv: null determinant for N = 2`
@@ -174,7 +126,8 @@ sample_allocations = {
     "hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
     "tau_background":  ["p8_ee_Ztautau_ecm91"],
     "full_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91","p8_ee_Ztautau_ecm91"],
-    "bb_only":    ["p8_ee_Zbb_ecm91"],   
+    "bb_only":    ["p8_ee_Zbb_ecm91"],
+    "light_background": ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"], 
 }
 
 sample_shorthand = {
@@ -233,38 +186,3 @@ mass_Z = 91.188  # Ecm used in the winter2023 samples
 EVT_hemisEmin_e_withpresel_min = 0.5*mass_Z - 40
 EVT_hemisEmin_e_withpresel_max = 0.5*mass_Z
 
-####### I don't believe this section is used - to check #########
-efficiencies = {
-    "unity": {
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1,
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1,
-        "p8_ee_Zbb_ecm91": 1,
-        "p8_ee_Zcc_ecm91": 1,
-        "p8_ee_Zss_ecm91": 1,
-        "p8_ee_Zud_ecm91": 1,
-        "p8_ee_Ztautau_ecm91":1,
-    },
-    "presel": {
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.9315, 0.0003),
-    # no Bd yet
-        "p8_ee_Zbb_ecm91": (0.08440, 0.00013),
-        "p8_ee_Zcc_ecm91": (0.08470, 0.00012),
-        "p8_ee_Zss_ecm91": (0.1144,   0.0001),
-        "p8_ee_Zud_ecm91": (0.08720, 0.00013),
-    # no tau tau yet
-    },
-    "presel+bdt1>0.2": {
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.8851, 0.0002),
-    #no bd here
-        "p8_ee_Zbb_ecm91": (0.008701, 0.000006),
-        "p8_ee_Zcc_ecm91": (0.005605, 0.000005),
-        "p8_ee_Zss_ecm91": (0.007871, 0.000006),
-        "p8_ee_Zud_ecm91": (0.002103, 0.000003),
-    #no tau tau either yet
-    },
-}
-
-wp1_cuts = {
-    "EVT_MVA1":0.994,
-    "EVT_MVA2":0.95,
-                  }

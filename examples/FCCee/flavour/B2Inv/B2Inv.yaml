@@ -1,4 +1,27 @@
 ---
+#full list of variables which could be helpful in either BDT, this will be narrowed down further but allows a full investigation
+full_vars:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################################################################################
+#This is all old - to remove at some point!
+######################################################################################################################################
 ###############
 # BDT
 ###############
@@ -47,7 +70,7 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV
   - EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV
 # keep nSV as correclated with this for now
-  - EVT_hemisEmax_nDV
+  - EVT_hemisEmin_nDV
 
 #IP_like - plan to look at importances and remove some of these
   - Rec_track_absd0_max_hemisEmin
@@ -94,6 +117,10 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - Rec_vtx_thrustCosTheta_ave_hemisEmin
   - Rec_vtx_thrustCosTheta_max_hemisEmax
   - Rec_vtx_thrustCosTheta_ave_hemisEmax
+    
+  #keep in to check correlations - again probably don't want all of them
+  - Rec_thrustCosTheta_min_hemisEmin
+  - Rec_thrustCosTheta_min_hemisEmax
   
   #a lot of overlap with nDV in min hemis
   - Rec_vtx_d2PV_max_hemisEmin
@@ -108,14 +135,6 @@ bdt2-training-vars: #probably dont want BDT score in here as going to cut on bot
   - EVT_sum_Rec_py
   - EVT_sum_Rec_pz
   - EVT_p
-  
-  #keep in to check correlations - again probably don't want all of them
-  - Rec_thrustCosTheta_min_hemisEmin
-  - Rec_thrustCosTheta_max_hemisEmin
-  - Rec_thrustCosTheta_ave_hemisEmin  
-  - Rec_thrustCosTheta_min_hemisEmax
-  - Rec_thrustCosTheta_max_hemisEmax
-  - Rec_thrustCosTheta_ave_hemisEmax
 
 ############################################### Variables helpful for non-bb bkgs
 # keep nSV as correclated with this for now

@@ -2,16 +2,22 @@
 #
 # Use this file to process B -> inv tuples
 # Runs in a few different configurations
-#   - stage1_training 
-#           produce ntuples to train BDT1
-#           these have pre-selection cuts on
-#           min hemis E and nCharged
-#   - stage2_training: 
-#           produce ntuples to train BDT2
-#           also have a loose cut on BDT1
-#   - stage2:          
-#           produce final tuples with both BDTs
-#           and some loose cuts
+#   -no_selection:
+#       Processes small test file with no cuts for bb bkg and signal
+#
+#   -prelim_cuts:
+#       Produces ntuples to train 1st stage BDTs (BDTh and BDTl)
+#       Includes all variables that I believe might be helpful for selection 
+#       Applies preliminary cuts:
+#               -"EVT_hasPV==1"                 #EVT must have a PV
+#               - "EVT_hemisEmin_e < 40"       # Energy on the signal side must be < 40 GeV
+#               - "EVT_hemisEmin_nCharged > 0"  # Signal side must have at least one charged reco particle
+#               - "EVT_hemisEmin_nLept == 0"    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
+#       
+#
+#BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
+#BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
+#BDTmE - BDT to look for missing energy events in events that pass BDTl
 #
 ####################################
 
@@ -20,7 +26,7 @@ import sys
 
 # Config and yaml file must be in this directory by default
 # Absolute path must be supplied for the script to work in batch mode
-configPath = '/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv'
+configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'
 sys.path.append(os.path.abspath(configPath))
 
 
@@ -106,13 +112,6 @@ class RDFanalysis():
             # now update reco momentum based on the rec vertex position
             .Define("RecoParticlesPIDAtVertex",  "myUtils::get_RP_atVertex(RecoParticlesPID, Rec_VertexObject)")
 
-
-            #############################################
-            ##         Filter events with no PV        ##
-            #############################################
-            .Define("EVT_hasPV",                "myUtils::hasPV(Rec_VertexObject)")
-            .Filter("EVT_hasPV==1")
-            
             #############################################
             ##         Define vertex variables         ##
             #############################################
@@ -244,14 +243,6 @@ class RDFanalysis():
             .Define("EVT_EmaxPartInfo",    "myUtils::get_RP_HemisInfo(RecoParticlesPIDAtVertex, Rec_VertexObject, Rec_in_hemisEmax)")
             .Define("EVT_hemisEmin_nLept", "(EVT_EminPartInfo.at(0)).num")
             
-            #############################################
-            ##                  Filters                ##
-            #############################################
-            .Filter("EVT_hemisEmin_e < 40")        # Energy on the signal side must be < 40 GeV
-            .Filter("EVT_hemisEmin_nCharged > 0")  # Signal side must have at least one charged reco particle
-            .Filter("EVT_hemisEmin_nLept == 0")    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
-            .Filter("ROOT::VecOps::Any(Rec_vtx_isPV > 0)")  # Remove events that fail to reconstruct a PV
-
             #################################################
             ## Ella extra variables to add for S2 Training ##
             #################################################
@@ -429,12 +420,6 @@ class RDFanalysis():
             ## others of Ritwiks S1 variables                       ###
             ###########################################################
 
-            #############################################
-            ##  Tau -> 3 pi vertex on the signal side  ##
-            #############################################
-            .Define("Rec_vtx_ntracks_int",   "myUtils::get_Vertex_ntracks(Rec_VertexObject)")
-            .Define("EVT_hemisEmin_containsTau23Pi",   "myUtils::get_hemis_containstau23pi(Rec_in_hemisEmin, Rec_true_PDG, Rec_true_M1, Rec_indvtx, Rec_vtx_ntracks_int)")
-
             ###########################
             ##  thrustcostheta stats ##
             ###########################
@@ -491,14 +476,40 @@ class RDFanalysis():
             .Define("Rec_vtx_thrustCosTheta_min_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(0)")
             .Define("Rec_vtx_thrustCosTheta_max_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(1)")
             .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
+        
+        )
 
+        # If producing raw_tuples we are done
+        if cfg.run_mode == 'no_selection':
+            return df2 
+
+
+        #Add prelim cuts if running in this mode    
+        df3 = (
+            df2
+            #############################################
+            ##         Filter events with no PV        ##
+            #############################################
+            .Define("EVT_hasPV",                "myUtils::hasPV(Rec_VertexObject)")
+            .Filter("EVT_hasPV==1")
+
+            #############################################
+            ##                  Filters                ##
+            #############################################
+            .Filter("EVT_hemisEmin_e < 40")        # Energy on the signal side must be < 40 GeV
+            .Filter("EVT_hemisEmin_nCharged > 0")  # Signal side must have at least one charged reco particle
+            .Filter("EVT_hemisEmin_nLept == 0")    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
+            #.Filter("ROOT::VecOps::Any(Rec_vtx_isPV > 0)")  # Remove events that fail to reconstruct a PV - I domt think this is needed due to above filter
 
         )
 
-        # If producing files for stage1 training then we are done
-        if cfg.run_mode == 'stage1_training':
-            return df2            
+        # If producing files for training BDTh/l then we are done
+        if cfg.run_mode == 'prelim_cuts':
+            return df3            
         
+        ##########################################################################################
+        #This section needs changing once trained BDTl/h
+        ##########################################################################################
         # Otherwise we evaluate the Stage 1 BDT
         else:
             # Read list of feature names used in the BDT from the config YAML file

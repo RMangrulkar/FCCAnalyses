@@ -2,7 +2,7 @@ import ROOT
 import os
 import sys
 
-configPath = '/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv'
+configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'
 sys.path.append(os.path.abspath(configPath))
 import config as cfg
 
@@ -68,7 +68,9 @@ def merge_root_files(input_folder_path, output_file, tree_name='events', input_f
         print('Error: Incorrect number of events in Ttree!!')
 
 
-
+####################################################################################################################
+##End section to change if want to use on current files
+####################################################################################################################
 '''
 ### Test on data really dont care about...
 data_folder_path = '/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/stage2_training_old_and_incorrectBSC/'

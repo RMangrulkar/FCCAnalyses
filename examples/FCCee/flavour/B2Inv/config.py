@@ -7,7 +7,7 @@ import os
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
 FCCAnalysesPath = "/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
-SavedOutputsPath = "/r02/lhcb/ejnw2/FCC/outputs"
+SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs"
 # RUNNING MODE
 run_mode_choices = [ 'stage1_training', 'stage2_training', 'stage2' ,'tautest']
 run_mode = 'stage2_training'
@@ -43,7 +43,7 @@ processList = {
         "p8_ee_Zbb_ecm91": {"fraction": 0.4, "chunks": 100},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zcc_ecm91": {"fraction": 0.4, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
         "p8_ee_Zss_ecm91": {"fraction": 0.3, "chunks": 200},#{"fraction": 0.2, "chunks": 200},
-        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 500}, #{"fraction": 0.2, "chunks": 200},
+        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 600}, #{"fraction": 0.2, "chunks": 200},
     },
     "stage2": {
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": {"fraction": 1, "chunks": 100},

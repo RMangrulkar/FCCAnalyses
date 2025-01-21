@@ -55,7 +55,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['bb']
+testFile = cfg.fccana_opts['testFile']['Bs']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -82,7 +82,25 @@ class RDFanalysis():
             .Alias("MCRecoAssociationsGen", "MCRecoAssociations#1.index")  # points to Particle
             .Alias("ParticleParents",       "Particle#0.index")            # gen particle parents
             .Alias("ParticleChildren",      "Particle#1.index")            # gen particle children
+            
 
+            ##################################################
+            ## MC variavles to help with understanding event##
+            ##################################################
+            # Pythia8 generatorStatus
+            # 21 - incoming particles of hardest process (e+ e- beams)
+            # 22 - intermediate particles of hardest process (Z)
+            # 23 - outgoing particles of hardest process (quark pair produced from Z)
+            #  1 - final-state particles
+            .Define("MC_ee",          "MCParticle::sel_genStatus(21)(Particle)")   # INTERMEDIATE
+            .Define("MC_Z",           "MCParticle::sel_genStatus(22)(Particle)")   # INTERMEDIATE
+            .Define("MC_qq",          "MCParticle::sel_genStatus(23)(Particle)")   # INTERMEDIATE
+            .Define("MCem_p",         "(MCParticle::get_p(MC_ee)).at(0)")
+            .Define("MCep_p",         "(MCParticle::get_p(MC_ee)).at(1)")
+            .Define("MCZ_p",          "(MCParticle::get_p(MC_Z)).at(0)")
+            .Define("MCq1_p",         "(MCParticle::get_p(MC_qq)).at(0)")
+            .Define("MCq1_pz",        "(MCParticle::get_pz(MC_qq)).at(0)")
+            
             #############################################
             ##         Perform vertex fitting          ##
             #############################################
@@ -249,9 +267,7 @@ class RDFanalysis():
             .Define("PV_Rec_vtx_m_vec", "myUtils::filter_vtx_variable_onisPV(Rec_vtx_isPV, Rec_vtx_m)") #intermediate
             .Define("PV_Rec_vtx_m","PV_Rec_vtx_m_vec.at(0)") 
             
-            #global to event sum ntracks over non-PV vertices
-            .Define("EVT_sum_Rec_vtx_ntracks_exclPV_vec", "myUtils::sum_RVec_withcond(1-(Rec_vtx_isPV), Rec_vtx_ntracks)") #Intermediate
-            
+
             #Equivalent for different hemispheres
             # Vertex relations to thrust
             .Define("Rec_vtx_thrustCosTheta",  "myUtils::get_Vertex_thrusthemis_angle(Rec_VertexObject, RecoParticlesPIDAtVertex, EVT_ThrustInfo)")
@@ -264,7 +280,7 @@ class RDFanalysis():
             .Define("EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV_vec", "myUtils::sum_RVec_with2cond(1-(Rec_vtx_isPV), Rec_vtx_in_hemisEmax, Rec_vtx_ntracks)") #Intermediate
             
             #Overall three sum_Rec_vtx_exclPV vars
-            .Define("EVT_sum_Rec_vtx_ntracks_exclPV","EVT_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
+            .Define("EVT_sum_Rec_vtx_ntracks_exclPV", "myUtils::sum_RVec_withcond(1-(Rec_vtx_isPV), Rec_vtx_ntracks)")
             .Define("EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV", "EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
             .Define("EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV", "EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV_vec.at(0)") 
             
@@ -454,6 +470,7 @@ class RDFanalysis():
             .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
         
         )
+
 
         # If producing raw_tuples we are done
         if cfg.run_mode == 'no_selection':

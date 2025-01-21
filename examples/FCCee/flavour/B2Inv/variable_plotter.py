@@ -485,14 +485,14 @@ variable_list_BDT2_options = [ 'EVT_unitThrust_x',
  'EVT_hemisEmax_maxpChargedRP_fromPV',
  'Rec_vtx_ntracks_max_hemisEmin',
  'Rec_vtx_ntracks_max_hemisEmax',
- 'Rec_thrustCosTheta_max_hemisEmin',
- 'Rec_thrustCosTheta_ave_hemisEmin',
- 'Rec_thrustCosTheta_max_hemisEmax',
- 'Rec_thrustCosTheta_ave_hemisEmax',
- 'Rec_vtx_thrustCosTheta_max_hemisEmin', #nb. was in twice
- 'Rec_vtx_thrustCosTheta_ave_hemisEmin', #nb. was in twice
- 'Rec_vtx_thrustCosTheta_max_hemisEmax', #nb. was in twice
- 'Rec_vtx_thrustCosTheta_ave_hemisEmax', #nb. was in twice
+ 'Rec_thrustCosTheta_max_hemisEmin', #nb. was in twice
+ 'Rec_thrustCosTheta_ave_hemisEmin',#nb. was in twice
+ 'Rec_thrustCosTheta_max_hemisEmax',#nb. was in twice
+ 'Rec_thrustCosTheta_ave_hemisEmax',#nb. was in twice
+ 'Rec_vtx_thrustCosTheta_max_hemisEmin', 
+ 'Rec_vtx_thrustCosTheta_ave_hemisEmin', 
+ 'Rec_vtx_thrustCosTheta_max_hemisEmax', 
+ 'Rec_vtx_thrustCosTheta_ave_hemisEmax', 
  'Rec_vtx_d2PV_max_hemisEmin',
  'EVT_Thrust_deltaE',
  'EVT_hemisEmin_Emiss',

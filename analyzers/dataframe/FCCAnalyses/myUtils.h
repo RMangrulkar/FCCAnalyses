@@ -189,7 +189,7 @@ namespace myUtils{
   ROOT::VecOps::RVec<float> filter_vtx_variable_onisPV(ROOT::VecOps::RVec<int> isPV, ROOT::VecOps::RVec<float> var);
 
   // Define function to sum entries within an event if should_eval is true
-  ROOT::VecOps::RVec<float> sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values); 
+  float sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values); 
 
   // function to sum RVec components with a condition
   ROOT::VecOps::RVec<float> sum_RVec_with2cond(ROOT::VecOps::RVec<int> should_eval1, ROOT::VecOps::RVec<int> should_eval2, ROOT::VecOps::RVec<float> values);

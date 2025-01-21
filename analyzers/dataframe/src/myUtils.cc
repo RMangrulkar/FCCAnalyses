@@ -405,7 +405,7 @@ float norm_RVec_x(float x, float y,float z) {
 
 
 // function to sum RVec components with a condition
-ROOT::VecOps::RVec<float> sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values) {
+float sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval, ROOT::VecOps::RVec<float> values) {
   ROOT::VecOps::RVec<float> values_to_eval;
   for (size_t i = 0; i < values.size(); ++i) {
     if (should_eval.at(i) == 1) values_to_eval.push_back(values.at(i));
@@ -413,10 +413,12 @@ ROOT::VecOps::RVec<float> sum_RVec_withcond(ROOT::VecOps::RVec<int> should_eval,
 
   auto sum = ROOT::VecOps::Sum(values_to_eval);
 
-  ROOT::VecOps::RVec<float> result; 
-  result.push_back(float(sum));
-  return result;
+  return float(sum);
 }
+  //ROOT::VecOps::RVec<float> result; 
+  //result.push_back(float(sum));
+  //return result;
+
 
 // function to sum RVec components with two conditions
 ROOT::VecOps::RVec<float> sum_RVec_with2cond(ROOT::VecOps::RVec<int> should_eval1, ROOT::VecOps::RVec<int> should_eval2, ROOT::VecOps::RVec<float> values) {

@@ -41,11 +41,10 @@ processList = {
         "p8_ee_Zbb_ecm91": {"fraction": 0.000228, "chunks": 1},
     },
     
-    '''NEED TO FILL IN NUMBERS HERE FROM TEST FILE RUN'''
 
     "prelim_cuts": {  # ~2G or ~500k events per sample
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.28, "chunks": 5},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.25, "chunks": 5},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.28, "chunks": 5},
         "p8_ee_Zbb_ecm91": {"fraction": 0.015, "chunks": 5},
         "p8_ee_Zcc_ecm91": {"fraction": 0.015, "chunks": 8},
         "p8_ee_Zss_ecm91": {"fraction": 0.015, "chunks": 10},
@@ -59,6 +58,7 @@ processList = {
 fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
+        "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts/"),
     },
     "testFile": {

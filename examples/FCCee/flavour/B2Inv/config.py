@@ -116,7 +116,7 @@ samples = [
     "p8_ee_Zcc_ecm91",
     "p8_ee_Zss_ecm91",
     "p8_ee_Zud_ecm91",
-    "p8_ee_Ztautau_ecm91",
+    #"p8_ee_Ztautau_ecm91",
 ]
 
 sample_allocations = {

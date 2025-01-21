@@ -16,7 +16,7 @@ import efficiency_finder
 # I'd like to have an argument please
 from argparse import ArgumentParser
 parser = ArgumentParser(description="Interactively plots features from a specified inputpath")
-parser.add_argument("-i","--inputpath", default=f"{cfg.fccana_opts['outputDir']['stage2']}", help="Path to look for files in, default is the stage2 directory in config.py")
+parser.add_argument("-i","--inputpath", default=f"{cfg.fccana_opts['outputDir']['prelim_cuts']}", help="Path to look for files in, default is the stage2 directory in config.py")
 # MARK FOR DELETION
 # parser.add_argument("-e","--efficiencies", default=None, help="Name of efficiency dictionary key, default is None")
 args = parser.parse_args()

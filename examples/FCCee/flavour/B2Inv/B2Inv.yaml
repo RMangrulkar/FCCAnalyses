@@ -121,7 +121,7 @@ full_vars: # just taken from previous run to ensure nothing missed
   - Rec_vtx_thrustCosTheta_max_hemisEmax
   - Rec_vtx_thrustCosTheta_ave_hemisEmax
   
-###other helpful evt variable
+  ###other helpful evt variable
   # Event variables -- thrust
   - EVT_Thrust_mag
   - EVT_Thrust_x

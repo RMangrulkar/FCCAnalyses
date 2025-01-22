@@ -7,7 +7,7 @@ import os
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
 FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
-SavedOutputsPath = "" #I'm not sure this is used anywhere!
+SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
 run_mode_choices = ['no_selection','prelim_cuts'] #when add run mode, now need to add to processList, fccana_opts
 
@@ -16,7 +16,7 @@ run_mode_choices = ['no_selection','prelim_cuts'] #when add run mode, now need t
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'prelim_cuts'
+run_mode = 'no_selection'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -38,7 +38,11 @@ processList = {
 
     "no_selection": {  # 100,000 events per sample just to look at
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.05, "chunks": 1},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.000228, "chunks": 1},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.05, "chunks": 1},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.00025, "chunks": 2},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.00025, "chunks": 2},
+        "p8_ee_Zss_ecm91": {"fraction": 0.00025, "chunks": 2},
+        "p8_ee_Zud_ecm91": {"fraction": 0.00025, "chunks": 2},
     },
     
 
@@ -60,6 +64,7 @@ fccana_opts = {
     "outputDir": {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts/"),
+        "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
     },
     "testFile": {
         "Bs": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/events_026683563.root",
@@ -79,10 +84,11 @@ fccana_opts = {
     "outputBranches": {
         "no_selection":"full_vars",
         "prelim_cuts": "full_vars",
+
     },
 }
 
-''' to keep as example
+
 # TMVA options
 bdt1_opts = {
     "training":           False,                  # True == stage1 does not use BDT1
@@ -94,9 +100,9 @@ bdt1_opts = {
     "mvaCut":             0.3,
     "mvaBranchList":      "bdt1-training-vars",  # key in the yaml file pointing to the feature list
     "efficiencyKey":      "presel",              # efficiencies used to calculate sample weights
-    "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdt1out/best_params_bdt1.yaml"),
+    "optHyperParamsFile": os.path.join(FCCAnalysesPath, "bdt1out/best_params_bdt1.yaml"),
 }
-'''
+
 
 #BSC taken from https://github.com/HEP-FCC/FCCeePhysicsPerformance/blob/master/General/README.md#generating-events-under-realistic-fcc-ee-environment-conditions and agreement checked with MC samples
 #nb. if spring2021 values used for winter2023, BSC is too tight --> error and slow fitting: `VertexFit::RegInv: null determinant for N = 2`

@@ -99,7 +99,13 @@ class RDFanalysis():
             .Define("MCep_p",         "(MCParticle::get_p(MC_ee)).at(1)")
             .Define("MCZ_p",          "(MCParticle::get_p(MC_Z)).at(0)")
             .Define("MCq1_p",         "(MCParticle::get_p(MC_qq)).at(0)")
+            .Define("MCq1_px",        "(MCParticle::get_px(MC_qq)).at(0)")
+            .Define("MCq1_py",        "(MCParticle::get_py(MC_qq)).at(0)")
             .Define("MCq1_pz",        "(MCParticle::get_pz(MC_qq)).at(0)")
+            .Define("MCq2_p",         "(MCParticle::get_p(MC_qq)).at(1)")
+            .Define("MCq2_px",        "(MCParticle::get_px(MC_qq)).at(1)")
+            .Define("MCq2_py",        "(MCParticle::get_py(MC_qq)).at(1)")
+            .Define("MCq2_pz",        "(MCParticle::get_pz(MC_qq)).at(1)")
             
             #############################################
             ##         Perform vertex fitting          ##
@@ -469,6 +475,13 @@ class RDFanalysis():
             .Define("Rec_vtx_thrustCosTheta_max_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(1)")
             .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
         
+            #############################################
+            ##         Filter events with no PV        ##
+            #NEEDED even if no other cuts otherwise throws a huge strop over TypeError: could not convert argument 3, in ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager,void> > ROOT::RDF::RInterface<ROOT::Detail::RDF::RRange<ROOT::Detail::RDF::RLoopManager>,void>::Snapshot(basic_string_view<char,char_traits<char> > treename, basic_string_view<char,char_traits<char> > filename, initializer_list<string> columnList, const ROOT::RDF::RSnapshotOptions& options = ROOT::RDF::RSnapshotOptions()) 
+            # This disappears provided this cut is in place!
+            #############################################
+            .Define("EVT_hasPV",                "myUtils::hasPV(Rec_VertexObject)")
+            .Filter("EVT_hasPV==1")
         )
 
 

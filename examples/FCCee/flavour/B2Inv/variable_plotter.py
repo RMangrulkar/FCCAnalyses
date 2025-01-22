@@ -402,6 +402,11 @@ def plot(varname,
                     ax.set_xlabel(f"$\sqrt({var1}^2+{var2}^2+{var3}^2)$ (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
                 else:
                     ax.set_xlabel(f"$\sqrt({var1}^2+{var2}^2+{var3}^2)$ (cut={cut}")
+            if composition=='/':
+                if cut is not None:
+                    ax.set_xlabel(f"${var1}/{var2})$ (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+                else:
+                    ax.set_xlabel(f"${var1}/{var2})$ (cut={cut}")
             if composition=='normvect':
                 if cut is not None:
                     ax.set_xlabel(f"Normalised {var1} (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")

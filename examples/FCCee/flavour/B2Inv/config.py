@@ -16,7 +16,7 @@ run_mode_choices = ['no_selection','prelim_cuts'] #when add run mode, now need t
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'no_selection'
+run_mode = 'prelim_cuts'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 

@@ -534,6 +534,29 @@ ROOT::VecOps::RVec<float> getAxisCosTheta_withcond(const ROOT::VecOps::RVec<floa
 }
 
 
+// return log of the input value - default value for input of 0 is an input
+ROOT::VecOps::RVec<float> log_with_0_map(const ROOT::VecOps::RVec<float> input_var, float zeromap) {
+    ROOT::VecOps::RVec<float> output(input_var.size());
+    for (unsigned int i = 0; i<input_var.size(); i++)
+      if (input_var[i] != 0){
+        output[i] = std::log(input_var[i]);
+      }
+      else{output[i] = zeromap;
+      }
+    
+    return output;
+}
+
+// return log of the input value - default value for input of 0 is an input
+float fromPV_map(float input_var) {
+    if (input_var == -999){
+        return -1;
+      }
+      else{return input_var;
+      }
+}
+
+
 /**********************************
   END OF B2INV FUNCTIONS
 ***********************************/

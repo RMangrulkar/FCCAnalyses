@@ -239,6 +239,8 @@ full_vars: # just taken from previous run to ensure nothing missed
   - MCq2_py
   - MCq2_pz
 
+  #to allow application of cuts manually
+  - EVT_hemisEmin_nLept
 
 
 BDTh-vars:
@@ -261,12 +263,12 @@ BDTh-vars:
   - EVT_hemisEmin_nNeutral
   - EVT_hemisEmin_nDV
 
-  #- EVT_hemisEmax_e
-  #- EVT_hemisEmax_eCharged
-  #- EVT_hemisEmax_eNeutral
-  #- EVT_hemisEmax_n
-  #- EVT_hemisEmax_nCharged
-  #- EVT_hemisEmax_nNeutral
+  - EVT_hemisEmax_e
+  - EVT_hemisEmax_eCharged
+  - EVT_hemisEmax_eNeutral
+  - EVT_hemisEmax_n
+  - EVT_hemisEmax_nCharged
+  - EVT_hemisEmax_nNeutral
   #- EVT_hemisEmax_nDV - now in later as l-h separation
 
   # Event level vertex info
@@ -331,12 +333,12 @@ BDTh-vars:
   ###############################################
   
   #old BDT1
-  - EVT_hemisEmax_e
-  - EVT_hemisEmax_eCharged
-  - EVT_hemisEmax_eNeutral
-  - EVT_hemisEmax_n
-  - EVT_hemisEmax_nCharged
-  - EVT_hemisEmax_nNeutral
+  #- EVT_hemisEmax_e
+  #- EVT_hemisEmax_eCharged
+  #- EVT_hemisEmax_eNeutral
+  #- EVT_hemisEmax_n
+  #- EVT_hemisEmax_nCharged
+  #- EVT_hemisEmax_nNeutral
 
   # vertex mass - good for light ones
   - PV_Rec_vtx_m
@@ -376,12 +378,12 @@ BDTl-vars:
 # Make plots to check bb bb vs signal
 ###############################################
     #old BDT1
-  - EVT_hemisEmax_e
-  - EVT_hemisEmax_eCharged
-  - EVT_hemisEmax_eNeutral
-  - EVT_hemisEmax_n
-  - EVT_hemisEmax_nCharged
-  - EVT_hemisEmax_nNeutral
+  #- EVT_hemisEmax_e
+  #- EVT_hemisEmax_eCharged
+  #- EVT_hemisEmax_eNeutral
+  #- EVT_hemisEmax_n
+  #- EVT_hemisEmax_nCharged
+  #- EVT_hemisEmax_nNeutral
 
   # vertex mass - good for light ones
   - PV_Rec_vtx_m

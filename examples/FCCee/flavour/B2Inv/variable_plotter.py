@@ -166,6 +166,7 @@ def plot(varname,
          bins=50,
          xtitle=None,
          range=None, 
+         yrange=None,
          logy=False,
          total=["hadronic_background"], 
          components=["Bs_signal", "hadronic_background"],
@@ -219,6 +220,8 @@ def plot(varname,
     range : tuple or list, optional
         The lower and upper limits to use in the plot. 
         If None uses the minimum and maximum value from the samples. Default: None
+    yrange : tuple or list, optional
+        The lower and upper limits to use in the plot y axis. 
     logy : bool, optional
         Use log scale for the y axis. Default: False
     total : list of str, optional
@@ -421,7 +424,7 @@ def plot(varname,
                 if cut is not None:
                     ax.set_xlabel(f"{var1+ composition+var2}(cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
                 else:
-                    ax.set_xlabel(f"{var1+ composition+var2}(cut={cut}")
+                    ax.set_xlabel(f"{var1+ composition+var2}(cut={cut})")
         else:
             if cut is not None:
                 ax.set_xlabel(f"{varname} (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
@@ -432,6 +435,9 @@ def plot(varname,
         ax.set_ylabel('Density')
     else:
         ax.set_ylabel('Counts')
+   
+    if yrange:
+        ax.set_ylim(yrange)
     
     if logy:
         ax.set_yscale('log')

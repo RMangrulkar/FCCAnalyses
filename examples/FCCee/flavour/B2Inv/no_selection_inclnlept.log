@@ -1,0 +1,100 @@
+----> INFO: Loading analyzers from libFCCAnalyses...
+----> INFO: Loading analysis file:
+            /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/process_tuples.py
+----> INFO: Multithreading enabled. Running over 8 threads
+----> INFO: YAML file with process information successfully loaded:
+            /cvmfs/fcc.cern.ch/FCCDicts/yaml/FCCee/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/merge.yaml
+----> INFO: Reducing the input file list by fraction "0.05" of total events:
+            	- total number of events: 2,000,000
+            	- targeted number of events: 100,000
+            	- number of events in the resulting file list: 100,000
+            	- number of files after reduction: 1
+----> INFO: Number of the output files: 1
+----> INFO: Running on the batch...
+----> WARNING: [4m[1m[91mRunning on batch with only one chunk might not be optimal[0m
+----> INFO: Batch command:
+              condor_submit /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/BatchOutputs/2025-01-24_18-11-21/p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu/job_desc_p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu.cfg
+----> INFO: Submitting job(s).
+            1 job(s) submitted to cluster 7828.
+
+----> INFO: GOOD SUBMISSION
+----> INFO: YAML file with process information successfully loaded:
+            /cvmfs/fcc.cern.ch/FCCDicts/yaml/FCCee/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu/merge.yaml
+----> INFO: Reducing the input file list by fraction "0.05" of total events:
+            	- total number of events: 2,200,000
+            	- targeted number of events: 110,000
+            	- number of events in the resulting file list: 200,000
+            	- number of files after reduction: 2
+----> INFO: Number of the output files: 1
+----> INFO: Running on the batch...
+----> WARNING: [4m[1m[91mRunning on batch with only one chunk might not be optimal[0m
+----> INFO: Batch command:
+              condor_submit /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/BatchOutputs/2025-01-24_18-11-26/p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu/job_desc_p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu.cfg
+----> INFO: Submitting job(s).
+            1 job(s) submitted to cluster 7829.
+
+----> INFO: GOOD SUBMISSION
+----> INFO: YAML file with process information successfully loaded:
+            /cvmfs/fcc.cern.ch/FCCDicts/yaml/FCCee/winter2023/IDEA/p8_ee_Zbb_ecm91/merge.yaml
+----> INFO: Reducing the input file list by fraction "0.00025" of total events:
+            	- total number of events: 438,738,637
+            	- targeted number of events: 109,684
+            	- number of events in the resulting file list: 200,000
+            	- number of files after reduction: 2
+----> INFO: Number of the output files: 2
+----> INFO: Running on the batch...
+----> INFO: Batch command:
+              condor_submit /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/BatchOutputs/2025-01-24_18-11-30/p8_ee_Zbb_ecm91/job_desc_p8_ee_Zbb_ecm91.cfg
+----> INFO: Submitting job(s)..
+            2 job(s) submitted to cluster 7830.
+
+----> INFO: GOOD SUBMISSION
+----> INFO: YAML file with process information successfully loaded:
+            /cvmfs/fcc.cern.ch/FCCDicts/yaml/FCCee/winter2023/IDEA/p8_ee_Zcc_ecm91/merge.yaml
+----> INFO: Reducing the input file list by fraction "0.00025" of total events:
+            	- total number of events: 499,786,495
+            	- targeted number of events: 124,946
+            	- number of events in the resulting file list: 200,000
+            	- number of files after reduction: 2
+----> INFO: Number of the output files: 2
+----> INFO: Running on the batch...
+----> INFO: Batch command:
+              condor_submit /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/BatchOutputs/2025-01-24_18-11-33/p8_ee_Zcc_ecm91/job_desc_p8_ee_Zcc_ecm91.cfg
+----> INFO: Submitting job(s)..
+            2 job(s) submitted to cluster 7831.
+
+----> INFO: GOOD SUBMISSION
+----> INFO: YAML file with process information successfully loaded:
+            /cvmfs/fcc.cern.ch/FCCDicts/yaml/FCCee/winter2023/IDEA/p8_ee_Zss_ecm91/merge.yaml
+----> INFO: Reducing the input file list by fraction "0.00025" of total events:
+            	- total number of events: 499,842,440
+            	- targeted number of events: 124,960
+            	- number of events in the resulting file list: 212,459
+            	- number of files after reduction: 3
+----> INFO: Number of the output files: 2
+----> INFO: Running on the batch...
+----> INFO: Batch command:
+              condor_submit /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/BatchOutputs/2025-01-24_18-11-36/p8_ee_Zss_ecm91/job_desc_p8_ee_Zss_ecm91.cfg
+----> INFO: Submitting job(s)..
+            2 job(s) submitted to cluster 7832.
+
+----> INFO: GOOD SUBMISSION
+----> INFO: YAML file with process information successfully loaded:
+            /cvmfs/fcc.cern.ch/FCCDicts/yaml/FCCee/winter2023/IDEA/p8_ee_Zud_ecm91/merge.yaml
+----> INFO: Reducing the input file list by fraction "0.00025" of total events:
+            	- total number of events: 497,658,654
+            	- targeted number of events: 124,414
+            	- number of events in the resulting file list: 200,000
+            	- number of files after reduction: 2
+----> INFO: Number of the output files: 2
+----> INFO: Running on the batch...
+----> INFO: Batch command:
+              condor_submit /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/BatchOutputs/2025-01-24_18-11-40/p8_ee_Zud_ecm91/job_desc_p8_ee_Zud_ecm91.cfg
+----> INFO: Submitting job(s)..
+            2 job(s) submitted to cluster 7833.
+
+----> INFO: GOOD SUBMISSION
+----> INFO: Using config.py file from:
+               /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv
+----> INFO: Using branch names from:
+               /r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/B2Inv.yaml

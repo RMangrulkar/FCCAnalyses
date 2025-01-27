@@ -52,14 +52,15 @@ def get_efficiencies(inputtype,
                      raw=False,
                      custompath=None,
                      save=None,
-                     verbose=True):
+                     verbose=True,
+                     return_files_list=False):
     '''
     Function to print, save or return efficiencies of given samples with a given cut string.
 
     Parameters
     ----------
     inputtype: str, required
-        Choose one of `stage1_training`, `stage1`, `stage2_training` or `stage2` to use from config. To use a custom path pass `custom` with a valid `custompath`.
+        Choose one of `no_selection`, `prelim_cuts`, `stage1_training` to use from config. To use a custom path pass `custom` with a valid `custompath`.
     further_analysis: bool, optional
         If True, a dictionary of type {sample: (efficiency, error)} is returned, where sample belongs to the specified samples (or default config.samples). Default = True.
     samples: list of str, optional
@@ -80,6 +81,8 @@ def get_efficiencies(inputtype,
     shorthand: bool, optional
         Use shorthands defined in config.sample_shorthand instead of the full name from config.samples.
         ONLY RENAMES THE COLUMNS IN THE OUTPUT CSV
+    return_files_list: bool, optional
+        If true dataframe returned also includes list of files used to calculate efficiencies. Default=False
 
     Returns
     -------
@@ -88,6 +91,8 @@ def get_efficiencies(inputtype,
         Dictionary with efficiencies and their Bayesian errors for each sample.
         data[sample][0] : efficiency for sample
         data[sample][1] : Bayesian error in the efficiency
+    If  return_files_list is also True:  
+        data[sample_files] : list of files used in efficiency calculation
     '''
 
     ##############################
@@ -100,13 +105,17 @@ def get_efficiencies(inputtype,
         print(f"{30*'-'}\n")
         print("Initialising...")
 
+    #get possible values of 'inputtype' from config - just defines output directory gets files from
+    config_keys = list(cfg.fccana_opts['outputDir'].keys())
+    config_keys.append('custom')
+
     # Set inputpath
     if (inputtype == 'custom') and (custompath is None):
         raise ValueError(f"{custompath} custompath incompatible with `inputtype` == {inputtype}")
     elif (inputtype == 'custom') and not os.path.exists(custompath):
         raise ValueError(f"{custompath} invalid or does not exist")
-    elif inputtype not in ['stage1_training', 'stage1', 'stage2_training', 'stage2', 'custom']:
-        raise ValueError(f"`inputtype` must be one of ['stage1_training', 'stage1', 'stage2_training', 'stage2', 'custom']")
+    elif inputtype not in config_keys:
+        raise ValueError(f"`inputtype` must be one of {config_keys}")
 
     inputpath = cfg.fccana_opts['outputDir'][inputtype] if inputtype != 'custom' else custompath
 
@@ -245,8 +254,13 @@ def get_efficiencies(inputtype,
         print(f"\n{30*'-'}")
         print(f"Execution time = {timedelta(seconds=end-start)}")
         print(f"{30*'-'}")
-
-    if further_analysis:
+    
+    if further_analysis and return_files_list:
+        files_dict = {key + '_files': value for key, value in files.items()}
+        merged_dict = {**data, **files_dict}
+        return merged_dict
+    
+    elif further_analysis:
         return data
 
 

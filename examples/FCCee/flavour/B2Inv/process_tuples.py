@@ -10,7 +10,7 @@
 #       Includes all variables that I believe might be helpful for selection 
 #       Applies preliminary cuts:
 #               -"EVT_hasPV==1"                 #EVT must have a PV
-#               - "EVT_hemisEmin_e < 40"       # Energy on the signal side must be < 40 GeV
+#               - "EVT__e < 85"                 # Total energy must be < 85 GeV
 #               - "EVT_hemisEmin_nCharged > 0"  # Signal side must have at least one charged reco particle
 #               - "EVT_hemisEmin_nLept == 0"    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
 #       
@@ -55,7 +55,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['Bs']
+testFile = cfg.fccana_opts['testFile']['mumu']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -85,27 +85,27 @@ class RDFanalysis():
             
 
             ##################################################
-            ## MC variavles to help with understanding event##
+            ## MC variavles to help with understanding event## - nb. these cause issues for taus
             ##################################################
             # Pythia8 generatorStatus
             # 21 - incoming particles of hardest process (e+ e- beams)
             # 22 - intermediate particles of hardest process (Z)
             # 23 - outgoing particles of hardest process (quark pair produced from Z)
             #  1 - final-state particles
-            .Define("MC_ee",          "MCParticle::sel_genStatus(21)(Particle)")   # INTERMEDIATE
+            #.Define("MC_ee",          "MCParticle::sel_genStatus(21)(Particle)")   # INTERMEDIATE
             .Define("MC_Z",           "MCParticle::sel_genStatus(22)(Particle)")   # INTERMEDIATE
-            .Define("MC_qq",          "MCParticle::sel_genStatus(23)(Particle)")   # INTERMEDIATE
-            .Define("MCem_p",         "(MCParticle::get_p(MC_ee)).at(0)")
-            .Define("MCep_p",         "(MCParticle::get_p(MC_ee)).at(1)")
+            #.Define("MC_qq",          "MCParticle::sel_genStatus(23)(Particle)")   # INTERMEDIATE
+            #.Define("MCem_p",         "(MCParticle::get_p(MC_ee)).at(0)")
+            #.Define("MCep_p",         "(MCParticle::get_p(MC_ee)).at(1)")
             .Define("MCZ_p",          "(MCParticle::get_p(MC_Z)).at(0)")
-            .Define("MCq1_p",         "(MCParticle::get_p(MC_qq)).at(0)")
-            .Define("MCq1_px",        "(MCParticle::get_px(MC_qq)).at(0)")
-            .Define("MCq1_py",        "(MCParticle::get_py(MC_qq)).at(0)")
-            .Define("MCq1_pz",        "(MCParticle::get_pz(MC_qq)).at(0)")
-            .Define("MCq2_p",         "(MCParticle::get_p(MC_qq)).at(1)")
-            .Define("MCq2_px",        "(MCParticle::get_px(MC_qq)).at(1)")
-            .Define("MCq2_py",        "(MCParticle::get_py(MC_qq)).at(1)")
-            .Define("MCq2_pz",        "(MCParticle::get_pz(MC_qq)).at(1)")
+            #.Define("MCq1_p",         "(MCParticle::get_p(MC_qq)).at(0)")
+            #.Define("MCq1_px",        "(MCParticle::get_px(MC_qq)).at(0)")
+            #.Define("MCq1_py",        "(MCParticle::get_py(MC_qq)).at(0)")
+            #.Define("MCq1_pz",        "(MCParticle::get_pz(MC_qq)).at(0)")
+            #.Define("MCq2_p",         "(MCParticle::get_p(MC_qq)).at(1)")
+            #.Define("MCq2_px",        "(MCParticle::get_px(MC_qq)).at(1)")
+            #.Define("MCq2_py",        "(MCParticle::get_py(MC_qq)).at(1)")
+            #.Define("MCq2_pz",        "(MCParticle::get_pz(MC_qq)).at(1)")
             
             #############################################
             ##         Perform vertex fitting          ##
@@ -135,6 +135,14 @@ class RDFanalysis():
             .Define("RecoParticlesPID",          "myUtils::PID(ReconstructedParticles, MCRecoAssociationsRec, MCRecoAssociationsGen, Particle)")
             # now update reco momentum based on the rec vertex position
             .Define("RecoParticlesPIDAtVertex",  "myUtils::get_RP_atVertex(RecoParticlesPID, Rec_VertexObject)")
+
+            #############################################
+            ##         Filter events with no PV        ##
+            # NEEDED even if no other cuts otherwise throws a huge strop over TypeError: could not convert argument 3, in ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager,void> > ROOT::RDF::RInterface<ROOT::Detail::RDF::RRange<ROOT::Detail::RDF::RLoopManager>,void>::Snapshot(basic_string_view<char,char_traits<char> > treename, basic_string_view<char,char_traits<char> > filename, initializer_list<string> columnList, const ROOT::RDF::RSnapshotOptions& options = ROOT::RDF::RSnapshotOptions()) 
+            # This disappears provided this cut is in place!
+            #############################################
+            .Define("EVT_hasPV",                "myUtils::hasPV(Rec_VertexObject)")
+            .Filter("EVT_hasPV==1")
 
             #############################################
             ##         Define vertex variables         ##
@@ -308,6 +316,11 @@ class RDFanalysis():
             .Define("EVT_sum_Rec_px",  "EVT_hemisEmin_sum_Rec_px+EVT_hemisEmax_sum_Rec_px")
             .Define("EVT_sum_Rec_py",  "EVT_hemisEmin_sum_Rec_py+EVT_hemisEmax_sum_Rec_py")
             .Define("EVT_sum_Rec_pz",  "EVT_hemisEmin_sum_Rec_pz+EVT_hemisEmax_sum_Rec_pz")
+
+            .Define("unitEVT_sum_Rec_px",  "myUtils::norm_RVec_x(EVT_sum_Rec_px,EVT_sum_Rec_py,EVT_sum_Rec_pz)")
+            .Define("unitEVT_sum_Rec_py",  "myUtils::norm_RVec_x(EVT_sum_Rec_py,EVT_sum_Rec_px,EVT_sum_Rec_pz)")
+            .Define("unitEVT_sum_Rec_pz",  "myUtils::norm_RVec_x(EVT_sum_Rec_pz,EVT_sum_Rec_py,EVT_sum_Rec_px)")
+
             .Define("EVT_p",  "sqrt(EVT_sum_Rec_px*EVT_sum_Rec_px+EVT_sum_Rec_py*EVT_sum_Rec_py+EVT_sum_Rec_pz*EVT_sum_Rec_pz)")
 
             
@@ -372,6 +385,39 @@ class RDFanalysis():
             .Define("Rec_track_absz0chi2_max_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(1)")
             .Define("Rec_track_absz0chi2_ave_hemisEmax",    "Rec_track_absnormz0StatsEmax.at(2)")
 
+            ##Add log of IP-like variables, map 0 -> 10 (0s not as big a problem as with d2PV as to do with individual tracks not vertices)
+            .Define("ln_Rec_track_absd0_min_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absd0_min_hemisEmin,10)")
+            .Define("ln_Rec_track_absd0_max_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absd0_max_hemisEmin,10)")
+            .Define("ln_Rec_track_absd0_ave_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absd0_ave_hemisEmin,10)")
+
+            .Define("ln_Rec_track_absd0_min_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absd0_min_hemisEmax,10)")
+            .Define("ln_Rec_track_absd0_max_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absd0_max_hemisEmax,10)")
+            .Define("ln_Rec_track_absd0_ave_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absd0_ave_hemisEmax,10)")
+            
+            .Define("ln_Rec_track_absd0chi2_min_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absd0chi2_min_hemisEmin,10)")
+            .Define("ln_Rec_track_absd0chi2_max_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absd0chi2_max_hemisEmin,10)")
+            .Define("ln_Rec_track_absd0chi2_ave_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absd0chi2_ave_hemisEmin,10)")
+
+            .Define("ln_Rec_track_absd0chi2_min_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absd0chi2_min_hemisEmax,10)")
+            .Define("ln_Rec_track_absd0chi2_max_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absd0chi2_max_hemisEmax,10)")
+            .Define("ln_Rec_track_absd0chi2_ave_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absd0chi2_ave_hemisEmax,10)")
+
+            .Define("ln_Rec_track_absz0_min_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absz0_min_hemisEmin,10)")
+            .Define("ln_Rec_track_absz0_max_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absz0_max_hemisEmin,10)")
+            .Define("ln_Rec_track_absz0_ave_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absz0_ave_hemisEmin,10)")
+
+            .Define("ln_Rec_track_absz0_min_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absz0_min_hemisEmax,10)")
+            .Define("ln_Rec_track_absz0_max_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absz0_max_hemisEmax,10)")
+            .Define("ln_Rec_track_absz0_ave_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absz0_ave_hemisEmax,10)")
+            
+            .Define("ln_Rec_track_absz0chi2_min_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absz0chi2_min_hemisEmin,10)")
+            .Define("ln_Rec_track_absz0chi2_max_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absz0chi2_max_hemisEmin,10)")
+            .Define("ln_Rec_track_absz0chi2_ave_hemisEmin",    "myUtils::log_with_0_map(Rec_track_absz0chi2_ave_hemisEmin,10)")
+
+            .Define("ln_Rec_track_absz0chi2_min_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absz0chi2_min_hemisEmax,10)")
+            .Define("ln_Rec_track_absz0chi2_max_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absz0chi2_max_hemisEmax,10)")
+            .Define("ln_Rec_track_absz0chi2_ave_hemisEmax",    "myUtils::log_with_0_map(Rec_track_absz0chi2_ave_hemisEmax,10)")
+
             #############################################
             ##     for max P charged RP vars           ##
             #############################################
@@ -396,6 +442,10 @@ class RDFanalysis():
             .Define("EVT_hemisEmax_maxpChargedRP_py",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).py")
             .Define("EVT_hemisEmax_maxpChargedRP_pz",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).pz")
             .Define("EVT_hemisEmax_maxpChargedRP_fromPV",             "(EVT_hemisEmax_maxpChargedRPInfo.at(0)).fromPV")
+
+            #transforming -999 to -1 in from PV var
+            .Define("EVT_hemisEmin_maxpChargedRP_fromPV_transformed",             "myUtils::fromPV_map(EVT_hemisEmin_maxpChargedRP_fromPV)")
+            .Define("EVT_hemisEmax_maxpChargedRP_fromPV_transformed",             "myUtils::fromPV_map(EVT_hemisEmax_maxpChargedRP_fromPV)")
 
 
             ##################################################################
@@ -466,6 +516,14 @@ class RDFanalysis():
             .Define("Rec_vtx_d2PV_max_hemisEmax",             "Rec_vtx_d2PVStatsEmax.at(1)")
             .Define("Rec_vtx_d2PV_ave_hemisEmax",             "Rec_vtx_d2PVStatsEmax.at(2)")
 
+            #Add log of d2PV variables, map 0 -> 10
+            .Define("ln_Rec_vtx_d2PV_min_hemisEmin",             "myUtils::log_with_0_map(Rec_vtx_d2PV_min_hemisEmin,10)")
+            .Define("ln_Rec_vtx_d2PV_max_hemisEmin",             "myUtils::log_with_0_map(Rec_vtx_d2PV_max_hemisEmin,10)")
+            .Define("ln_Rec_vtx_d2PV_ave_hemisEmin",             "myUtils::log_with_0_map(Rec_vtx_d2PV_ave_hemisEmin,10)")
+            .Define("ln_Rec_vtx_d2PV_min_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_d2PV_min_hemisEmax,10)")
+            .Define("ln_Rec_vtx_d2PV_max_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_d2PV_max_hemisEmax,10)")
+            .Define("ln_Rec_vtx_d2PV_ave_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_d2PV_ave_hemisEmax,10)")
+
             .Define("Rec_vtx_thrustCosThetaStatsEmin",        "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmin_andNotPV, Rec_vtx_thrustCosTheta)")  # INTERMEDIATE
             .Define("Rec_vtx_thrustCosThetaStatsEmax",        "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmax_andNotPV, Rec_vtx_thrustCosTheta)")  # INTERMEDIATE
             .Define("Rec_vtx_thrustCosTheta_min_hemisEmin",   "Rec_vtx_thrustCosThetaStatsEmin.at(0)")
@@ -475,13 +533,6 @@ class RDFanalysis():
             .Define("Rec_vtx_thrustCosTheta_max_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(1)")
             .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
         
-            #############################################
-            ##         Filter events with no PV        ##
-            #NEEDED even if no other cuts otherwise throws a huge strop over TypeError: could not convert argument 3, in ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager,void> > ROOT::RDF::RInterface<ROOT::Detail::RDF::RRange<ROOT::Detail::RDF::RLoopManager>,void>::Snapshot(basic_string_view<char,char_traits<char> > treename, basic_string_view<char,char_traits<char> > filename, initializer_list<string> columnList, const ROOT::RDF::RSnapshotOptions& options = ROOT::RDF::RSnapshotOptions()) 
-            # This disappears provided this cut is in place!
-            #############################################
-            .Define("EVT_hasPV",                "myUtils::hasPV(Rec_VertexObject)")
-            .Filter("EVT_hasPV==1")
         )
 
 
@@ -494,17 +545,12 @@ class RDFanalysis():
         df3 = (
             df2
             #############################################
-            ##         Filter events with no PV        ##
-            #############################################
-            .Define("EVT_hasPV",                "myUtils::hasPV(Rec_VertexObject)")
-            .Filter("EVT_hasPV==1")
-
-            #############################################
             ##                  Filters                ##
             #############################################
-            .Filter("EVT_hemisEmin_e < 40")        # Energy on the signal side must be < 40 GeV
+            .Filter("EVT_e < 85")        # Total event energy < 85 GeV
             .Filter("EVT_hemisEmin_nCharged > 0")  # Signal side must have at least one charged reco particle
             .Filter("EVT_hemisEmin_nLept == 0")    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
+            .Filter("PV_Rec_vtx_m<40")  #Remove events where total reconstructed mass at the PV is large - good at removing light (usd) backgrounds for free
             #.Filter("ROOT::VecOps::Any(Rec_vtx_isPV > 0)")  # Remove events that fail to reconstruct a PV - I domt think this is needed due to above filter
 
         )

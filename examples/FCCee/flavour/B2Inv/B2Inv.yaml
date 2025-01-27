@@ -20,6 +20,10 @@ full_vars: # just taken from previous run to ensure nothing missed
   - EVT_sum_Rec_px
   - EVT_sum_Rec_py
   - EVT_sum_Rec_pz
+  #unit vector equivalents (ie. direction of missing energyS)
+  - unitEVT_sum_Rec_px
+  - unitEVT_sum_Rec_py
+  - unitEVT_sum_Rec_pz
   - EVT_p
 
 
@@ -67,6 +71,11 @@ full_vars: # just taken from previous run to ensure nothing missed
   - EVT_hemisEmax_maxpChargedRP_py
   - EVT_hemisEmax_maxpChargedRP_pz
   - EVT_hemisEmax_maxpChargedRP_fromPV
+  
+  #Adding tranform for fomPV flag that takes -999 to -1 (for particles not vertexed)
+  - EVT_hemisEmin_maxpChargedRP_fromPV_transformed
+  - EVT_hemisEmax_maxpChargedRP_fromPV_transformed
+
 
   #variables relating to new hemisphere assignment
   - Rec_vtx_d2PV_x
@@ -78,6 +87,54 @@ full_vars: # just taken from previous run to ensure nothing missed
   #for check
   - Rec_vtx_thrustCosTheta
   - Rec_vtx_in_hemisEmin
+
+  #d2PVs and their log
+  - Rec_vtx_d2PV_min_hemisEmin
+  - Rec_vtx_d2PV_max_hemisEmin
+  - Rec_vtx_d2PV_ave_hemisEmin
+  - Rec_vtx_d2PV_min_hemisEmax
+  - Rec_vtx_d2PV_max_hemisEmax
+  - Rec_vtx_d2PV_ave_hemisEmax
+  #New variables for log d2PV with map for 0s to 10 (ie. events with no SV)
+  - ln_Rec_vtx_d2PV_min_hemisEmin
+  - ln_Rec_vtx_d2PV_max_hemisEmin
+  - ln_Rec_vtx_d2PV_ave_hemisEmin
+  - ln_Rec_vtx_d2PV_min_hemisEmax
+  - ln_Rec_vtx_d2PV_max_hemisEmax
+  - ln_Rec_vtx_d2PV_ave_hemisEmax
+
+  ##Add log of IP-like variables, map 0 -> 10 (0s not as big a problem as with d2PV as to do with individual tracks not vertices)
+  - ln_Rec_track_absd0_min_hemisEmin
+  - ln_Rec_track_absd0_max_hemisEmin
+  - ln_Rec_track_absd0_ave_hemisEmin
+
+  - ln_Rec_track_absd0_min_hemisEmax
+  - ln_Rec_track_absd0_max_hemisEmax
+  - ln_Rec_track_absd0_ave_hemisEmax
+            
+  - ln_Rec_track_absd0chi2_min_hemisEmin
+  - ln_Rec_track_absd0chi2_max_hemisEmin
+  - ln_Rec_track_absd0chi2_ave_hemisEmin
+
+  - ln_Rec_track_absd0chi2_min_hemisEmax
+  - ln_Rec_track_absd0chi2_max_hemisEmax
+  - ln_Rec_track_absd0chi2_ave_hemisEmax
+
+  - ln_Rec_track_absz0_min_hemisEmin
+  - ln_Rec_track_absz0_max_hemisEmin
+  - ln_Rec_track_absz0_ave_hemisEmin
+
+  - ln_Rec_track_absz0_min_hemisEmax
+  - ln_Rec_track_absz0_max_hemisEmax
+  - ln_Rec_track_absz0_ave_hemisEmax
+    
+  - ln_Rec_track_absz0chi2_min_hemisEmin
+  - ln_Rec_track_absz0chi2_max_hemisEmin
+  - ln_Rec_track_absz0chi2_ave_hemisEmin
+
+  - ln_Rec_track_absz0chi2_min_hemisEmax
+  - ln_Rec_track_absz0chi2_max_hemisEmax
+  - ln_Rec_track_absz0chi2_ave_hemisEmax
 
 
   ############################
@@ -108,12 +165,6 @@ full_vars: # just taken from previous run to ensure nothing missed
   #overall reco vtx stats
   - Rec_vtx_ntracks_max_hemisEmin
   - Rec_vtx_ntracks_max_hemisEmax
-  - Rec_vtx_d2PV_min_hemisEmin
-  - Rec_vtx_d2PV_max_hemisEmin
-  - Rec_vtx_d2PV_ave_hemisEmin
-  - Rec_vtx_d2PV_min_hemisEmax
-  - Rec_vtx_d2PV_max_hemisEmax
-  - Rec_vtx_d2PV_ave_hemisEmax
   - Rec_vtx_thrustCosTheta_min_hemisEmin
   - Rec_vtx_thrustCosTheta_max_hemisEmin
   - Rec_vtx_thrustCosTheta_ave_hemisEmin
@@ -227,17 +278,16 @@ full_vars: # just taken from previous run to ensure nothing missed
   - Rec_true_M2ofM2
 
 
-  - MCem_p # allow to check how frequently Z is at rest!
-  - MCep_p
-  - MCZ_p
-  - MCq1_p #allows check on thrust alignment
-  - MCq1_px
-  - MCq1_py
-  - MCq1_pz
-  - MCq2_p #allows check on thrust alignment
-  - MCq2_px
-  - MCq2_py
-  - MCq2_pz
+  #MC variables to help with understanding
+  - MCZ_p # allow to check how frequently Z is at rest!
+  #- MCq1_p #allows check on thrust alignment
+  #- MCq1_px
+  #- MCq1_py
+  #- MCq1_pz
+  #- MCq2_p #allows check on thrust alignment
+  #- MCq2_px
+  #- MCq2_py
+  #- MCq2_pz
 
   #to allow application of cuts manually
   - EVT_hemisEmin_nLept

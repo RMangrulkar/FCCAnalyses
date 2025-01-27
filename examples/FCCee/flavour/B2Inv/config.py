@@ -34,6 +34,8 @@ processList = {
     # p8_ee_Zss_ecm91                == 3.3T (499,842,440 events)
     # p8_ee_Zud_ecm91                == 3.3T (497,658,654 events)
     # p8_ee_Ztautau_ecm91            == 140G  (100,000,000 events)
+    # p8_ee_Zmumu_ecm91              == 93G  (100,000,000 events)
+    # p8_ee_Zee_ecm91                == 97G  (100,000,000 events)
 
 
     "no_selection": {  # 100,000 events per sample just to look at
@@ -46,14 +48,17 @@ processList = {
     },
     
 
-    "prelim_cuts": {  # ~2G or ~500k events per sample
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.28, "chunks": 5},
+    "prelim_cuts": {  # ~2G or ~500k events per sample #ALL NUMBERS TO UPDATE
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.30, "chunks": 5},
         "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.28, "chunks": 5},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.015, "chunks": 5},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.015, "chunks": 8},
-        "p8_ee_Zss_ecm91": {"fraction": 0.015, "chunks": 10},
-        "p8_ee_Zud_ecm91": {"fraction": 0.015, "chunks": 10},
-        #note no tau sample as not training hadronic BDTs on Ztautau
+        "p8_ee_Zbb_ecm91": {"fraction": 0.025, "chunks": 15},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.025, "chunks": 15},
+        "p8_ee_Zss_ecm91": {"fraction": 0.025, "chunks": 15},
+        "p8_ee_Zud_ecm91": {"fraction": 0.045, "chunks": 30},
+        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 10}, 
+        "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 2},
+        "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 2},
+        
     },
 
 }
@@ -74,6 +79,9 @@ fccana_opts = {
         "ss": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zss_ecm91/events_000099129.root",
         "ud": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zud_ecm91/events_000071896.root",
         "tautau": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Ztautau_ecm91/events_000143148.root",
+        "mumu": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zmumu_ecm91/events_000128808.root",
+        "ee": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zee_ecm91/events_000132426.root",
+    
     },
     "analysisName":   "b2inv",
     "nCPUS":          8,
@@ -122,7 +130,9 @@ samples = [
     "p8_ee_Zcc_ecm91",
     "p8_ee_Zss_ecm91",
     "p8_ee_Zud_ecm91",
-    #"p8_ee_Ztautau_ecm91",
+    "p8_ee_Ztautau_ecm91",
+    "p8_ee_Zmumu_ecm91",
+    "p8_ee_Zee_ecm91",
 ]
 
 sample_allocations = {
@@ -134,6 +144,7 @@ sample_allocations = {
     "full_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91","p8_ee_Ztautau_ecm91"],
     "bb_only":    ["p8_ee_Zbb_ecm91"],
     "light_background": ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"], 
+    "leptonic_background": ["p8_ee_Ztautau_ecm91","p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
 }
 
 sample_shorthand = {
@@ -144,6 +155,8 @@ sample_shorthand = {
     "p8_ee_Zss_ecm91":                "Z2ss",
     "p8_ee_Zud_ecm91":                "Z2ud",
     "p8_ee_Ztautau_ecm91":            "Z2tautau",
+    "p8_ee_Zmumu_ecm91":              "Z2mumu",
+    "p8_ee_Zee_ecm91":                "Z2ee",
 }
 
 titles = {
@@ -154,6 +167,8 @@ titles = {
     "p8_ee_Zss_ecm91": r"$Z \to s \bar{s}$",
     "p8_ee_Zud_ecm91": r"$Z \to q \bar{q}$, $q \in [u,d]$",
     "p8_ee_Ztautau_ecm91":r"$Z \to \tau^{+} \tau^{-}$",
+    "p8_ee_Zmumu_ecm91":r"$Z \to \mu^{+} \mu^{-}$",
+    "p8_ee_Zee_ecm91":r"$Z \to e^{+} e^{-}$",
 }
 
 ##############################
@@ -178,6 +193,9 @@ prod_frac = {
 # Z->uu/cc = 2 * (11.6 +/- 0.6) = 23.2 +/- 1.2
 # Z->dd/ss/bb = 3 * (15.6 +/- 0.4) = 46.8 +/- 1.2
 #Z->τ+τ− = (3.3696±0.0083) %
+#Z->mu+mu− = (3.3662±0.0066) %
+#Z->e+e− = (3.3632±0.0042) %
+
 branching_fractions = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (1, 0),  # a dummy value
     "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (1, 0),  # a dummy value
@@ -186,9 +204,9 @@ branching_fractions = {
     "p8_ee_Zss_ecm91": (0.1584, 0.0060),
     "p8_ee_Zud_ecm91": (0.2701, 0.0136),
     "p8_ee_Ztautau_ecm91":(0.033696,0.000083),
+    "p8_ee_Zmumu_ecm91":(0.033662,0.000066),
+    "p8_ee_Zee_ecm91":(0.033632,0.000042),
 }
 
 mass_Z = 91.188  # Ecm used in the winter2023 samples
-EVT_hemisEmin_e_withpresel_min = 0.5*mass_Z - 40
-EVT_hemisEmin_e_withpresel_max = 0.5*mass_Z
 

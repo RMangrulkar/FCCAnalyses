@@ -215,7 +215,7 @@ namespace myUtils{
                                                       const ROOT::VecOps::RVec<int> & should_eval);
 
   // return log of the input value - default value for input of 0 is an input
-  ROOT::VecOps::RVec<float> log_with_0_map(const ROOT::VecOps::RVec<float> input_var, float zeromap);  
+  float log_with_0_map(float input_var, float zeromap);  
 
   // return log of the input value - default value for input of 0 is an input
   float fromPV_map(float input_var);                                         

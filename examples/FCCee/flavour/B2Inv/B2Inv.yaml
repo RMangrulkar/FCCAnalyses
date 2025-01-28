@@ -293,7 +293,7 @@ full_vars: # just taken from previous run to ensure nothing missed
   - EVT_hemisEmin_nLept
 
 
-BDTh-vars:
+Bdth-vars:
   #################################
   # variables in old BDT1 - to look at once data finished
   #################################
@@ -422,7 +422,7 @@ BDTh-vars:
    #- EVT_Thrust_mag  
 
 
-BDTl-vars:
+Bdtl-vars:
 
 ############################################### 
 # Make plots to check bb bb vs signal

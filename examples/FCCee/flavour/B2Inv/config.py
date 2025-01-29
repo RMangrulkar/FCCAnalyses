@@ -45,6 +45,9 @@ processList = {
         "p8_ee_Zcc_ecm91": {"fraction": 0.00025, "chunks": 2},
         "p8_ee_Zss_ecm91": {"fraction": 0.00025, "chunks": 2},
         "p8_ee_Zud_ecm91": {"fraction": 0.00025, "chunks": 2},
+        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 20}, 
+        "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 20},
+        "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 20},
     },
     
 
@@ -160,6 +163,7 @@ sample_allocations = {
     "light_background": ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"], 
     "heavy_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
     "leptonic_background": ["p8_ee_Ztautau_ecm91","p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
+    "light_leptonic_backgrounds": ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
     "tau_background":  ["p8_ee_Ztautau_ecm91"],
     "bb_only":    ["p8_ee_Zbb_ecm91"],
 }

@@ -152,6 +152,8 @@ class RDFanalysis():
             .Define("Rec_PV_x",        "Rec_PrimaryVertex.position.x")
             .Define("Rec_PV_y",        "Rec_PrimaryVertex.position.y")
             .Define("Rec_PV_z",        "Rec_PrimaryVertex.position.z")
+            .Define("Rec_PV_chi2",     "Rec_PrimaryVertex.chi2") #chi2 of PV fit - used to check for if PV actually fitted
+
             # All Rec Vertices
             .Define("Rec_vtx_n",               "float(Rec_VertexObject.size())")
             .Define("Rec_vtx_indRP",           "myUtils::get_Vertex_ind(Rec_VertexObject)")

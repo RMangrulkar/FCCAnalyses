@@ -217,6 +217,7 @@ full_vars: # just taken from previous run to ensure nothing missed
   - Rec_PV_x
   - Rec_PV_y
   - Rec_PV_z
+  - Rec_PV_chi2
 
   # Reconstructed vertex variables
   - Rec_vtx_n
@@ -366,7 +367,7 @@ bdth-vars:
   # IP-like
   - ln_Rec_track_absd0_max_hemisEmin
   - ln_Rec_track_absz0_max_hemisEmin 
-  - ln_Rec_track_absz0chi2_min_hemisEmin #quite descriminating - to understand physics of why
+  - ln_Rec_track_absz0chi2_min_hemisEmin #quite descriminating - to understand physics of why, equally performs badlly in BDT
   
   #- ln_Rec_track_absz0chi2_max_hemisEmin #very little descrim
   #- ln_Rec_track_absd0_min_hemisEmin #small extra peak maybe helpful

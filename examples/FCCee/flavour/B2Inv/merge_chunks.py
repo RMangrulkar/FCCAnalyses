@@ -6,6 +6,10 @@ configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/
 sys.path.append(os.path.abspath(configPath))
 import config as cfg
 
+###################################################
+##define function to merge files within given decay
+###################################################
+
 def merge_root_files(input_folder_path, output_file, tree_name='events', input_files_list=None):
     # Create a new ROOT file to store the combined data
     output_file = ROOT.TFile(output_file, "RECREATE")
@@ -59,13 +63,31 @@ def merge_root_files(input_folder_path, output_file, tree_name='events', input_f
     output_file.Close()
 
     # Print the total events processed and selected 
-    print(f"{sample}")
     print(f"Total events processed: {total_eventsProcessed}") 
     print(f"Total events selected: {total_eventsSelected}")
     print(f"Total events in new Ttree:{total_events}")
 
     if total_eventsSelected !=total_events:
         print('Error: Incorrect number of events in Ttree!!')
+
+
+#############################################################################################
+## define function to run given decays through merge_root_files for data in a given directory
+##############################################################################################
+
+def run_merge_over_decays(data_folder_path, decays_list):
+    # define output directory
+    output_dir = os.path.join(data_folder_path, 'full_data_merged/')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # run over input list of samples
+    for sample in decays_list:
+        output_file = os.path.join(output_dir, f'{sample}_allchunks.root')      
+        folder_path = os.path.join(data_folder_path, sample)
+        print(f"----> INFO: Merging all root files for decay {sample} within directory:")
+        print(f"{15*' '}{folder_path}")
+        merge_root_files(folder_path,output_file)
 
 
 ####################################################################################################################
@@ -81,14 +103,17 @@ for sample in list:
     input_files = os.listdir(folder_path)
     merge_root_files(folder_path,output_file)
 #n.b. for old_andOincorrectBSC added extra variables whilst still processing ud so some ud files have extra variables -> cant compile ud into one file
-'''
 
-#### Running on old data as a test
-data_folder_path = '/r01/lhcb/ejnw2/fcc/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/stage2_training_incorrectBSC/'
 
-for sample in cfg.samples:
-    output_file = data_folder_path + f'full_data_merged/{sample}_allchunks.root'
-    folder_path = data_folder_path+ sample
-    nput_files = os.listdir(folder_path)
+#### Running on Zee and Zmumu files
+data_folder_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/prelim_cuts_leptons_copy/'
+output_dir = os.path.join(data_folder_path, 'full_data_merged/')
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+for sample in cfg.sample_allocations["light_leptonic_backgrounds"]:
+    output_file = os.path.join(output_dir, f'{sample}_allchunks.root')      
+    folder_path = os.path.join(data_folder_path, sample)
     merge_root_files(folder_path,output_file)
+'''
 

@@ -92,9 +92,6 @@ def histogram_settings():
         elif sample in cfg.sample_allocations["Bdsignal"]:
             hist_settings[sample]["histtype"] = "bar"
 
-        elif sample in cfg.sample_allocations["full_background"]:
-            hist_settings[sample]["histtype"] = "step"
-
         elif sample in cfg.sample_allocations["hadronic_background"]:
             hist_settings[sample]["histtype"] = "step"
 
@@ -351,10 +348,6 @@ def plot(varname,
             #hist_opts['fill'] = True
             hist_opts['hatch'] = r'\\\\'
             #hist_opts['alpha'] = 0.6
-        elif allocation=='full_background':
-            hist_opts['lw'] = 2
-            reds = mpl.colormaps['Reds_r']
-            hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
         elif allocation=='bb_only':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2

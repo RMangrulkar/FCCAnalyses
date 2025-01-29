@@ -115,13 +115,13 @@ bdt1_opts = {
 # TMVA options
 bdth_opts = {
     "training":           True,                  
-    "inputPath":          "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/prelim_cuts_no_leptons",  #TO CHANGE TO: fccana_opts['outputDir']['prelim_cuts'], #ie. want ot train on data with just preliminary cuts
+    "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want ot train on data with just preliminary cuts
     "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/"),
     "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/bdth.json"),
     "mvaPath":            os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/saved_bdth.root"),
     "mvaRBDTName":        "bdth",                 # Name of the TMVA TObject in the .root file
     "mvaCut":             0.,
-    "mvaBranchList":      "Bdth-vars",  # key in the yaml file pointing to the feature list 
+    "mvaBranchList":      "bdth-vars",  # key in the yaml file pointing to the feature list 
     "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/hps_bdth.yaml"),
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],

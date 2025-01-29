@@ -67,7 +67,7 @@ print("Initialising...")
 plt.style.use(os.path.abspath(os.path.join(cfg.FCCAnalysesPath, 'fcc.mplstyle')))
 
 #path to data and outputs
-inputpath    = check_inputpath(cfg.bdth_opts['inputPath'])  #TO REPLACE WITH NEW PRELIM CUTS ONCE FINISED''''''''''''''''''''''''''''''''''''''''
+inputpath    = check_inputpath(cfg.bdth_opts['inputPath']) 
 outputpath   = set_outputpath(cfg.bdth_opts['outputPath'])
 yamlpath     = check_inputpath(cfg.fccana_opts['yamlPath'])
 
@@ -77,7 +77,7 @@ bdtvars      = vars_fromyaml(yamlpath, bdtvars_list)
 responsevars = ["EVT_hemisEmin_Emiss"] # Variables not used by the bdt which you want to plot
 
 # branching fractions for weights
-branching_fractions = cfg.branching_fractions #dictionary containing sample name and tuple with BF and its error
+branching_fractions = cfg.branching_fractions #dictionary containing decay name and tuple with BF and its error
 
 # print statements to check loading things expect
 print(f"----> INFO: Using {bdtvars_list} from")
@@ -88,20 +88,22 @@ print(f"----> INFO: Output will be saved to")
 print(f"{15*' '}{outputpath}")
 
 
-#getting training samples from config sample list
-signal_samples =  cfg.bdth_opts["signalAllocation"]
-background_samples =  cfg.bdth_opts["backgroundAllocation"]
-training_samples = signal_samples + background_samples # Not including the Z->ee, Z->mumu, Z->tautau samples in the training but we still want to process them to see how the BDT does
+#getting training decays from config decay list
+signal_decays =  cfg.bdth_opts["signalAllocation"]
+background_decays =  cfg.bdth_opts["backgroundAllocation"]
+training_decays = signal_decays + background_decays # Not including the Z->ee, Z->mumu, Z->tautau decays in the training but we still want to process them to see how the BDT does
 
-samples_dict={'signal':signal_samples,'background':background_samples}
+decays_dict={'signal':signal_decays,'background':background_decays}
 
-print(f"----> INFO: Using signal samples {signal_samples}")
-print(f"----> INFO: Using background samples {background_samples}")
+print(f"----> INFO: Using signal decays:")
+print(f"{15*' '}{signal_decays}")
+print(f"----> INFO: Using background decays:")
+print(f"{15*' '}{background_decays}")
 
 #calculating efficiencies and also saving files paths used to calculate efficiencies to ensure do training on same files
 selection_efficiency = efficiency_finder.get_efficiencies('custom',
                                                     further_analysis=True,
-                                                    samples = training_samples,
+                                                    samples = training_decays,
                                                     raw=True, #ie. want full efficiency including tupling and prelim cuts
                                                     custompath=inputpath,
                                                     verbose=False,
@@ -114,9 +116,9 @@ efficiencies_err_dict = {key: value for key, value in selection_efficiency.items
 
 
 # going to print the efficiencies and BF for each now so can manually check
-print("Efficiencies and BFs:")
-eff_to_print = [[ key , efficiencies_dict[key+'_eff'],branching_fractions[key][0] ] for key in training_samples]
-print( tabulate(  eff_to_print, headers=["sample", "efficiency", "BF"] ) +'\n')
+print("Efficiencies and BFs:"+'\n')
+eff_to_print = [[ key , efficiencies_dict[key+'_eff'],branching_fractions[key][0] ] for key in training_decays]
+print( tabulate(  eff_to_print, headers=["decay", "efficiency", "BF"] ) +'\n')
 
 
 ##############################################################
@@ -126,30 +128,30 @@ print( tabulate(  eff_to_print, headers=["sample", "efficiency", "BF"] ) +'\n')
 # now collect relevant events into a dataframe
 df_dict = {}
 
-for sample in training_samples:
-    eff = efficiencies_dict[sample+'_eff']
-    weight = branching_fractions[sample][0] * eff #need zero index for bf as branching fractions is a tuple in the yaml
-    filepaths = training_filepaths_dict[sample+'_files']
+for decay in training_decays:
+    eff = efficiencies_dict[decay+'_eff']
+    weight = branching_fractions[decay][0] * eff #need zero index for bf as branching fractions is a tuple in the yaml
+    filepaths = training_filepaths_dict[decay+'_files']
     Rdf = ROOT.RDataFrame("events", filepaths)
     Rdf_np = Rdf.AsNumpy(columns= bdtvars+responsevars)
     sub_df = pd.DataFrame(Rdf_np)
-    sub_df["decay"] = sample
+    sub_df["decay"] = decay
     sub_df["w1"] = weight / len(sub_df) 
-    df_dict[sample] = sub_df
+    df_dict[decay] = sub_df
 
 # going to print the sum of weights for each now
 # can check this is consistent with BF * eff (which it should be)
-print("Sum of weights:")
+print("Sum of weights:"+'\n')
 print_rows=[]
-for sample in training_samples:
-    sumw = df_dict[sample]["w1"].sum()
-    nevs = len(df_dict[sample])
-    print_rows.append( [ sample, sumw, nevs ] )
+for decay in training_decays:
+    sumw = df_dict[decay]["w1"].sum()
+    nevs = len(df_dict[decay])
+    print_rows.append( [ decay, sumw, nevs ] )
 
 print( tabulate( print_rows, headers=["decay", "sumWeights", "numEvents"] ) +'\n')
 
 
-# this so far has weighted correctly within each sample - now want to weight so that overall satisfy two conditions
+# this so far has weighted correctly within each type of sample (ie. signal or bkg) - now want to weight so that overall satisfy two conditions
 # let weights from previous section be W1_kk where kk is either quark combo or Bs,Bd
 # let new weights be W2_s for signal and W2_b for bkg
 #1. Account for the fact that our training sample contains more background than signal
@@ -163,12 +165,12 @@ print( tabulate( print_rows, headers=["decay", "sumWeights", "numEvents"] ) +'\n
 #                  W2_s = (n_s + n_b) / 2(W1_Bs * n_Bs + W1_Bd * n_Bd)
 #                  W2_b = (n_s + n_b) / 2 * [(W1_qq * n_q)] summed over q        
 
-#total numbe of events in sig and background (ie. n_s + n_b)
-n_total = sum(len(df_dict[s]) for s in training_samples)
+#total number of events in sig and background (ie. n_s + n_b)
+n_total = sum(len(df_dict[s]) for s in training_decays)
 
 
 for allocation in ["signal","background"]:
-    samples =  samples_dict[allocation]
+    samples =  decays_dict[allocation]
     # Calculate the denominator by summing twice the sum of weights for each sample
     denom = sum(2 * df_dict[s]["w1"].sum() for s in samples)
     w2 = n_total/denom
@@ -182,26 +184,26 @@ for allocation in ["signal","background"]:
 ##Checks on  weights performed (as calculaing manually and dont want to have made a mistake)
 ##############################################################################################
 #print out weights for visual check
-print("Weights assigned to each sample:")
-weights_print_row = [[sample,df_dict[sample]["w1"][0],df_dict[sample]["w2"][0],df_dict[sample]["total_weight"][0]] for sample in training_samples]
-print( tabulate( weights_print_row, headers=["sample", "w1", "w2","total_weight"] )+'\n' )
+print("Weights assigned to each decay:"+'\n')
+weights_print_row = [[decay,df_dict[decay]["w1"][0],df_dict[decay]["w2"][0],df_dict[decay]["total_weight"][0]] for decay in training_decays]
+print( tabulate( weights_print_row, headers=["decay", "w1", "w2","total_weight"] )+'\n' )
 
 ### A few checks to make sure the total weights are behaving as desired
-#check1 - total sum of weights for events over all samples == total number of events
-check1 = np.isclose(sum(len(df_dict[s]) for s in training_samples), sum(df_dict[s]["total_weight"].sum() for s in training_samples),rtol=1e-05) #check agreememt to within relative tolerance of 1e-5
+#check1 - total sum of weights for events over all decays == total number of events
+check1 = np.isclose(sum(len(df_dict[s]) for s in training_decays), sum(df_dict[s]["total_weight"].sum() for s in training_decays),rtol=1e-07) #check agreememt to within relative tolerance of 1e-7
 #Check2: Sum of weights in signal == Sum of weights in bkg
-check2 = np.isclose(sum(df_dict[s]["total_weight"].sum() for s in signal_samples),sum(df_dict[b]["total_weight"].sum() for b in background_samples),rtol=1e-05)
+check2 = np.isclose(sum(df_dict[s]["total_weight"].sum() for s in signal_decays),sum(df_dict[b]["total_weight"].sum() for b in background_decays),rtol=1e-07)
 #"Check3: Ratio sum of weights in Bs:Bd = Bs_eff/Bd_eff"
-check3 = np.isclose(df_dict[signal_samples[0]]["total_weight"].sum()/df_dict[signal_samples[1]]["total_weight"].sum(), branching_fractions[signal_samples[0]][0]*efficiencies_dict[signal_samples[0]+'_eff']/ (branching_fractions[signal_samples[1]][0]*efficiencies_dict[signal_samples[1]+'_eff']),rtol=1e-05)
+check3 = np.isclose(df_dict[signal_decays[0]]["total_weight"].sum()/df_dict[signal_decays[1]]["total_weight"].sum(), branching_fractions[signal_decays[0]][0]*efficiencies_dict[signal_decays[0]+'_eff']/ (branching_fractions[signal_decays[1]][0]*efficiencies_dict[signal_decays[1]+'_eff']),rtol=1e-07)
 #Check4:Ratio sum of weights in bb:cc = bb_eff*BF(Z->bb)/cc_eff*BF(Z->cc)
-check4 = np.isclose(df_dict[background_samples[0]]["total_weight"].sum()/df_dict[background_samples[1]]["total_weight"].sum(), branching_fractions[background_samples[0]][0]*efficiencies_dict[background_samples[0]+'_eff']/ (branching_fractions[background_samples[1]][0]*efficiencies_dict[background_samples[1]+'_eff']),rtol=1e-05)
+check4 = np.isclose(df_dict[background_decays[0]]["total_weight"].sum()/df_dict[background_decays[1]]["total_weight"].sum(), branching_fractions[background_decays[0]][0]*efficiencies_dict[background_decays[0]+'_eff']/ (branching_fractions[background_decays[1]][0]*efficiencies_dict[background_decays[1]+'_eff']),rtol=1e-07)
 #Check5: Ratio sum of weights in bb:ss = bb_eff*BF(Z->bb)/ss_eff*BF(Z->ss) 
-check5 = np.isclose(df_dict[background_samples[0]]["total_weight"].sum()/df_dict[background_samples[2]]["total_weight"].sum(),branching_fractions[background_samples[0]][0]*efficiencies_dict[background_samples[0]+'_eff']/ (branching_fractions[background_samples[2]][0]*efficiencies_dict[background_samples[2]+'_eff']),rtol=1e-05)
+check5 = np.isclose(df_dict[background_decays[0]]["total_weight"].sum()/df_dict[background_decays[2]]["total_weight"].sum(),branching_fractions[background_decays[0]][0]*efficiencies_dict[background_decays[0]+'_eff']/ (branching_fractions[background_decays[2]][0]*efficiencies_dict[background_decays[2]+'_eff']),rtol=1e-07)
 # Check6: Ratio sum of weights in bb:ud = bb_eff*BF(Z->bb)/ud_eff*BF(Z->ud)
-check6 = np.isclose(df_dict[background_samples[0]]["total_weight"].sum()/df_dict[background_samples[3]]["total_weight"].sum(),branching_fractions[background_samples[0]][0]*efficiencies_dict[background_samples[0]+'_eff']/ (branching_fractions[background_samples[3]][0]*efficiencies_dict[background_samples[3]+'_eff']),rtol=1e-05)
+check6 = np.isclose(df_dict[background_decays[0]]["total_weight"].sum()/df_dict[background_decays[3]]["total_weight"].sum(),branching_fractions[background_decays[0]][0]*efficiencies_dict[background_decays[0]+'_eff']/ (branching_fractions[background_decays[3]][0]*efficiencies_dict[background_decays[3]+'_eff']),rtol=1e-07)
 
 checks= [check1,check2,check3,check4,check5,check6] 
-check_names = ["Check1: Total sum of weights for events over all samples == total number of events","Check2: Sum of weights in signal == Sum of weights in bkg","Check3: Ratio sum of weights in Bs:Bd = Bs_eff/Bd_eff",
+check_names = ["Check1: Total sum of weights for events over all decays == total number of events","Check2: Sum of weights in signal == Sum of weights in bkg","Check3: Ratio sum of weights in Bs:Bd = Bs_eff/Bd_eff",
                "Check4:Ratio sum of weights in bb:cc = bb_eff*BF(Z->bb)/cc_eff*BF(Z->cc)","Check5: Ratio sum of weights in bb:ss = bb_eff*BF(Z->bb)/ss_eff*BF(Z->ss)", "Check6: Ratio sum of weights in bb:ud = bb_eff*BF(Z->bb)/ud_eff*BF(Z->ud)"]
 
 # Check if any value is False
@@ -215,68 +217,46 @@ else:
     print("----> INFO: Weights have passed all checks!")
 
 
-########################################################################
-## Now training BDT assuming weights pass checks
-#######################################################################
+##########################################################################
+## Now combining into one df and labelling assuming weights pass checks
+#########################################################################
 
-
-
-
-'''
-df = pd.concat( df_list, ignore_index=True )
+# combining dataframes into one
+df = pd.concat( [df_dict[s] for s in training_decays], ignore_index=True )
 
 # want to make sure that integer types are actually set as integers - currenlty stored as float
+#if changed branches significantly might be worth checking the list is still right, with current branches expected integers in yaml
 integer_branches = [s for s in bdtvars+responsevars if '_n' in s and '_norm' not in s]
-
 for integer_branch in integer_branches:
     df[integer_branch] = df[integer_branch].astype(np.int32)
 
-#if changed branches significantly might be worth checking the list is still right, with current branches expect:
-#integer_branches_expect = ["EVT_hemisEmin_n","EVT_hemisEmin_nCharged", "EVT_hemisEmin_nNeutral","EVT_hemisEmin_nDV","EVT_hemisEmax_n","EVT_hemisEmax_nCharged","EVT_hemisEmax_nNeutral",
-#    "EVT_hemisEmax_nDV","Rec_track_n","Rec_PV_ntracks","Rec_vtx_n","EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV","Rec_vtx_ntracks_max_hemisEmin","EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV","Rec_vtx_ntracks_max_hemisEmax",]
-#print(set(integer_branches)==set(integer_branches_expect))
-
-
 #  label background and signal events as 0 and 1 for classifier 
 def labeller(dec):
-    if dec in cfg.sample_allocations["combined_signal"] :
+    if dec in signal_decays:
         return 1
     else:
         return 0
 
 df["label"] = df["decay"].apply(labeller)
 
-
-
-#################################
-## TRAINING OF BDTh
-#################################
-
-# we currently have a bit of an inbalance in our samples -> good practise to get an additional weight which balances the classes
-# i.e.
-y = df["label"].values
-balancing_weights = compute_sample_weight("balanced", y)
-df["bdt_weight"] = df["weight"] * balancing_weights
-
-print(balancing_weights)
-print(tabulate(df["bdt_weight"]))
-
 # now shuffle the whole dataframe around to avoid any funny biases
 # do this with a random seed so it's reproducible
 df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-'''
-'''
+
 # now create labels for the train, test and validation split
 # we will give them indices train==0, test==1, validation==2
 # use a random seed for this so it's reproducible
 np.random.seed(210187)
-sample_indices = np.random.choice( [0,1,2], p=[0.75, 0.125, 0.125], size=len(df) )
+train_frac = 0.75
+test_frac= 0.125
+valid_frac = 1-train_frac-test_frac
+sample_indices = np.random.choice( [0,1,2], p=[train_frac, test_frac, valid_frac], size=len(df) )
 df["sample"] = sample_indices
 
 # matrix of input vars
-X_train = df[ df["sample"]==0][ bdt_input_var ]
-X_test  = df[ df["sample"]==1][ bdt_input_var ]
-X_valid = df[ df["sample"]==2][ bdt_input_var ]
+x_train = df[ df["sample"]==0][bdtvars]
+x_test  = df[ df["sample"]==1][bdtvars]
+x_valid = df[ df["sample"]==2][bdtvars]
 
 # array of target
 y_train = df[ df["sample"]==0][ "label" ]
@@ -284,25 +264,204 @@ y_test  = df[ df["sample"]==1][ "label" ]
 y_valid = df[ df["sample"]==2][ "label" ]
 
 # array of weights
-w_train = df[ df["sample"]==0][ "bdt_weight" ]
-w_test  = df[ df["sample"]==1][ "bdt_weight" ]
-w_valid = df[ df["sample"]==2][ "bdt_weight" ]
+w_train = df[ df["sample"]==0][ "total_weight" ]
+w_test  = df[ df["sample"]==1][ "total_weight" ]
+w_valid = df[ df["sample"]==2][ "total_weight" ]
 
+
+print("\n----> INFO: Preprocessing done")
+print(f"{15*' '}Using {len(x_train):>8} events to train ({100*train_frac:.1f}% of total)")
+print(f"{15*' '}Using {len(x_test):>8} events to  test ({100*test_frac:.1f}% of total)")
+print(f"\n{30*'-'}\n")
+
+#################################
+## TRAINING OF BDTh
+#################################
+
+## Currently no cross validation - potentially TO IMPLEMENT LATER
+## Also for now no hp opt - TO IMPLEMENT LATER
+
+print("CURRENTLY NO HP OPTIMISATION OR CROSS VALIDATION - THIS IS NOT THE FINAL BDT")
+# now let's train it
+bdt = xgb.XGBClassifier( n_estimators=400,
+                         max_depth=3,
+                         learning_rate=0.1 ) 
+
+print("\n----> INFO: Training using n_estimators=400, maxdepth=3 and learning_rate=0.1")
+
+print("\n Training model")
+bdt.fit( x_train, y_train, 
+         sample_weight=w_train, 
+         eval_set=[(x_test, y_test)], 
+         sample_weight_eval_set=[w_test], 
+         verbose=10 )
+
+
+# now put it's predictions back into the frame 
+# The predict_proba() method returns a 2D array where each row corresponds to a sample
+# each column represents the probability of that sample belonging to a particular class.
+df['bdt_score'] = bdt.predict_proba( df[bdtvars] )[:,1]
+
+# get the feature importance
+importance_indices = np.argsort(bdt.feature_importances_)
+sorted_features = bdt.feature_names_in_[importance_indices[::-1]]
+sorted_importances = bdt.feature_importances_[importance_indices[::-1]]
+print( "Feature Importance:")
+print( tabulate( zip( sorted_features, sorted_importances ) ) )
+
+# save the model to a file for use later
+bdt.save_model( "bdt.json" )
+
+
+####################################################
+## Make response plots defined in bdt_plotter.py        # this should be improved and put in a function when you have a sec Ella!! Currently just using plotters from Matt's script
+####################################################
+
+# make roc curve (use test sample)
+fpr, tpr, thresholds = roc_curve( y_test, bdt.predict_proba( x_test )[:,1], sample_weight=w_test )
+roc_auc = auc(fpr, tpr)
+print("AUC = ", roc_auc)
+
+fig, ax = plt.subplots()
+ax.plot( tpr, 1-fpr, lw=1 )
+ax.set_xlabel( "Signal Efficiency" )
+ax.set_ylabel( "Background Rate" )
+fig.tight_layout()
+fig.savefig("roc.png")
+fig.savefig("roc.pdf")
+
+
+# efficiency plot (on total sample)
+fig, ax = plt.subplots()
+for decay in df["decay"].unique():
+    subf = df[ df["decay"]==decay ]
+    mva_scores = subf["bdt_score"].values
+    weights = subf["total_weight"].values
+
+    sorted_indices = np.argsort( mva_scores )
+    sorted_scores = mva_scores[sorted_indices]
+    sorted_weights = weights[sorted_indices]
+
+    total_weight = np.sum( sorted_weights ) 
+    cumalative_weights = np.cumsum( sorted_weights[::-1] )[::-1] # reverse order for efficiency above cut
+    efficiency = cumalative_weights / total_weight
+
+    ax.plot( sorted_scores, efficiency, label=decay )
+
+ax.legend()
+ax.set_xlabel('MVA Score')
+ax.set_ylabel('Efficiency')
+ax.set_yscale('log')
+ax.grid(visible=True, which='both', linestyle='-', color='0.7', linewidth=0.7, alpha=0.7)
+fig.tight_layout()
+fig.savefig("eff.png")
+fig.savefig("eff.pdf")
+
+# plot of BDT output
+fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3,1]}, figsize=(6.4,6.4))
+
+sig_train = df[ (df["sample"]==0) & (df["label"]==1) ]["bdt_score"].values
+bkg_train = df[ (df["sample"]==0) & (df["label"]==0) ]["bdt_score"].values
+sig_test = df[ (df["sample"]==1) & (df["label"]==1) ]["bdt_score"].values
+bkg_test = df[ (df["sample"]==1) & (df["label"]==0) ]["bdt_score"].values
+sig_train_w = df[ (df["sample"]==0) & (df["label"]==1) ]["total_weight"].values
+bkg_train_w = df[ (df["sample"]==0) & (df["label"]==0) ]["total_weight"].values
+sig_test_w = df[ (df["sample"]==1) & (df["label"]==1) ]["total_weight"].values
+bkg_test_w = df[ (df["sample"]==1) & (df["label"]==0) ]["total_weight"].values
+
+# plot training sample dists
+ax[0].hist( bkg_train, bins=50, range=(0,1), label='Bkg Train', alpha=0.5, ec='none', fc='r', weights=bkg_train_w, density=True )
+ax[0].hist( sig_train, bins=50, range=(0,1), label='Sig Train', alpha=0.5, ec='none', fc='b', weights=sig_train_w, density=True )
+
+# plot test sample dists
+# if you want the error need to track squared weights (probably a better way of doing this)
+nb, xe = np.histogram( bkg_test, bins=50, range=(0,1), weights=bkg_test_w )
+nb2, _ = np.histogram( bkg_test, bins=50, range=(0,1), weights=bkg_test_w**2 )
+nbe = nb2**0.5 / nb
+nb, xe = np.histogram( bkg_test, bins=50, range=(0,1), density=True, weights=bkg_test_w )
+nbe = nbe * nb
+
+ns, xe = np.histogram( sig_test, bins=50, range=(0,1), weights=sig_test_w )
+ns2, _ = np.histogram( sig_test, bins=50, range=(0,1), weights=sig_test_w**2 )
+nse = ns2**0.5 / ns
+ns, xe = np.histogram( sig_test, bins=50, range=(0,1), density=True, weights=sig_test_w )
+nse = nse * ns
+
+cx = 0.5*(xe[1:]+xe[:-1])
+ax[0].errorbar( cx, nb, nbe, fmt='rx', label='Bkg Test' ) 
+ax[0].errorbar( cx, ns, nse, fmt='bo', label='Sig Test' ) 
+
+# now plot the residual
+nbt, xe = np.histogram( bkg_train, bins=50, range=(0,1), weights=bkg_train_w )
+nbt2, _ = np.histogram( bkg_train, bins=50, range=(0,1), weights=bkg_train_w**2 )
+nbte = nbt2**0.5 / nbt
+nbt, xe = np.histogram( bkg_train, bins=50, range=(0,1), density=True, weights=bkg_train_w )
+nbte = nbte * nbt
+
+nst, xe = np.histogram( sig_train, bins=50, range=(0,1), weights=sig_train_w )
+nst2, _ = np.histogram( sig_train, bins=50, range=(0,1), weights=sig_train_w**2 )
+nste = nst2**0.5 / nst
+nst, xe = np.histogram( sig_train, bins=50, range=(0,1), density=True, weights=sig_train_w )
+nste = nste * nst
+
+db = nb - nbt
+dbe = (nbe**2 + nbte**2)**0.5
+ds = ns - nst
+dse = (nse**2 + nste**2)**0.5
+pb = db / dbe
+ps = ds / dse
+
+ax[1].axhline(0, c='k', ls='--' )
+ax[1].errorbar( cx, pb, np.ones_like(pb), fmt='rx' )
+ax[1].errorbar( cx, ps, np.ones_like(ps), fmt='bo' )
+ax[1].set_ylabel('Pull')
+
+ax[0].set_xlabel('MVA Score')
+ax[0].set_ylabel('Density')
+ax[0].legend()
+ax[0].set_yscale('log')
+fig.tight_layout()
+fig.savefig("bdth.png")
+fig.savefig("bdth.pdf")
+
+plt.show()
+
+
+'''
+bdtplt.plot_bdt_response(x, "BDT1 response")
+responsepath = os.path.join(outputpath, f"BDTh-response.pdf")
+plt.savefig(responsepath)
+print(f'BDT1 response curve saved to')
+print(f"{15*' '}{responsepath}")
+plt.close()
+
+bdtplt.plot_roc(bdt, x_test[bdtvars], y_test, w_test)
+rocpath = os.path.join(outputpath, f"BDTh-roc.pdf")
+plt.savefig(rocpath)
+print(f'ROC saved to')
+print(f"{15*' '}{rocpath}")
+plt.close()
+
+
+
+for feature in responsevars:
+    bdtplt.plot_feature(x, 0.6, feature)
+    figpath = os.path.join(outputpath, f"BDTh-{feature}-withcut.pdf")
+    plt.savefig(figpath)
+    print(f'Feature plot with bdt cut saved to')
+    print(f"{15*' '}{figpath}")
+    plt.close()
+
+    bdtpltplot_feature(x, 0, feature)
+    figpath = os.path.join(outputpath, f"BDTh-{feature}-nocut.pdf")
+    plt.savefig(figpath)
+    print(f'Feature plot without cuts saved to')
+    print(f"{15*' '}{figpath}")
+    plt.close()
 '''
 
 
-
-
-
-
 '''
-
-
-
-
-
-
-
 
 #############################
 ## MAIN

@@ -228,6 +228,9 @@ def plot(varname,
     verbose : bool, optional
         Print out some useful stuff. Default: True
     """
+    decays_list = [cfg.sample_allocations[i] for i in components]
+    flat_decays_list = [item for sublist in decays_list for item in sublist]
+
     if density:
         if weight:
             raise RuntimeError( f"Cannot have both density and weight True. Please change one to False." )
@@ -240,32 +243,32 @@ def plot(varname,
             raise RuntimeError( f"cannot have remove_outliers=True for composition" )
         else:
             if isinstance(nchunks, list):
-                values1 = { sample: as_array(sample, var1, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                values1 = { sample: as_array(sample, var1, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
                 if var2!=None:
-                    values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                    values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
                 if var3!=None:
-                    values3 = { sample: as_array(sample, var3, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                    values3 = { sample: as_array(sample, var3, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
             else:
-                values1 = { sample: as_array(sample, var1, cut, nchunks) for sample in cfg.samples }
+                values1 = { sample: as_array(sample, var1, cut, nchunks) for sample in flat_decays_list }
                 if var2!=None:
-                    values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in cfg.samples }
+                    values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in flat_decays_list }
                 if var3!=None:
-                    values3 = { sample: as_array(sample, var3, cut, nchunks) for sample in cfg.samples }
+                    values3 = { sample: as_array(sample, var3, cut, nchunks) for sample in flat_decays_list }
        
         if composition == '+':
-            values = { sample: (values1[sample] + values2[sample]) for sample in cfg.samples }
+            values = { sample: (values1[sample] + values2[sample]) for sample in flat_decays_list }
         elif composition == '-':
-            values =  { sample: (values1[sample] - values2[sample]) for sample in cfg.samples }
+            values =  { sample: (values1[sample] - values2[sample]) for sample in flat_decays_list }
         elif composition == '/':
-            values =  { sample: values1[sample] /values2[sample] for sample in cfg.samples }
+            values =  { sample: values1[sample] /values2[sample] for sample in flat_decays_list }
         elif composition == '*':
-            values =  { sample: values1[sample] * values2[sample] for sample in cfg.samples }
+            values =  { sample: values1[sample] * values2[sample] for sample in flat_decays_list }
         elif composition == 'sumquad':
-            values =  { sample: np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2) for sample in cfg.samples }
+            values =  { sample: np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2) for sample in flat_decays_list }
         elif composition == 'normvect':
-            values =  { sample: values1[sample]/(np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2)) for sample in cfg.samples }
+            values =  { sample: values1[sample]/(np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2)) for sample in flat_decays_list }
         elif composition == 'log':
-            values =  {sample: [np.log(elem) if elem != 0 else 10 for elem in values1[sample]] for sample in cfg.samples}#{sample: np.log(values1[sample])for sample in cfg.samples} #if values1[sample] != 0 else 0 for sample in cfg.samples}
+            values =  {sample: [np.log(elem) if elem != 0 else 10 for elem in values1[sample]] for sample in flat_decays_list}#{sample: np.log(values1[sample])for sample in cfg.samples} #if values1[sample] != 0 else 0 for sample in cfg.samples}
         
         else:
             raise RuntimeError( f"No such composition {composition}" )
@@ -277,14 +280,14 @@ def plot(varname,
         # If nchunks is a list, use corresponding elements
         if remove_outliers:
             if isinstance(nchunks, list):
-                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i])) for i, sample in enumerate(cfg.samples) }
+                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i])) for i, sample in enumerate(flat_decays_list) }
             else:
-                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks)) for sample in cfg.samples }
+                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks)) for sample in flat_decays_list }
         else:
             if isinstance(nchunks, list):
-                values = { sample: as_array(sample, varname, cut, nchunks[i]) for i, sample in enumerate(cfg.samples) }
+                values = { sample: as_array(sample, varname, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
             else:
-                values = { sample: as_array(sample, varname, cut, nchunks) for sample in cfg.samples }
+                values = { sample: as_array(sample, varname, cut, nchunks) for sample in flat_decays_list }
 
     if range is None:
         xmin = min( [ min(values[sample]) for sample in values ] )
@@ -303,7 +306,7 @@ def plot(varname,
         # if density:
         #     print("----> WARNING: `density` incompatible with `weight`, setting to False")
         #     density = False
-        effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=args.inputpath, verbose=verbose)
+        effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=args.inputpath, verbose=verbose,samples=flat_decays_list)
         n_expect = efficiency_finder.get_sample_expectations(effs, signal_bf, save=None, verbose=verbose, cut=cut)
         ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
 

@@ -322,7 +322,11 @@ def plot(varname,
         hist_l = [ cfg.titles[sample] for sample in samples ]
 
         if stacked:
-            hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
+            if allocation=='combined_signal':
+                hist_opts = dict( stacked=True, histtype='step', lw=2 )
+                #hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
+            else:
+                hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
         else:
             hist_opts = dict( stacked=False, histtype='step', lw=2 )
 
@@ -334,23 +338,36 @@ def plot(varname,
         elif allocation=='Bdsignal':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
-            hist_opts['color'] = 'royalblue'
+            hist_opts['color'] = 'mediumblue'#'royalblue'
             hist_opts['hatch'] = '////'
         elif allocation=='combined_signal':
             hist_opts['lw'] = 2
-            hist_opts['color'] = ['cornflowerblue','royalblue']
-            hist_opts['alpha'] = 0.8
+            hist_opts['color'] = ['cornflowerblue','mediumblue']
+            total_color = 'midnightblue'
+            hist_opts['hatch'] = '////'
         elif allocation=='hadronic_background':
             reds = mpl.colormaps['Reds_r']
             hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
+            total_color = 'k'
+        elif allocation=='light_hadronic_background':
+            reds = mpl.colormaps['Reds_r']
+            hist_opts['color'] = reds( np.linspace(0.3, 1, len(samples)+2)[1:-1] )
+            total_color = 'indianred'
+        elif allocation=='heavy_hadronic_background':
+            reds = mpl.colormaps['Reds_r']
+            hist_opts['color'] = reds( np.linspace(0, 0.7, len(samples)+2)[1:-1] )
+            total_color = 'darkred'
         elif allocation=='tau_background':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
             hist_opts['color'] = 'mediumvioletred'
-            #hist_opts['facecolor'] = 'darkmagenta'
-            #hist_opts['fill'] = True
             hist_opts['hatch'] = r'\\\\'
-            #hist_opts['alpha'] = 0.6
+        elif allocation=='leptonic_background':
+            hist_opts['color'] = plt.cm.PuRd_r( np.linspace(0, 1, len(samples)+2)[1:-1] )
+            total_color = 'maroon'
+        elif allocation=='light_leptonic_background':
+            hist_opts['color'] = plt.cm.PuRd_r( np.linspace(0.25, 1, len(samples)+2)[1:-1] )
+            total_color = 'mediumvioletred'
         elif allocation=='bb_only':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
@@ -359,8 +376,6 @@ def plot(varname,
             hist_opts['color'] = reds(0.25)
             hist_opts['hatch'] = r'\\\\'
             hist_opts['fill'] = False
-
-
 
 
         
@@ -383,7 +398,7 @@ def plot(varname,
                 label = f'Total {allocation}',
                 weights = np.concatenate( hist_w ) if weight else None,
                 histtype = 'step',
-                color = 'k',
+                color = total_color,#'k',
                 lw = 2,
             )
 

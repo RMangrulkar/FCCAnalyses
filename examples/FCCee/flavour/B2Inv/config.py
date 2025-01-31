@@ -16,7 +16,7 @@ run_mode_choices = ['no_selection','prelim_cuts'] #when add run mode, now need t
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'prelim_cuts'
+run_mode = 'no_selection'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -45,9 +45,9 @@ processList = {
         "p8_ee_Zcc_ecm91": {"fraction": 0.00025, "chunks": 2},
         "p8_ee_Zss_ecm91": {"fraction": 0.00025, "chunks": 2},
         "p8_ee_Zud_ecm91": {"fraction": 0.00025, "chunks": 2},
-        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 20}, 
-        "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 20},
-        "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 20},
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.05, "chunks": 40}, 
+        "p8_ee_Zmumu_ecm91": {"fraction": 0.05, "chunks": 40},
+        "p8_ee_Zee_ecm91": {"fraction": 0.05, "chunks": 40},
     },
     
 
@@ -58,7 +58,7 @@ processList = {
         "p8_ee_Zcc_ecm91": {"fraction": 0.025, "chunks": 15},
         "p8_ee_Zss_ecm91": {"fraction": 0.025, "chunks": 15},
         "p8_ee_Zud_ecm91": {"fraction": 0.045, "chunks": 30},
-        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 10}, 
+        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 40}, 
         "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
         "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},
         
@@ -156,16 +156,16 @@ samples = [
 ]
 
 sample_allocations = {
+    "leptonic_background": ["p8_ee_Ztautau_ecm91","p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
+    "tau_background":  ["p8_ee_Ztautau_ecm91"],
+    "light_leptonic_background": ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
+    "hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+    "bb_only":    ["p8_ee_Zbb_ecm91"],
+    "heavy_hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
+    "light_hadronic_background": ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"], 
     "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
     "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
-    "hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
-    "light_background": ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"], 
-    "heavy_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
-    "leptonic_background": ["p8_ee_Ztautau_ecm91","p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
-    "light_leptonic_backgrounds": ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
-    "tau_background":  ["p8_ee_Ztautau_ecm91"],
-    "bb_only":    ["p8_ee_Zbb_ecm91"],
 }
 
 sample_shorthand = {

@@ -459,7 +459,7 @@ class RDFanalysis():
             .Define("Rec_vtx_d2PV_y",          "myUtils::get_Vertex_d2PV(Rec_VertexObject, 1)")
             .Define("Rec_vtx_d2PV_z",          "myUtils::get_Vertex_d2PV(Rec_VertexObject, 2)")
             
-            #calculate costheta for thrust to d2pv vector - returns 0 if vertex is a PV - not minus signs infront of d2pv variabls as d2PV defined in source code as PV-SV [the vector we want is SV-PV]
+            #calculate costheta for thrust to d2pv vector - returns 0 if vertex is a PV - note minus signs infront of d2pv variabls as d2PV defined in source code as PV-SV [the vector we want is SV-PV]
             .Define("Rec_vtx_thrustCosTheta_d2PV",           "myUtils::getAxisCosTheta_withcond(EVT_ThrustInfo, (-Rec_vtx_d2PV_x), (-Rec_vtx_d2PV_y), (-Rec_vtx_d2PV_z),1-(Rec_vtx_isPV))")
 
             # Flag vertex in max or min hemisphere - use get_RP_inHemis as gives '-1' if costheta==0
@@ -555,6 +555,20 @@ class RDFanalysis():
             .Filter("PV_Rec_vtx_m<40")  #Remove events where total reconstructed mass at the PV is large - good at removing light (usd) backgrounds for free
             #.Filter("ROOT::VecOps::Any(Rec_vtx_isPV > 0)")  # Remove events that fail to reconstruct a PV - I domt think this is needed due to above filter
 
+            #############################################
+            ## Extra filters based on reconstruction  ###
+            #############################################
+
+            #Require iterative fit to successfully fit a PV [when it fails assigns ntracks==1]
+            #This is clearest way to cut on this as physically impossible to reconstruct a 1 track vertex
+            .Filter("Rec_PV_ntracks>1")
+
+            #check the hemisphere assignment for all SV using vtx_p and PV-SV vector agree
+            .Define("matching_vtx_assignment", "Rec_vtx_in_hemisEmin==Rec_vtx_in_hemisEmin_d2PV") #INTERMEDIATE
+            # check matching_vtx_assignment has form [0, any number of 1s] ie. all but PV hemis assignments agrees per event
+            .Define("HasFormZeroOnes", "matching_vtx_assignment.size() > 0 && matching_vtx_assignment.at(0) == 0 && Sum(matching_vtx_assignment) == matching_vtx_assignment.size() - 1")   #INTERMEDIATE
+            # Filter based on above matching condition
+            .Filter("HasFormZeroOnes==1")
         )
 
         # If producing files for training BDTh/l then we are done

@@ -38,7 +38,7 @@ def read_data(inpath, folder, cut, chunk_index=0):
 tupling_output_path = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/" 
 data_folder = "prelim_cuts_noPV_ntracks_cut" 
 input = os.path.join(os.path.abspath(tupling_output_path), data_folder)
-decay_list =  ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91",] #cfg.samples
+decay_list = cfg.samples
 cuts = "Rec_PV_ntracks>1"
 
 

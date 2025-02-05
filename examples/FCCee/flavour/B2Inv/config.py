@@ -71,7 +71,7 @@ fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
-        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts/"),
+        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_noPV_ntracks_cut/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
     },
     "testFile": {
@@ -119,9 +119,9 @@ bdt1_opts = {
 bdth_opts = {
     "training":           True,                  
     "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want ot train on data with just preliminary cuts
-    "outputPath":         os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/"),
-    "jsonPath":           os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/bdth.json"),
-    "mvaPath":            os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/saved_bdth.root"),
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/"),
+    "jsonPath":           os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/bdth.json"),
+    "mvaPath":            os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/saved_bdth.root"),
     "mvaRBDTName":        "bdth",                 # Name of the TMVA TObject in the .root file
     "mvaCut":             0.,
     "mvaBranchList":      "bdth-vars",  # key in the yaml file pointing to the feature list 

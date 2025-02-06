@@ -17,52 +17,42 @@ import efficiency_finder
 from argparse import ArgumentParser
 parser = ArgumentParser(description="Interactively plots features from a specified inputpath")
 parser.add_argument("-i","--inputpath", default=f"{cfg.fccana_opts['outputDir']['prelim_cuts']}", help="Path to look for files in, default is the stage2 directory in config.py")
-# MARK FOR DELETION
-# parser.add_argument("-e","--efficiencies", default=None, help="Name of efficiency dictionary key, default is None")
 args = parser.parse_args()
 
-def get_list_of_files(folder):
+def get_list_of_files(folder,inputpath = args.inputpath):
     
-    path = os.path.join( args.inputpath, folder )
+    path = os.path.join( inputpath, folder )
     if not os.path.exists( path ):
         raise RuntimeError( f"No such path {path}" )
     
-    files = glob( os.path.join(args.inputpath, folder, "*.root") )
+    files = glob( os.path.join(inputpath, folder, "*.root") )
     if len(files)==0:
         raise RuntimeError( f"No root files found in {path}" )
 
     return files
 
-def get_list_of_branches(folder):
-    f0 = get_list_of_files(folder)[0]
+def get_list_of_branches(folder,inputpath=args.inputpath):
+    f0 = get_list_of_files(folder,inputpath)[0]
     try:
         tr = uproot.open( f0+":events" )
         return [ br.name for br in tr.branches ]
     except:
         raise RuntimeError( f"No tree called events found in file {f0}" )
 
-def check_var(folder, varname):
-    branches = get_list_of_branches(folder)
-    if varname not in branches:
-        print( f"Branches found in files at path {folder}:" )
-        for br in branches:
-            print('  ', br)
-        raise RuntimeError( f"No branch {varname} found in files at path {folder}. Try one from the list above." )
-    return True
 
-def as_array(folder, varname, cut, nchunks):
+def as_array(folder, varname, cut, nchunks,inputpath =args.inputpath ):
     if nchunks is not None:
-        files = glob(os.path.join(os.path.abspath(args.inputpath), folder, "*.root"))[:nchunks]
+        files = glob(os.path.join(os.path.abspath(inputpath), folder, "*.root"))[:nchunks]
         path = [ f"{f}:events" for f in files ]
     else:
-        path = os.path.join( os.path.abspath(args.inputpath), folder, "*.root:events" )
+        path = os.path.join( os.path.abspath(inputpath), folder, "*.root:events" )
 
     try: 
         # awkward array instead of numpy -> allows variable length elements
         #arr = uproot.concatenate( path+":events", expressions=varname, library="np")[varname]
         arr = uproot.concatenate( path, expressions=varname, cut=cut)[varname]
     except:
-        branches = get_list_of_branches(folder)
+        branches = get_list_of_branches(folder,inputpath)
         print( f"Branches found in files at path {folder}:" )
         for br in branches:
             print('  ', br)
@@ -100,44 +90,6 @@ def histogram_settings():
 
     return hist_settings
 
-def get_efficiencies():
-    """
-    Returns the efficiency dictionary from config.py with the efficiencies argument as key
-    """
-    if args.efficiencies is None:
-        return { sample : 1 for sample in cfg.samples }
-    else:
-        if args.efficiencies not in cfg.efficiencies:
-            raise RuntimeError( f"Tried passed efficiency dictionary key {args.efficiencies} which does not exist in config" )
-        return cfg.efficiencies[args.efficiencies]
-
-def get_weights(cut=None,signal_bf=1e-6,Bd_signal_bf = 1e-6):
-    """
-    Returns a dictionary of weights for each sample
-    Assumes a placeholder branching fraction of 1e-6 for Bs2NuNu
-    """
-    hist_weights = {}
-    effs = get_efficiencies()
-    for sample in cfg.samples:
-        hist_weights[sample] = effs[sample][0] * cfg.branching_fractions[sample][0]
-        if sample in cfg.sample_allocations['Bssignal']:
-            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*signal_bf
-        if sample in cfg.sample_allocations['Bdsignal']:
-            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bd_signal_bf
-    
-    
-    if cut is not None:
-        cut_efficiency = efficiency_finder.get_efficiencies('custom',
-                                                            further_analysis=True,
-                                                            cut=cut,
-                                                            raw=False,
-                                                            custompath=args.inputpath,
-                                                            vebose=False)
-        
-        hist_weights = {sample: hist_weights[sample]*cut_efficiency[sample+'_eff'] for sample in hist_weights}
-
-    return hist_weights
-
 #Function to enable automatic xtitle with > or <
 def replace_all(s, old_char, new_char):
     # Replace all occurrences of the old character with the new character
@@ -162,12 +114,14 @@ def plot(varname,
          save=None, 
          bins=50,
          xtitle=None,
-         range=None, 
+         xrange=None, 
          yrange=None,
          logy=False,
          total=["hadronic_background"], 
-         components=["Bs_signal", "hadronic_background"],
-         verbose=True):
+         components=["Bssignal", "hadronic_background"],
+         verbose=True,
+         inputpath = args.inputpath,
+         data=None):
     
     """ 
     plot( varname, **opts ) will plot a variable
@@ -214,7 +168,7 @@ def plot(varname,
     xtitle : str, optional
         Provide a custom title for the x axis. Default : `varname`, cut=`cut`.
         Use this if LaTeX complains about the cut expression.
-    range : tuple or list, optional
+    xrange : tuple or list, optional
         The lower and upper limits to use in the plot. 
         If None uses the minimum and maximum value from the samples. Default: None
     yrange : tuple or list, optional
@@ -227,6 +181,11 @@ def plot(varname,
         Distinguish the samples according to cfg.sample_allocations. Default: ['Bssignal', 'hadronic_background'] - can also add Bd_signal
     verbose : bool, optional
         Print out some useful stuff. Default: True
+    inputpath : str, optional
+        For when importing function so that can run without argpasser. path to data folder to be used. Default: args.inputpath
+    data : pandas df of data, optional.
+        Allows plotter to be impoarted and used if have data in a pandas df rather than reading from the root file. Default:None
+        note: this is currently not compatible with plotting a compoition
     """
     decays_list = [cfg.sample_allocations[i] for i in components]
     flat_decays_list = [item for sublist in decays_list for item in sublist]
@@ -243,17 +202,17 @@ def plot(varname,
             raise RuntimeError( f"cannot have remove_outliers=True for composition" )
         else:
             if isinstance(nchunks, list):
-                values1 = { sample: as_array(sample, var1, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
+                values1 = { sample: as_array(sample, var1, cut, nchunks[i],inputpath) for i, sample in enumerate(flat_decays_list) }
                 if var2!=None:
-                    values2 = { sample: as_array(sample, var2, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
+                    values2 = { sample: as_array(sample, var2, cut, nchunks[i],inputpath) for i, sample in enumerate(flat_decays_list) }
                 if var3!=None:
-                    values3 = { sample: as_array(sample, var3, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
+                    values3 = { sample: as_array(sample, var3, cut, nchunks[i],inputpath) for i, sample in enumerate(flat_decays_list) }
             else:
-                values1 = { sample: as_array(sample, var1, cut, nchunks) for sample in flat_decays_list }
+                values1 = { sample: as_array(sample, var1, cut, nchunks,inputpath) for sample in flat_decays_list }
                 if var2!=None:
-                    values2 = { sample: as_array(sample, var2, cut, nchunks) for sample in flat_decays_list }
+                    values2 = { sample: as_array(sample, var2, cut, nchunks,inputpath) for sample in flat_decays_list }
                 if var3!=None:
-                    values3 = { sample: as_array(sample, var3, cut, nchunks) for sample in flat_decays_list }
+                    values3 = { sample: as_array(sample, var3, cut, nchunks,inputpath) for sample in flat_decays_list }
        
         if composition == '+':
             values = { sample: (values1[sample] + values2[sample]) for sample in flat_decays_list }
@@ -274,27 +233,45 @@ def plot(varname,
             raise RuntimeError( f"No such composition {composition}" )
 
     else:
+        
         if var1 !=None or var2 !=None or var3 !=None or composition !=None:
             print(f'var1,var2,composition inputs ignored unless varname=="composition". Currently using varname={varname}')
-    
-        # If nchunks is a list, use corresponding elements
-        if remove_outliers:
-            if isinstance(nchunks, list):
-                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i])) for i, sample in enumerate(flat_decays_list) }
-            else:
-                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks)) for sample in flat_decays_list }
-        else:
-            if isinstance(nchunks, list):
-                values = { sample: as_array(sample, varname, cut, nchunks[i]) for i, sample in enumerate(flat_decays_list) }
-            else:
-                values = { sample: as_array(sample, varname, cut, nchunks) for sample in flat_decays_list }
 
-    if range is None:
+        if data is not None:
+            print('Data from Pandas dataframe input to plotter being used. Note: input path, remove_outliers and nchunks are therefore ignored')
+            
+            if varname =='composition':
+                raise ValueError('composition currently incompatible with data input as pandas dataframe')
+            
+            else:
+                if cut:
+                    df = data.query(cut)
+
+                else:
+                    df = data
+
+                values = {sample: df[df['decay']==sample][varname].to_numpy() for sample in flat_decays_list}
+
+
+        else:
+            # If nchunks is a list, use corresponding elements
+            if remove_outliers:
+                if isinstance(nchunks, list):
+                    values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i],inputpath)) for i, sample in enumerate(flat_decays_list) }
+                else:
+                    values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks,inputpath)) for sample in flat_decays_list }
+            else:
+                if isinstance(nchunks, list):
+                    values = { sample: as_array(sample, varname, cut, nchunks[i],inputpath) for i, sample in enumerate(flat_decays_list) }
+                else:
+                    values = { sample: as_array(sample, varname, cut, nchunks,inputpath) for sample in flat_decays_list }
+
+    if xrange is None:
         xmin = min( [ min(values[sample]) for sample in values ] )
         xmax = max( [ max(values[sample]) for sample in values ] )
     else:
-        xmin = range[0]
-        xmax = range[1]
+        xmin = xrange[0]
+        xmax = xrange[1]
     
     hist_settings = histogram_settings()
     #hist_weights = get_weights(cut=cut)
@@ -306,7 +283,7 @@ def plot(varname,
         # if density:
         #     print("----> WARNING: `density` incompatible with `weight`, setting to False")
         #     density = False
-        effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=args.inputpath, verbose=verbose,samples=flat_decays_list)
+        effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=inputpath, verbose=verbose,samples=flat_decays_list)
         n_expect = efficiency_finder.get_sample_expectations(effs, signal_bf, save=None, verbose=verbose, cut=cut)
         ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
 
@@ -351,11 +328,11 @@ def plot(varname,
             total_color = 'k'
         elif allocation=='light_hadronic_background':
             reds = mpl.colormaps['Reds_r']
-            hist_opts['color'] = reds( np.linspace(0.3, 1, len(samples)+2)[1:-1] )
+            hist_opts['color'] = reds( np.linspace(0.25, 1, len(samples)+2)[1:-1] )
             total_color = 'indianred'
         elif allocation=='heavy_hadronic_background':
             reds = mpl.colormaps['Reds_r']
-            hist_opts['color'] = reds( np.linspace(0, 0.7, len(samples)+2)[1:-1] )
+            hist_opts['color'] = reds( np.linspace(0, 0.75, len(samples)+2)[1:-1] )
             total_color = 'darkred'
         elif allocation=='tau_background':
             hist_opts['histtype'] = 'step'
@@ -461,17 +438,6 @@ def plot(varname,
     if save is not None:
         fig.savefig(save)
 
-def make_plots():
-
-    outpath = f"{args.inputpath}/plots"
-    if not os.path.exists( outpath ):
-        os.system( f"mkdir -p {outpath}" )
-    
-    for stacked in [True, False]:
-        suffix = "_stacked" if stacked else ""
-        plot( "EVT_Thrust_Emin_e", bins=100, range=(0,50), stacked=stacked, save=f"{outpath}/EVT_Thrust_Emin_e{suffix}.pdf" ) 
-        plot( "EVT_Thrust_Emax_e", bins=100, range=(0,50), stacked=stacked, save=f"{outpath}/EVT_Thrust_Emin_e{suffix}.pdf" )
-        plot( "MC_Z_pz", stacked=stacked, save=f"{outpath}/MC_Z_pz{suffix}.pdf")
 
 if __name__=="__main__":
 
@@ -690,3 +656,70 @@ nbins = [50,
 
 
 #for i in range(len(nbins)): plot(variable_list_BDT2_options[i],range=ranges[i],bins=nbins[i], save=f'plots/Data_with_correct_BSC_Jan2025/{variable_list_BDT2_options[i]}.pdf',weight=True,components=['hadronic_background','Bssignal'],total=["hadronic_background"], nchunks=12,signal_bf=1e-1)
+
+
+
+'''
+def check_var(folder, varname,inputpath=args.inputpath):
+    branches = get_list_of_branches(folder,inputpath)
+    if varname not in branches:
+        print( f"Branches found in files at path {folder}:" )
+        for br in branches:
+            print('  ', br)
+        raise RuntimeError( f"No branch {varname} found in files at path {folder}. Try one from the list above." )
+    return True
+'''
+
+'''
+def make_plots():
+
+    outpath = f"{args.inputpath}/plots"
+    if not os.path.exists( outpath ):
+        os.system( f"mkdir -p {outpath}" )
+    
+    for stacked in [True, False]:
+        suffix = "_stacked" if stacked else ""
+        plot( "EVT_Thrust_Emin_e", bins=100, range=(0,50), stacked=stacked, save=f"{outpath}/EVT_Thrust_Emin_e{suffix}.pdf" ) 
+        plot( "EVT_Thrust_Emax_e", bins=100, range=(0,50), stacked=stacked, save=f"{outpath}/EVT_Thrust_Emin_e{suffix}.pdf" )
+        plot( "MC_Z_pz", stacked=stacked, save=f"{outpath}/MC_Z_pz{suffix}.pdf")
+'''
+
+'''
+def get_efficiencies():
+    """
+    Returns the efficiency dictionary from config.py with the efficiencies argument as key
+    """
+    if args.efficiencies is None:
+        return { sample : 1 for sample in cfg.samples }
+    else:
+        if args.efficiencies not in cfg.efficiencies:
+            raise RuntimeError( f"Tried passed efficiency dictionary key {args.efficiencies} which does not exist in config" )
+        return cfg.efficiencies[args.efficiencies]
+
+def get_weights(cut=None,signal_bf=1e-6,Bd_signal_bf = 1e-6,inputpath = args.inputpath):
+    """
+    Returns a dictionary of weights for each sample
+    Assumes a placeholder branching fraction of 1e-6 for Bs2NuNu
+    """
+    hist_weights = {}
+    effs = get_efficiencies()
+    for sample in cfg.samples:
+        hist_weights[sample] = effs[sample][0] * cfg.branching_fractions[sample][0]
+        if sample in cfg.sample_allocations['Bssignal']:
+            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*signal_bf
+        if sample in cfg.sample_allocations['Bdsignal']:
+            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bd_signal_bf
+    
+    
+    if cut is not None:
+        cut_efficiency = efficiency_finder.get_efficiencies('custom',
+                                                            further_analysis=True,
+                                                            cut=cut,
+                                                            raw=False,
+                                                            custompath=inputpath,
+                                                            vebose=False)
+        
+        hist_weights = {sample: hist_weights[sample]*cut_efficiency[sample+'_eff'] for sample in hist_weights}
+
+    return hist_weights
+'''

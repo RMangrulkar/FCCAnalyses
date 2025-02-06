@@ -17,6 +17,7 @@ from sklearn.metrics import roc_curve, auc
 
 import config as cfg
 import efficiency_finder
+import variable_plotter as vp
 
 
 # Function to load the BDT model from a JSON file
@@ -261,6 +262,21 @@ def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=
         fig.savefig(f'{bdt_name}_{output_file_name}_zoomedin.pdf')
 
 
+def post_bdt_variable_plot(df,variable,
+                           bdt_cut, #must be string of correct format as in vp
+                           bdt_name = "BDTh",
+                           weight=True,
+                           density=False,
+                           signal_bf=1e-6, #for Bs
+                           components=["Bssignal", "hadronic_background"],outpath=None):
+    if outpath:
+        savepath=os.path.join(outpath,f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf')
+    else:
+        savepath= f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf'
+
+    vp.plot(varname=variable,cut=bdt_cut, data=df,weight=weight,density=density,signal_bf=signal_bf, components=components,save=savepath)
+
+
 #######################################################
 # Load BDT and apply to loaded data - define as funtion
 #######################################################
@@ -318,14 +334,24 @@ model, bdtname, df = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl"
 
 outputpath = os.path.join(cfg.bdth_opts['outputPath'],"baseline")
 
-plot_simple_ROC(df, bdt_name = bdtname,outpath=outputpath)
-plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
-plot_eff(df,bdt_name = bdtname, outpath=outputpath)
-plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
+#plot_simple_ROC(df, bdt_name = bdtname,outpath=outputpath)
+#plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
+#plot_eff(df,bdt_name = bdtname, outpath=outputpath)
+#plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
+post_bdt_variable_plot(df,variable='EVT_e',bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=False,density=True)
 
 
 
 
+
+
+
+
+
+
+
+
+####################################### old - to delete when sure dont need #########################################################
 
 '''
 #Section needed as currently not got saved df :(

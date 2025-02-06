@@ -120,16 +120,28 @@ bdth_opts = {
     "training":           True,                  
     "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want ot train on data with just preliminary cuts
     "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/"),
-    "jsonPath":           os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/bdth.json"),
-    "mvaPath":            os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/saved_bdth.root"),
-    "mvaRBDTName":        "bdth",                 # Name of the TMVA TObject in the .root file
-    "mvaCut":             0.,
-    "mvaBranchList":      "bdth-vars",  # key in the yaml file pointing to the feature list 
-    "optHyperParamsFile": os.path.join(FCCAnalysesPath, "outputs/bdth_outputs/hps_bdth.yaml"),
+    #"jsonPath":           os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/bdth.json"),
+    #"mvaPath":            os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/saved_bdth.root"),
+    #"mvaRBDTName":        "bdth",                 # Name of the TMVA TObject in the .root file
+    #"mvaCut":             0.,
+    #"mvaBranchList":      "bdth-vars",  # key in the yaml file pointing to the feature list 
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
 }
 
+hp_opts = {
+    "default-hps": {'n_estimators': 400, 
+                    'learning_rate': 0.1, #xgb default=0.3
+                    'max_depth': 3, #xgb default=6
+                    'gamma': 0, #xgb default (min_split_loss) 
+                    'min_child_weight': 1, #xgb default
+                    'max_delta_step': 0, #xgb default
+                    'subsample':1, }, #xgb default
+
+    # for all hp configs that are not 'default_hps' only need to specify changes from default above
+
+    "hp1": {'learning_rate': 0.3,} 
+}
 
 
 #BSC taken from https://github.com/HEP-FCC/FCCeePhysicsPerformance/blob/master/General/README.md#generating-events-under-realistic-fcc-ee-environment-conditions and agreement checked with MC samples

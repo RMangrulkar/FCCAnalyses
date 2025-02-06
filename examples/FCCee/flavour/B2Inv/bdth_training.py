@@ -55,11 +55,11 @@ def set_outputpath(outputpath):
 
 
 #Define function that does training
-def train_bdt(pickled_df_fname = 'bdth_dataframe.pkl',
-              bdtname='BDTh',
+def train_bdth(pickled_df_fname = "bdth_dataframe.pkl", 
               config_bdtopts = cfg.bdth_opts,
-              training_round = 'baseline',
-              **hps): #should be a dict of hps want to use
+              training_round = "baseline",
+              hps_dict_name = "default-hps",#if not using default, name of hp config in config
+              features_list_name = "baseline-bdth-vars"): 
     
     
     ## PREPROCESSING AND CREATING df
@@ -73,14 +73,12 @@ def train_bdt(pickled_df_fname = 'bdth_dataframe.pkl',
     plt.style.use(os.path.abspath(os.path.join(cfg.FCCAnalysesPath, 'fcc.mplstyle')))
 
     #path to data and outputs
-    inputpath    = check_inputpath(config_bdtopts['inputPath']) 
     outputpath   = set_outputpath(config_bdtopts['outputPath'])
     yamlpath     = check_inputpath(cfg.fccana_opts['yamlPath'])
 
     #Getting BDT vars for training from yaml
-    bdtvars_list = config_bdtopts['mvaBranchList']
-    bdtvars      = vars_fromyaml(yamlpath, bdtvars_list)
-
+    bdtvars      = vars_fromyaml(yamlpath, features_list_name)
+    bdtname      = f'BDTh_{hps_dict_name}_{features_list_name}'
 
     #loading saved data
     pickled_df_path = os.path.join(outputpath, pickled_df_fname)
@@ -102,20 +100,13 @@ def train_bdt(pickled_df_fname = 'bdth_dataframe.pkl',
     w_valid = df[ df["sample"]==2][ "total_weight" ]
 
 
-
     # Set Default hyperparameters - updated with those input
-    default_hps = {
-        'n_estimators': 400, 
-        'learning_rate': 0.1, #xgb default=0.3
-        'max_depth': 3, #xgb default=0.6
-        'gamma': 0, #xgb default (min_split_loss) 
-        'min_child_weight': 1, #xgb default
-        'max_delta_step': 0, #xgb default
-        'subsample':1,  #xgb default
-    }
-    
-    # Update default hyperparameters with any provided 
-    default_hps.update(hps)
+    default_hps = cfg.hp_opts['default_hps']
+
+    if hps_dict_name != 'default_hps':
+        hps =  cfg.hp_opts[hps_dict_name]
+        # Update default hyperparameters with any provided 
+        default_hps.update(hps)
 
     #Possible hps to try
         #"n_estimators": [100, 150, 200],
@@ -133,13 +124,16 @@ def train_bdt(pickled_df_fname = 'bdth_dataframe.pkl',
 
     print("CURRENTLY NO HP OPTIMISATION OR CROSS VALIDATION")
     # now let's train it
-    bdt = xgb.XGBClassifier( n_estimators=default_hps['n_estimators'],
-                            learning_rate=default_hps['learning_rate'],
-                            max_depth=default_hps['max_depth'],
-                            gamma=default_hps['gamma'],
-                            min_child_weight=default_hps['min_child_weight'],
-                            max_delta_step=default_hps['max_delta_step'],
-                            subsample=default_hps['subsample']) 
+    bdt = xgb.XGBClassifier( objective='binary:logistic') #xgb default objective
+    #nb. could add early_stopping_rounds=10, eval_metric="auc",  - if specify first want to specify second as this is metric used for early stopping
+
+    bdt.set_params(n_estimators=default_hps['n_estimators'],
+                    learning_rate=default_hps['learning_rate'],
+                    max_depth=default_hps['max_depth'],
+                    gamma=default_hps['gamma'],
+                    min_child_weight=default_hps['min_child_weight'],
+                    max_delta_step=default_hps['max_delta_step'],
+                    subsample=default_hps['subsample']) 
     
     print(f"\n----> INFO: Training using {default_hps}")
 
@@ -160,6 +154,7 @@ def train_bdt(pickled_df_fname = 'bdth_dataframe.pkl',
     importance_indices = np.argsort(bdt.feature_importances_)
     sorted_features = bdt.feature_names_in_[importance_indices[::-1]]
     sorted_importances = bdt.feature_importances_[importance_indices[::-1]]
+    print(f"Feature importance type: {bdt.importance_type}")
     print( "Feature Importance:")
     print( tabulate( zip( sorted_features, sorted_importances ) ) )
 
@@ -175,9 +170,6 @@ def train_bdt(pickled_df_fname = 'bdth_dataframe.pkl',
         log_file.write(f'bdt_training_vars: {bdtvars}\n')
 
     return bdt, df
-
-
-
 
 
 

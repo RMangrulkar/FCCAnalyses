@@ -261,49 +261,67 @@ def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=
         fig.savefig(f'{bdt_name}_{output_file_name}_zoomedin.pdf')
 
 
-#############################
-# Load BDT 
-#############################
+#######################################################
+# Load BDT and apply to loaded data - define as funtion
+#######################################################
 
-# Path to the JSON for BDT
-json_path = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/prelim_cuts_noPV_ntracks_cut/bdth_outputs/baseline/bdt.json"
+def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl", 
+                        config_bdtopts = cfg.bdth_opts,
+                        training_round = "baseline",
+                        hps_dict_name = "default-hps",
+                        features_list_name = "baseline-bdth-vars"): # hps dict and features_list_name specift BDT used
+    
+    
+    #path to data and outputs
+    outputpath   = config_bdtopts['outputPath']
+    yamlpath = cfg.fccana_opts['yamlPath']
 
-# Load the BDT model
-try:
-    print("Loading BDT model...")
-    bdt_model = load_bdt_model(json_path)
-    print("BDT model loaded successfully.")
-except Exception as e:
-    print(f"Error loading BDT model: {e}")
-    quit()
+    #Getting BDT vars for training from yaml
+    bdtvars      = vars_fromyaml(yamlpath, features_list_name)
+    bdtname      = f'BDTh_{hps_dict_name}_{features_list_name}'
 
+    #path to pickled data
+    pickled_df_path = os.path.join(outputpath, pickled_df_fname)
 
-#########################################
-## Read df saved to pickle and add BDT ##
-#########################################
+    #path to saved bdt
+    bdt_json_path = os.path.join(outputpath,training_round,f"{bdtname}.json")
 
-#Getting BDT vars for training from yaml
-bdtvars_list = cfg.bdth_opts['mvaBranchList']
-yamlpath     = cfg.fccana_opts['yamlPath']
-bdtvars      = vars_fromyaml(yamlpath, bdtvars_list) #change so that this comes from an output log when the BDT is produced
-training_round = 'baseline'
-outputpath   = cfg.bdth_opts['outputPath']
-pickled_df_path = os.path.join(outputpath, 'bdth_dataframe.pkl')
+    # Load the BDT model
+    try:
+        print("Loading BDT model...")
+        bdt_model = load_bdt_model(bdt_json_path)
+        print("BDT model loaded successfully.")
+    except Exception as e:
+        print(f"Error loading BDT model: {e}")
+        quit()
 
-# load pickled df
-df = pd.read_pickle(pickled_df_path)
+    # Read df saved to pickle and add BDT 
 
-#add bdt score
-df["bdt_score"] =  bdt_model.predict(xgb.DMatrix(df[bdtvars])) #Add BDT1 score
+    #Getting BDT vars for training from yaml
+    # load pickled df
+    df = pd.read_pickle(pickled_df_path)
+
+    #add bdt score
+    df["bdt_score"] =  bdt_model.predict(xgb.DMatrix(df[bdtvars])) #Add BDT1 score
+
+    return bdt_model, bdtname, df
 
 #########################################
 ## Make some plots 
 ########################################
-outputpath = os.path.join(outputpath,training_round)
-plot_simple_ROC(df, outpath=outputpath)
-plot_bdt_response(df,outpath=outputpath)
-plot_eff(df, outpath=outputpath)
-plot_ROC_star(df, outpath=outputpath)
+
+model, bdtname, df = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl", 
+                        config_bdtopts = cfg.bdth_opts,
+                        training_round = "baseline",
+                        hps_dict_name = "default-hps",
+                        features_list_name = "baseline-bdth-vars")
+
+outputpath = os.path.join(cfg.bdth_opts['outputPath'],"baseline")
+
+plot_simple_ROC(df, bdt_name = bdtname,outpath=outputpath)
+plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
+plot_eff(df,bdt_name = bdtname, outpath=outputpath)
+plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
 
 
 

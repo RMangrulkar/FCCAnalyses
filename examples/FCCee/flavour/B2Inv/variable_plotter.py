@@ -242,6 +242,8 @@ def plot(varname,
             
             if varname =='composition':
                 raise ValueError('composition currently incompatible with data input as pandas dataframe')
+            if weight == True:
+                raise ValueError('weight currently incompatible with data input as pandas dataframe, please use density instead')
             
             else:
                 if cut:
@@ -292,15 +294,17 @@ def plot(varname,
             continue
         samples = cfg.sample_allocations[allocation]
         hist_x = [ values[sample] for sample in samples ]
+
         if weight:
                 hist_w = [ np.ones_like(values[sample])*n_expect[sample+'_num']/len(values[sample]) for sample in samples ]
         else:
                 hist_w = None
+
         hist_l = [ cfg.titles[sample] for sample in samples ]
 
         if stacked:
             if allocation=='combined_signal':
-                hist_opts = dict( stacked=True, histtype='step', lw=2 )
+                hist_opts = dict( stacked=True, histtype='step', lw=2, hatch = '////')
                 #hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
             else:
                 hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
@@ -310,52 +314,48 @@ def plot(varname,
         if allocation=='Bssignal':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
-            hist_opts['color'] = 'cornflowerblue'
+            hist_opts['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-1]) #'cornflowerblue'
             hist_opts['hatch'] = '////'
         elif allocation=='Bdsignal':
             hist_opts['histtype'] = 'step'
             hist_opts['lw'] = 2
-            hist_opts['color'] = 'mediumblue'#'royalblue'
-            hist_opts['hatch'] = '////'
+            hist_opts['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[3]) #'mediumblue'#'royalblue'
+            hist_opts['hatch'] = r'\\\\'
         elif allocation=='combined_signal':
             hist_opts['lw'] = 2
-            hist_opts['color'] = ['cornflowerblue','mediumblue']
+            hist_opts['color'] =plt.cm.Blues( np.linspace(0, 1, len(samples)+4)[3:-1] ) #['cornflowerblue','mediumblue']#['cornflowerblue', 'dodgerblue',]#['cadetblue','teal']#['cornflowerblue','mediumblue']
             total_color = 'midnightblue'
             hist_opts['hatch'] = '////'
+
         elif allocation=='hadronic_background':
-            reds = mpl.colormaps['Reds_r']
-            hist_opts['color'] = reds( np.linspace(0, 1, len(samples)+2)[1:-1] )
+            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(samples)+2)[1:-1] )
             total_color = 'k'
         elif allocation=='light_hadronic_background':
-            reds = mpl.colormaps['Reds_r']
-            hist_opts['color'] = reds( np.linspace(0.25, 1, len(samples)+2)[1:-1] )
+            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[3:-1] )
             total_color = 'indianred'
         elif allocation=='heavy_hadronic_background':
-            reds = mpl.colormaps['Reds_r']
-            hist_opts['color'] = reds( np.linspace(0, 0.75, len(samples)+2)[1:-1] )
+            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[1:3] )
             total_color = 'darkred'
-        elif allocation=='tau_background':
-            hist_opts['histtype'] = 'step'
-            hist_opts['lw'] = 2
-            hist_opts['color'] = 'mediumvioletred'
-            hist_opts['hatch'] = r'\\\\'
-        elif allocation=='leptonic_background':
-            hist_opts['color'] = plt.cm.PuRd_r( np.linspace(0, 1, len(samples)+2)[1:-1] )
-            total_color = 'maroon'
-        elif allocation=='light_leptonic_background':
-            hist_opts['color'] = plt.cm.PuRd_r( np.linspace(0.25, 1, len(samples)+2)[1:-1] )
-            total_color = 'mediumvioletred'
         elif allocation=='bb_only':
-            hist_opts['histtype'] = 'step'
+            hist_opts['histtype'] = 'stepfilled'
             hist_opts['lw'] = 2
-            reds = mpl.colormaps['Reds_r']
             hist_opts['alpha'] = 0.6
-            hist_opts['color'] = reds(0.25)
-            hist_opts['hatch'] = r'\\\\'
-            hist_opts['fill'] = False
+            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[1] )
+
+        elif allocation=='tau_background':
+            hist_opts['histtype'] = 'stepfilled'
+            hist_opts['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[1])/5 )#'mediumvioletred'
+            total_color = 'indigo'
+        elif allocation=='leptonic_background':
+            hist_opts['color'] = plt.cm.tab20b( (4+np.linspace(0, 1, len(samples)+2)[1:-1]) /5 )# plt.cm.tab20b((4+ np.linspace(0, 1, len(samples)))/5 ) #plt.cm.PuRd_r( np.linspace(0, 1, len(samples)+2)[1:-1] ) 
+            total_color = 'indigo'#'purple'
+        elif allocation=='light_leptonic_background':
+            hist_opts['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[2:-1])/5 )
+            total_color = 'mediumvioletred'
 
 
-        
+
+
         ax.hist( 
             x = hist_x,
             bins = bins,
@@ -372,7 +372,7 @@ def plot(varname,
                 bins = bins,
                 range = (xmin,xmax),
                 density = density,
-                label = f'Total {allocation}',
+                label = f'Total {allocation.replace("_", " ")}',
                 weights = np.concatenate( hist_w ) if weight else None,
                 histtype = 'step',
                 color = total_color,#'k',

@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import awkward as ak  # Needed if using awkward arrays
 plt.style.use('fcc.mplstyle')
 
-# go configure 
+
 import config as cfg
 import efficiency_finder
 
-# I'd like to have an argument please
+
 from argparse import ArgumentParser
 parser = ArgumentParser(description="Interactively plots features from a specified inputpath")
 parser.add_argument("-i","--inputpath", default=f"{cfg.fccana_opts['outputDir']['prelim_cuts']}", help="Path to look for files in, default is the stage2 directory in config.py")
@@ -70,25 +70,65 @@ def outlier_removal(values, threshold=7):
 
     return values
 
+
 def histogram_settings():
     
-    hist_settings = { sample: {} for sample in cfg.samples }
+    hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
+    total_color = { allocation: {} for allocation in cfg.sample_allocations }
 
-    for sample in cfg.samples:
+    for allocation in cfg.sample_allocations:
+        samples = cfg.sample_allocations[allocation]
+            
+        if allocation=='Bssignal':
+            hist_settings[allocation]['histtype'] = 'step'
+            hist_settings[allocation]['lw'] = 2
+            hist_settings[allocation]['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[3]) #'cornflowerblue'
+            hist_settings[allocation]['hatch'] = '////'
+        elif allocation=='Bdsignal':
+            hist_settings[allocation]['histtype'] = 'step'
+            hist_settings[allocation]['lw'] = 2
+            hist_settings[allocation]['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-1]) #'mediumblue'#'royalblue'
+            hist_settings[allocation]['hatch'] = r'\\\\'
+        elif allocation=='combined_signal':
+            hist_settings[allocation]['histtype'] = 'step'
+            hist_settings[allocation]['lw'] = 2
+            hist_settings[allocation]['color'] =plt.cm.Blues( np.linspace(0, 1, len(samples)+4)[3:-1] ) #['cornflowerblue','mediumblue']#['cornflowerblue', 'dodgerblue',]#['cadetblue','teal']#['cornflowerblue','mediumblue']
+            total_color[allocation] = 'midnightblue'
+            hist_settings[allocation]['hatch'] = '////'
 
-        if sample in cfg.sample_allocations["Bssignal"]:
-            hist_settings[sample]["histtype"] = "bar"
+        elif allocation=='hadronic_background':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(samples)+2)[1:-1] )
+            total_color[allocation] = 'k'
+        elif allocation=='light_hadronic_background':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[3:-1] )
+            total_color[allocation] = 'indianred'
+        elif allocation=='heavy_hadronic_background':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[1:3] )
+            total_color[allocation] = 'darkred'
+        elif allocation=='bb_only':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['lw'] = 2
+            hist_settings[allocation]['alpha'] = 0.6
+            hist_settings[allocation]['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[1] )
 
-        elif sample in cfg.sample_allocations["Bdsignal"]:
-            hist_settings[sample]["histtype"] = "bar"
+        elif allocation=='tau_background':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[1])/5 )#'mediumvioletred'
+            total_color[allocation] = 'indigo'
+        elif allocation=='leptonic_background':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = plt.cm.tab20b( (4+np.linspace(0, 1, len(samples)+2)[1:-1]) /5 )# plt.cm.tab20b((4+ np.linspace(0, 1, len(samples)))/5 ) #plt.cm.PuRd_r( np.linspace(0, 1, len(samples)+2)[1:-1] ) 
+            total_color[allocation] = 'indigo'#'purple'
+        elif allocation=='light_leptonic_background':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[2:-1])/5 )
+            total_color[allocation] = 'mediumvioletred'
 
-        elif sample in cfg.sample_allocations["hadronic_background"]:
-            hist_settings[sample]["histtype"] = "step"
+    return hist_settings, total_color
 
-        elif sample in cfg.sample_allocations["tau_background"]:
-            hist_settings[sample]["histtype"] = "bar"
-
-    return hist_settings
 
 #Function to enable automatic xtitle with > or <
 def replace_all(s, old_char, new_char):
@@ -157,7 +197,7 @@ def plot(varname,
         multiplied by efficiency. Default: True
     density : bool, optional
         Normalise histograms so that they represent a probability
-        density. 'weight' must be False if density True. Default: False
+        density. Default: False
     remove_outliers : bool, optional
         Remove severe outliers from the distribution. Default: True
     interactive : bool, optional
@@ -187,13 +227,10 @@ def plot(varname,
         Allows plotter to be impoarted and used if have data in a pandas df rather than reading from the root file. Default:None
         note: this is currently not compatible with plotting a compoition
     """
+    
     decays_list = [cfg.sample_allocations[i] for i in components]
     flat_decays_list = [item for sublist in decays_list for item in sublist]
 
-    if density:
-        if weight:
-            raise RuntimeError( f"Cannot have both density and weight True. Please change one to False." )
-    
     if varname == 'composition':
         if var1 ==None or composition ==None:
             raise RuntimeError( f"For composition need to specify at least var1 and composition inputs" )
@@ -274,91 +311,56 @@ def plot(varname,
     else:
         xmin = xrange[0]
         xmax = xrange[1]
-    
-    hist_settings = histogram_settings()
-    #hist_weights = get_weights(cut=cut)
-    
+
+    # If variable is an integer make sure nbins correct
+    #for most variables nbins=xmax-xmin
+    #unless ChargedRP_fromPV_transformed
+    if bins!=50:
+        nbins = bins
+    elif 'ChargedRP_fromPV_transformed' in varname:
+        nbins=3
+    elif '_n' in varname and '_norm' not in varname:
+        print(varname)
+        xmin = 0
+        nbins= int(xmax - xmin)
+    else:
+        nbins=50
+
     fig, ax = plt.subplots()
 
+    hist_settings,total_colours = histogram_settings()
+
     if weight:
-                # TODO: fix me please!
-        # if density:
-        #     print("----> WARNING: `density` incompatible with `weight`, setting to False")
-        #     density = False
         effs = efficiency_finder.get_efficiencies('custom', cut=cut, raw=True, custompath=inputpath, verbose=verbose,samples=flat_decays_list)
         n_expect = efficiency_finder.get_sample_expectations(effs, signal_bf, save=None, verbose=verbose, cut=cut)
-        ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
+
+        if density==False:
+            ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
 
     for allocation in cfg.sample_allocations:
+
         if allocation not in components:
             continue
+
         samples = cfg.sample_allocations[allocation]
         hist_x = [ values[sample] for sample in samples ]
+        hist_l = [ cfg.titles[sample] for sample in samples ]
+        hist_opts = hist_settings[allocation]
+        tot_colour= total_colours[allocation]
 
         if weight:
                 hist_w = [ np.ones_like(values[sample])*n_expect[sample+'_num']/len(values[sample]) for sample in samples ]
         else:
                 hist_w = None
 
-        hist_l = [ cfg.titles[sample] for sample in samples ]
-
         if stacked:
-            if allocation=='combined_signal':
-                hist_opts = dict( stacked=True, histtype='step', lw=2, hatch = '////')
-                #hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
-            else:
-                hist_opts = dict( stacked=True, histtype='stepfilled', alpha=1 )
+            hist_opts['stacked'] = True
         else:
-            hist_opts = dict( stacked=False, histtype='step', lw=2 )
-
-        if allocation=='Bssignal':
-            hist_opts['histtype'] = 'step'
-            hist_opts['lw'] = 2
-            hist_opts['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-1]) #'cornflowerblue'
-            hist_opts['hatch'] = '////'
-        elif allocation=='Bdsignal':
-            hist_opts['histtype'] = 'step'
-            hist_opts['lw'] = 2
-            hist_opts['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[3]) #'mediumblue'#'royalblue'
-            hist_opts['hatch'] = r'\\\\'
-        elif allocation=='combined_signal':
-            hist_opts['lw'] = 2
-            hist_opts['color'] =plt.cm.Blues( np.linspace(0, 1, len(samples)+4)[3:-1] ) #['cornflowerblue','mediumblue']#['cornflowerblue', 'dodgerblue',]#['cadetblue','teal']#['cornflowerblue','mediumblue']
-            total_color = 'midnightblue'
-            hist_opts['hatch'] = '////'
-
-        elif allocation=='hadronic_background':
-            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(samples)+2)[1:-1] )
-            total_color = 'k'
-        elif allocation=='light_hadronic_background':
-            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[3:-1] )
-            total_color = 'indianred'
-        elif allocation=='heavy_hadronic_background':
-            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[1:3] )
-            total_color = 'darkred'
-        elif allocation=='bb_only':
-            hist_opts['histtype'] = 'stepfilled'
-            hist_opts['lw'] = 2
-            hist_opts['alpha'] = 0.6
-            hist_opts['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[1] )
-
-        elif allocation=='tau_background':
-            hist_opts['histtype'] = 'stepfilled'
-            hist_opts['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[1])/5 )#'mediumvioletred'
-            total_color = 'indigo'
-        elif allocation=='leptonic_background':
-            hist_opts['color'] = plt.cm.tab20b( (4+np.linspace(0, 1, len(samples)+2)[1:-1]) /5 )# plt.cm.tab20b((4+ np.linspace(0, 1, len(samples)))/5 ) #plt.cm.PuRd_r( np.linspace(0, 1, len(samples)+2)[1:-1] ) 
-            total_color = 'indigo'#'purple'
-        elif allocation=='light_leptonic_background':
-            hist_opts['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[2:-1])/5 )
-            total_color = 'mediumvioletred'
-
-
-
+            hist_opts['stacked'] = False
 
         ax.hist( 
             x = hist_x,
-            bins = bins,
+            bins = nbins,
             range = (xmin,xmax),
             density = density,
             label = hist_l,
@@ -369,21 +371,19 @@ def plot(varname,
         if allocation in total and stacked:
             ax.hist( 
                 np.concatenate( hist_x), 
-                bins = bins,
+                bins = nbins,
                 range = (xmin,xmax),
                 density = density,
                 label = f'Total {allocation.replace("_", " ")}',
                 weights = np.concatenate( hist_w ) if weight else None,
                 histtype = 'step',
-                color = total_color,#'k',
+                color = tot_colour,#'k',
                 lw = 2,
             )
 
     ax.legend(reverse=True)
-    #if varname in cfg.variable_plot_titles:
-    #    ax.set_xlabel( cfg.variable_plot_titles[varname] )
-    #else:
-    #    ax.set_xlabel(f'{varname}, cut={cut}')
+
+
     if xtitle is not None:
         ax.set_xlabel(xtitle)
     else:
@@ -442,284 +442,3 @@ def plot(varname,
 if __name__=="__main__":
 
     print( plot.__doc__ )
-
-
-### Lists for plots for Jan 2025 - can be removed later#####
-variable_list_BDT2_options = [ 'EVT_unitThrust_x',
- 'EVT_unitThrust_y',
- 'EVT_unitThrust_z',
- 'EVT_Thrust_mag',
- 'EVT_hemisEmin_maxpChargedRP_px',
- 'EVT_hemisEmin_maxpChargedRP_py',
- 'EVT_hemisEmin_maxpChargedRP_pz', #from here and above basically no correlation, dont think will include
- 'EVT_hemisEmin_nDV',
- 'EVT_sum_Rec_vtx_ntracks_exclPV',
- 'EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV',
- 'EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV',
- 'EVT_hemisEmax_nDV', #nb. was in twice
- 'Rec_track_absd0_max_hemisEmin',
- 'Rec_track_absd0_ave_hemisEmin',
- 'Rec_track_absd0chi2_max_hemisEmin',
- 'Rec_track_absd0chi2_ave_hemisEmin',
- 'Rec_track_absz0_max_hemisEmin',
- 'Rec_track_absz0_ave_hemisEmin',
- 'Rec_track_absz0chi2_max_hemisEmin',
- 'Rec_track_absz0chi2_ave_hemisEmin',
- 'Rec_track_absz0_min_hemisEmin',
- 'Rec_track_absz0chi2_min_hemisEmin',
- 'EVT_hemisEmin_maxpChargedRP_p',
- 'EVT_hemisEmin_maxpChargedRP_fromPV',
- 'EVT_hemisEmax_maxpChargedRP_p',
- 'EVT_hemisEmax_maxpChargedRP_fromPV',
- 'Rec_vtx_ntracks_max_hemisEmin',
- 'Rec_vtx_ntracks_max_hemisEmax',
- 'Rec_thrustCosTheta_max_hemisEmin', #nb. was in twice
- 'Rec_thrustCosTheta_ave_hemisEmin',#nb. was in twice
- 'Rec_thrustCosTheta_max_hemisEmax',#nb. was in twice
- 'Rec_thrustCosTheta_ave_hemisEmax',#nb. was in twice
- 'Rec_vtx_thrustCosTheta_max_hemisEmin', 
- 'Rec_vtx_thrustCosTheta_ave_hemisEmin', 
- 'Rec_vtx_thrustCosTheta_max_hemisEmax', 
- 'Rec_vtx_thrustCosTheta_ave_hemisEmax', 
- 'Rec_vtx_d2PV_max_hemisEmin',
- 'EVT_Thrust_deltaE',
- 'EVT_hemisEmin_Emiss',
- 'EVT_hemisEmax_Emiss',
- 'EVT_e',
- 'Rec_thrustCosTheta_min_hemisEmin',
- 'Rec_thrustCosTheta_min_hemisEmax',
- 'PV_Rec_vtx_m',
- 'Rec_PV_ntracks',
- 'Rec_track_n',
- 'Rec_track_absd0_max_hemisEmax',
- 'Rec_track_absd0_ave_hemisEmax',
- 'Rec_track_absd0chi2_max_hemisEmax',
- 'Rec_track_absd0chi2_ave_hemisEmax',
- 'Rec_track_absz0_max_hemisEmax',
- 'Rec_track_absz0_ave_hemisEmax',
- 'Rec_track_absz0chi2_max_hemisEmax',
- 'Rec_track_absz0chi2_ave_hemisEmax',
- 'Rec_vtx_d2PV_max_hemisEmax',
- 'Rec_vtx_d2PV_ave_hemisEmax',
- 'Rec_vtx_d2PV_min_hemisEmax',
- 'Rec_track_absd0_min_hemisEmin',
- 'Rec_track_absd0chi2_min_hemisEmin',
- 'Rec_track_absz0chi2_min_hemisEmax',
- 'Rec_track_absd0chi2_min_hemisEmax',
- 'Rec_track_absd0_min_hemisEmax',
- 'Rec_track_absz0_min_hemisEmax',
- 'EVT_sum_Rec_px',
- 'EVT_sum_Rec_py',
- 'EVT_sum_Rec_pz',
- 'EVT_p',]
-
- #can now do command line for loop : for variable in variable_list_BDT2_options: plot(variable, save=f'plots/Data_with_incorrect_BSC_Dec2024/correlation_plot_variables/{variable}.pdf',weight=True,components=['hadronic_background','Bssignal'],total=["hadronic_background"], nchunks=12,signal_bf=1e-3)
- #Would be nice to update variable plotted so doesnt need to use command line. ie. make argpass only  https://stackoverflow.com/questions/44283780/importing-a-python-script-module-that-uses-argparse-into-another-python-script
-
- 
-
-ranges = [(-1,1),
-          (-1,1),
-          (-1,1),
-          (0,1),
-          (-15,15),
-          (-40,40),
-          (-40,40),
-          (0,6), #bins=6
-          (0,20),#bins=20
-          (0,12),#bins=12
-          (0,16),#bins=16
-          (0,7),#bins=7 
-(0,200),
-(0,30),
-(0,2000),
-(0,300),
-(0,300),
-(0,60),
-(0,2000),
-(0,600),
-(0,1.5),
-(0,100),
-(0,40),
-(-999,501),#bins=3
-(0,45),
-(-999,501),#bins=3
-(0,10),#bins=10
-(0,12),#bins=12
-(0,1),
-(0,1),
-(-1,0),
-(-1,0),
-(0,1),
-(0,1), 
-(-1,0),
-(-1,0),
-(0,20),
-(0,50),
-(0,46),
-(0,46),
-(0,90),
-(0,1),
-(-1,0),
-(0,80),
-(0,40),#bins=40
-(0,45),#bins=45
-(0,200),
-(0,30),
-(0,2000),
-(0,300),
-(0,300),
-(0,60),
-(0,3000),
-(0,600),
-(0,20),
-(0,20),
-(0,20),
-(0,0.1),
-(0,5),
-(0,100),
-(0,5),
-(0,0.1),
-(0,1.5),
-(-50,50),
-(-50,50),
-(-50,50),
-(0,50),]
-
-nbins = [50,
-          50,
-          50,
-          50,
-          50,
-          50,
-          50,
-          6,
-          20,
-          12,
-          16,
-          7,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-3,
-50,
-3,
-10,
-12,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-40,
-45,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,
-50,]
-
-
-#for i in range(len(nbins)): plot(variable_list_BDT2_options[i],range=ranges[i],bins=nbins[i], save=f'plots/Data_with_correct_BSC_Jan2025/{variable_list_BDT2_options[i]}.pdf',weight=True,components=['hadronic_background','Bssignal'],total=["hadronic_background"], nchunks=12,signal_bf=1e-1)
-
-
-
-'''
-def check_var(folder, varname,inputpath=args.inputpath):
-    branches = get_list_of_branches(folder,inputpath)
-    if varname not in branches:
-        print( f"Branches found in files at path {folder}:" )
-        for br in branches:
-            print('  ', br)
-        raise RuntimeError( f"No branch {varname} found in files at path {folder}. Try one from the list above." )
-    return True
-'''
-
-'''
-def make_plots():
-
-    outpath = f"{args.inputpath}/plots"
-    if not os.path.exists( outpath ):
-        os.system( f"mkdir -p {outpath}" )
-    
-    for stacked in [True, False]:
-        suffix = "_stacked" if stacked else ""
-        plot( "EVT_Thrust_Emin_e", bins=100, range=(0,50), stacked=stacked, save=f"{outpath}/EVT_Thrust_Emin_e{suffix}.pdf" ) 
-        plot( "EVT_Thrust_Emax_e", bins=100, range=(0,50), stacked=stacked, save=f"{outpath}/EVT_Thrust_Emin_e{suffix}.pdf" )
-        plot( "MC_Z_pz", stacked=stacked, save=f"{outpath}/MC_Z_pz{suffix}.pdf")
-'''
-
-'''
-def get_efficiencies():
-    """
-    Returns the efficiency dictionary from config.py with the efficiencies argument as key
-    """
-    if args.efficiencies is None:
-        return { sample : 1 for sample in cfg.samples }
-    else:
-        if args.efficiencies not in cfg.efficiencies:
-            raise RuntimeError( f"Tried passed efficiency dictionary key {args.efficiencies} which does not exist in config" )
-        return cfg.efficiencies[args.efficiencies]
-
-def get_weights(cut=None,signal_bf=1e-6,Bd_signal_bf = 1e-6,inputpath = args.inputpath):
-    """
-    Returns a dictionary of weights for each sample
-    Assumes a placeholder branching fraction of 1e-6 for Bs2NuNu
-    """
-    hist_weights = {}
-    effs = get_efficiencies()
-    for sample in cfg.samples:
-        hist_weights[sample] = effs[sample][0] * cfg.branching_fractions[sample][0]
-        if sample in cfg.sample_allocations['Bssignal']:
-            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*signal_bf
-        if sample in cfg.sample_allocations['Bdsignal']:
-            hist_weights[sample] *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample]*Bd_signal_bf
-    
-    
-    if cut is not None:
-        cut_efficiency = efficiency_finder.get_efficiencies('custom',
-                                                            further_analysis=True,
-                                                            cut=cut,
-                                                            raw=False,
-                                                            custompath=inputpath,
-                                                            vebose=False)
-        
-        hist_weights = {sample: hist_weights[sample]*cut_efficiency[sample+'_eff'] for sample in hist_weights}
-
-    return hist_weights
-'''

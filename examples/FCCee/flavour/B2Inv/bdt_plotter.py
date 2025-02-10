@@ -266,15 +266,19 @@ def post_bdt_variable_plot(df,variable,
                            bdt_cut, #must be string of correct format as in vp
                            bdt_name = "BDTh",
                            weight=True,
-                           density=False,
+                           density=True,
                            signal_bf=1e-6, #for Bs
-                           components=["Bssignal", "hadronic_background"],outpath=None):
+                           components=["Bssignal", "hadronic_background"],
+                           bins=None,
+                           xrange=None,
+                           outpath=None):
     if outpath:
         savepath=os.path.join(outpath,f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf')
     else:
         savepath= f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf'
 
-    vp.plot(varname=variable,cut=bdt_cut, data=df,weight=weight,density=density,signal_bf=signal_bf, components=components,save=savepath)
+    vp.plot(varname=variable,cut=bdt_cut, data=df,weight=weight,density=density,signal_bf=signal_bf, components=components,save=savepath, bins=bins,
+                           xrange=xrange)
 
 
 #######################################################
@@ -326,24 +330,27 @@ def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl",
 ## Make some plots 
 ########################################
 
-model, bdtname, df = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl", 
-                        config_bdtopts = cfg.bdth_opts,
-                        training_round = "baseline",
-                        hps_dict_name = "default-hps",
-                        features_list_name = "baseline-bdth-vars")
+if __name__=="__main__":
+    model, bdtname, df = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl", 
+                            config_bdtopts = cfg.bdth_opts,
+                            training_round = "baseline",
+                            hps_dict_name = "default-hps",
+                            features_list_name = "baseline-bdth-vars")
 
-outputpath = os.path.join(cfg.bdth_opts['outputPath'],"baseline")
+    outputpath = os.path.join(cfg.bdth_opts['outputPath'],"baseline","variables_post_bdt")
 
-#plot_simple_ROC(df, bdt_name = bdtname,outpath=outputpath)
-#plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
-#plot_eff(df,bdt_name = bdtname, outpath=outputpath)
-#plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
-#post_bdt_variable_plot(df,variable='EVT_e',bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=False,density=True)
-
-
-
+    #plot_simple_ROC(df, bdt_name = bdtname,outpath=outputpath)
+    #plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
+    #plot_eff(df,bdt_name = bdtname, outpath=outputpath)
+    #plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
+    #post_bdt_variable_plot(df,variable='EVT_e',bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=False,density=True)
 
 
+    #Getting BDT vars for training from yaml
+    bdtvars      = vars_fromyaml(cfg.fccana_opts['yamlPath'], "baseline-bdth-vars")
+
+    for var in bdtvars:
+        post_bdt_variable_plot(df,variable=var,bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=False,density=True)
 
 
 

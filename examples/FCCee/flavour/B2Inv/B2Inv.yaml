@@ -432,21 +432,24 @@ baseline-bdth-vars:
 #    "EVT_hemisEmax_nDV","Rec_track_n","Rec_PV_ntracks","Rec_vtx_n","EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV","Rec_vtx_ntracks_max_hemisEmin","EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV","Rec_vtx_ntracks_max_hemisEmax",]
  
 
-Bdtl-vars:
+baseline-bdtl-vars:
 
-############################################### 
-# Make plots to check bb bb vs signal
-###############################################
-    #old BDT1
-  #- EVT_hemisEmax_e
-  #- EVT_hemisEmax_eCharged
-  #- EVT_hemisEmax_eNeutral
-  #- EVT_hemisEmax_n
-  #- EVT_hemisEmax_nCharged
-  #- EVT_hemisEmax_nNeutral
+  #max hemis energy
+  - EVT_hemisEmax_e
+  - EVT_hemisEmax_eCharged
+  - EVT_hemisEmax_eNeutral
+  - EVT_hemisEmax_n
+  - EVT_hemisEmax_nCharged
+  - EVT_hemisEmax_nNeutral
 
-  # vertex mass - good for light ones
-  - PV_Rec_vtx_m
+  #PV and thrust info - only overlap with bdtmE
+  - PV_Rev_vtx_m   # vertex mass - good for light ones
+  - EVT_unitThrust_x #Thrust vector components replaced by more physically helpful normalised component
+  - EVT_unitThrust_z 
+  - EVT_Thrust_mag #value of object that is minimised in Thrust calculation , T
+
+  #no. vertices
+  - Rec_vtx_n
 
   # hemisEmax variables
   # EP related
@@ -460,19 +463,74 @@ Bdtl-vars:
   - Rec_vtx_thrustCosTheta_max_hemisEmax #more discriminating than ave and very good correlations with hemisEmax vars
   - Rec_thrustCosTheta_ave_hemisEmax 
   # d2PV
-  - Rec_vtx_d2PV_max_hemisEmax
-  - Rec_vtx_d2PV_min_hemisEmax
+  - ln_Rec_vtx_d2PV_max_hemisEmax
+  - ln_Rec_vtx_d2PV_min_hemisEmax
     #IP-like
-  - Rec_track_absd0chi2_max_hemisEmax
-  - Rec_track_absz0_max_hemisEmax
+  - ln_Rec_track_absd0chi2_max_hemisEmax
+  - ln_Rec_track_absz0chi2_max_hemisEmax
 
 
-# nbins=[50,50,50,70,45,45,50,50,3,7,18,12,50,50,50,50,50,50]
-# ranges=[(0,80),(0,60),(0,50),(0,70),(0,45),(0,45),(0,90),(0,40),(-999,501),(0,7),(0,18),(0,12),(-1,0),(-1,0),(0,10),(0,100),(0,500),(0,100)]
+  #helpful to remove some uds bkg as well - could have in both? - try without and see
+    # missing EP related variables 
+  #- EVT_e 
+  #- EVT_p
+  #- EVT_sum_Rec_px
+  #- EVT_sum_Rec_pz
+  #- EVT_Thrust_deltaE
+  #- EVT_hemisEmin_e
+  # ONLY REPEAT CURRENTLY PV MASS AND THRUST VECTOR COMPS
 
 
 
+baseline-bdtmE-vars:
 
+  # EVT level - hemisphere properties
+  - EVT_hemisEmin_e
+  - EVT_hemisEmin_eCharged
+  - EVT_hemisEmin_eNeutral
+  - EVT_hemisEmin_n
+  - EVT_hemisEmin_nCharged
+  - EVT_hemisEmin_nNeutral
+  #- EVT_hemisEmin_nDV #probably remove as info in some cos theta vars
+ 
+  # missing EP related variables
+  - EVT_e 
+  - EVT_p
+  - PV_Rev_vtx_m
+  - EVT_hemisEmax_e
+  - EVT_Thrust_deltaE
+
+    # correlation with thrust components different for signal and bkg so maybe keep (nb. not BDT1)
+  - EVT_unitThrust_x #Thrust vector components replaced by more physically helpful normalised component
+  - EVT_unitThrust_z 
+  - EVT_sum_Rec_px
+  - EVT_sum_Rec_pz
+
+  # Event level vertex info
+  - Rec_track_n
+
+  # number of tracks related
+  - EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV
+  - Rec_vtx_ntracks_max_hemisEmin #no tracks from vtx with most tracks in hemis
+  
+  # overlap with nDV as if nDV=0, d2pv=0
+  - ln_Rec_vtx_d2PV_min_hemisEmin #log more helpful
+  #- ln_Rec_vtx_d2PV_max_hemisEmin #log more helpfu
+  
+  # IP-like
+  - ln_Rec_track_absd0_max_hemisEmin
+  - ln_Rec_track_absz0_max_hemisEmin 
+ 
+  # maximum momentum particle 
+  - EVT_hemisEmin_maxpChargedRP_p
+  #Adding tranform for fomPV flag that takes -999 to -1 (for particles not vertexed)
+  - EVT_hemisEmin_maxpChargedRP_fromPV_transformed
+  
+  #vtx or particle thrustCosTheta related
+  - Rec_thrustCosTheta_ave_hemisEmin
+  - Rec_vtx_thrustCosTheta_max_hemisEmin #almost identical to ave, therefore max only
+
+  
 
 
 

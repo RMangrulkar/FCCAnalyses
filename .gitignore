@@ -112,3 +112,7 @@ examples/FCCee/flavour/B2Inv/plots/
 #other files
 examples/FCCee/flavour/B2Inv/st1_submission.log
 examples/FCCee/flavour/B2Inv/roc_n_roll.pdf
+examples/FCCee/flavour/B2Inv/first_pass_at_BDTh/bdt.json
+examples/FCCee/flavour/B2Inv/first_pass_at_BDTh/bdth.pdf
+examples/FCCee/flavour/B2Inv/first_pass_at_BDTh/eff.pdf
+examples/FCCee/flavour/B2Inv/first_pass_at_BDTh/roc.pdf

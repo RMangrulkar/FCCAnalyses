@@ -142,8 +142,7 @@ def plot(varname,
          var2=None,
          var3=None, #only used for vector sumquad
          composition=None,
-         signal_bf=1e-6,
-         Bd_signal_bf=1e-6,
+         signal_bf=1e-6,#used for both signal and bkg
          cut=None,
          nchunks=None,
          stacked=True, 
@@ -161,7 +160,7 @@ def plot(varname,
          components=["Bssignal", "hadronic_background"],
          verbose=True,
          inputpath = args.inputpath,
-         data=None):
+         ):
     
     """ 
     plot( varname, **opts ) will plot a variable
@@ -183,8 +182,6 @@ def plot(varname,
     composition:str
         Operator to be used in composition. Currently must be '+','-','*','/',','sumquad','normvect','log'. For 'normvect' var1, var2, var 3 should be the x,y,z components of the depired variable where var1 is the normlaised component desired. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
-        The assumed signal branching fraction to use with the weights. Default = 10^-6
-    Bd_signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     cut : str, optional
         Cut branch varname according to a (valid) UPROOT expression. Default: None
@@ -223,9 +220,6 @@ def plot(varname,
         Print out some useful stuff. Default: True
     inputpath : str, optional
         For when importing function so that can run without argpasser. path to data folder to be used. Default: args.inputpath
-    data : pandas df of data, optional.
-        Allows plotter to be impoarted and used if have data in a pandas df rather than reading from the root file. Default:None
-        note: this is currently not compatible with plotting a compoition
     """
     
     decays_list = [cfg.sample_allocations[i] for i in components]
@@ -274,36 +268,17 @@ def plot(varname,
         if var1 !=None or var2 !=None or var3 !=None or composition !=None:
             print(f'var1,var2,composition inputs ignored unless varname=="composition". Currently using varname={varname}')
 
-        if data is not None:
-            print('Data from Pandas dataframe input to plotter being used. Note: input path, remove_outliers and nchunks are therefore ignored')
-            
-            if varname =='composition':
-                raise ValueError('composition currently incompatible with data input as pandas dataframe')
-            if weight == True:
-                raise ValueError('weight currently incompatible with data input as pandas dataframe, please use density instead')
-            
+        # If nchunks is a list, use corresponding elements
+        if remove_outliers:
+            if isinstance(nchunks, list):
+                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i],inputpath)) for i, sample in enumerate(flat_decays_list) }
             else:
-                if cut:
-                    df = data.query(cut)
-
-                else:
-                    df = data
-
-                values = {sample: df[df['decay']==sample][varname].to_numpy() for sample in flat_decays_list}
-
-
+                values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks,inputpath)) for sample in flat_decays_list }
         else:
-            # If nchunks is a list, use corresponding elements
-            if remove_outliers:
-                if isinstance(nchunks, list):
-                    values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks[i],inputpath)) for i, sample in enumerate(flat_decays_list) }
-                else:
-                    values = { sample: outlier_removal(as_array(sample, varname, cut, nchunks,inputpath)) for sample in flat_decays_list }
+            if isinstance(nchunks, list):
+                values = { sample: as_array(sample, varname, cut, nchunks[i],inputpath) for i, sample in enumerate(flat_decays_list) }
             else:
-                if isinstance(nchunks, list):
-                    values = { sample: as_array(sample, varname, cut, nchunks[i],inputpath) for i, sample in enumerate(flat_decays_list) }
-                else:
-                    values = { sample: as_array(sample, varname, cut, nchunks,inputpath) for sample in flat_decays_list }
+                values = { sample: as_array(sample, varname, cut, nchunks,inputpath) for sample in flat_decays_list }
 
     if xrange is None:
         xmin = min( [ min(values[sample]) for sample in values ] )

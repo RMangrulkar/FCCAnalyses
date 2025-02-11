@@ -262,23 +262,135 @@ def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=
         fig.savefig(f'{bdt_name}_{output_file_name}_zoomedin.pdf')
 
 
-def post_bdt_variable_plot(df,variable,
-                           bdt_cut, #must be string of correct format as in vp
+def post_bdt_variable_plot(data,variable,
+                           bdt_cut = None, #must be string of correct format as in vp
                            bdt_name = "BDTh",
                            weight=True,
                            density=True,
-                           signal_bf=1e-6, #for Bs
-                           components=["Bssignal", "hadronic_background"],
-                           bins=None,
+                           bins=50,
                            xrange=None,
-                           outpath=None):
+                           outpath=None,
+                           stacked=True, 
+                           total=["hadronic_background"], 
+                           components=["Bssignal", "hadronic_background"], #currently not set up to do Bd and Bs with separate nominal bfs but thsi shouldnt be an issue
+                           signal_bf=1e-6):
     if outpath:
         savepath=os.path.join(outpath,f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf')
     else:
         savepath= f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf'
 
-    vp.plot(varname=variable,cut=bdt_cut, data=df,weight=weight,density=density,signal_bf=signal_bf, components=components,save=savepath, bins=bins,
-                           xrange=xrange)
+
+    decays_list = [cfg.sample_allocations[i] for i in components]
+    flat_decays_list = [item for sublist in decays_list for item in sublist]
+
+
+    if bdt_cut:
+        df = data.copy().query(bdt_cut)
+    else:
+        df = data.copy()
+
+
+    values = {sample: df[df['decay']==sample][variable].to_numpy() for sample in flat_decays_list}
+
+    if xrange is None:
+        xmin = min( [ min(values[sample]) for sample in values ] )
+        xmax = max( [ max(values[sample]) for sample in values ] )
+    else:
+        xmin = xrange[0]
+        xmax = xrange[1]
+
+    # If variable is an integer make sure nbins correct
+    #for most variables nbins=xmax-xmin
+    #unless ChargedRP_fromPV_transformed
+    if bins!=50:
+        nbins = bins
+    elif 'ChargedRP_fromPV_transformed' in variable:
+        nbins=3
+    elif '_n' in variable and '_norm' not in variable:
+        print(variable)
+        xmin = 0
+        nbins= int(xmax - xmin)
+    else:
+        nbins=50
+
+    fig, ax = plt.subplots()
+
+    hist_settings,total_colours = vp.histogram_settings()
+
+    if weight: 
+        desired_signal_samples = [sample for sample in cfg.sample_allocations['combined_signal'] if sample in flat_decays_list]
+        for sample in desired_signal_samples:
+            df.loc[df['decay'] == sample, 'w1']=df[df['decay']==sample]['w1']* 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
+
+
+        if density==False:
+            ax.set_title(f'Assuming signal branching fraction = {signal_bf:.1e}')
+
+    for allocation in cfg.sample_allocations:
+
+        if allocation not in components:
+            continue
+
+        samples = cfg.sample_allocations[allocation]
+        hist_x = [ values[sample] for sample in samples ]
+        hist_l = [ cfg.titles[sample] for sample in samples ]
+        hist_opts = hist_settings[allocation]
+        tot_colour= total_colours[allocation]
+
+        if weight:
+            hist_w= [np.array(df[df['decay']==sample]['w1'])*6e12 for sample in samples]
+            #print(variable)
+            #print(hist_w)
+        else:
+            hist_w = None
+
+        if stacked:
+            hist_opts['stacked'] = True
+        else:
+            hist_opts['stacked'] = False
+
+        ax.hist( 
+            x = hist_x,
+            bins = nbins,
+            range = (xmin,xmax),
+            density = density,
+            label = hist_l,
+            weights = hist_w,
+            **hist_opts
+        )
+
+        if allocation in total and stacked:
+            ax.hist( 
+                np.concatenate( hist_x), 
+                bins = nbins,
+                range = (xmin,xmax),
+                density = density,
+                label = f'Total {allocation.replace("_", " ")}',
+                weights = np.concatenate( hist_w ) if weight else None,
+                histtype = 'step',
+                color = tot_colour,#'k',
+                lw = 2,
+            )
+
+    ax.legend(reverse=True)
+
+
+
+    if bdt_cut is not None:
+        ax.set_xlabel(f"{variable} (cut={vp.replace_all(vp.replace_all(vp.replace_all(bdt_cut,'>','$>$'),'<','$<$'),'&',',')})")
+    else:
+        ax.set_xlabel(f"{variable} (cut={bdt_cut})")
+
+    if density:
+        ax.set_ylabel('Density')
+    else:
+        ax.set_ylabel('Counts')
+   
+
+    fig.tight_layout()
+
+    if outpath is not None:
+        fig.savefig(savepath)
 
 
 #######################################################
@@ -331,7 +443,7 @@ def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl",
 ########################################
 
 if __name__=="__main__":
-    model, bdtname, df = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl", 
+    model, bdtname, dataframe = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl", 
                             config_bdtopts = cfg.bdth_opts,
                             training_round = "baseline",
                             hps_dict_name = "default-hps",
@@ -343,16 +455,13 @@ if __name__=="__main__":
     #plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
     #plot_eff(df,bdt_name = bdtname, outpath=outputpath)
     #plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
-    #post_bdt_variable_plot(df,variable='EVT_e',bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=False,density=True)
 
-
+    print('starting plotting')
     #Getting BDT vars for training from yaml
     bdtvars      = vars_fromyaml(cfg.fccana_opts['yamlPath'], "baseline-bdth-vars")
 
     for var in bdtvars:
-        post_bdt_variable_plot(df,variable=var,bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=False,density=True)
-
-
+        post_bdt_variable_plot(dataframe,variable=var, bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=True,density=True,signal_bf=1e-1, components=["Bssignal", "heavy_hadronic_background"], total=["heavy_hadronic_background"])
 
 
 

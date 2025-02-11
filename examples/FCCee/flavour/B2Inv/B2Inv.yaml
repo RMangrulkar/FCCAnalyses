@@ -443,7 +443,7 @@ baseline-bdtl-vars:
   - EVT_hemisEmax_nNeutral
 
   #PV and thrust info - only overlap with bdtmE
-  - PV_Rev_vtx_m   # vertex mass - good for light ones
+  - PV_Rec_vtx_m   # vertex mass - good for light ones
   - EVT_unitThrust_x #Thrust vector components replaced by more physically helpful normalised component
   - EVT_unitThrust_z 
   - EVT_Thrust_mag #value of object that is minimised in Thrust calculation , T
@@ -496,7 +496,7 @@ baseline-bdtmE-vars:
   # missing EP related variables
   - EVT_e 
   - EVT_p
-  - PV_Rev_vtx_m
+  - PV_Rec_vtx_m
   - EVT_hemisEmax_e
   - EVT_Thrust_deltaE
 

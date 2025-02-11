@@ -124,9 +124,19 @@ bdth_opts = {
     #"mvaPath":            os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/saved_bdth.root"),
     #"mvaRBDTName":        "bdth",                 # Name of the TMVA TObject in the .root file
     #"mvaCut":             0.,
-    #"mvaBranchList":      "bdth-vars",  # key in the yaml file pointing to the feature list 
+    "mvaBranchList":      "baseline-bdth-vars",  # key in the yaml file pointing to the feature list 
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+}
+
+# TMVA options
+bdtl_opts = {
+    "training":           True,                  
+    "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want to train on data with just preliminary cuts
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdtl_outputs/"),
+    "mvaBranchList":      "baseline-bdtl-vars",  # key in the yaml file pointing to the feature list 
+    "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "backgroundAllocation":  ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
 }
 
 hp_opts = {

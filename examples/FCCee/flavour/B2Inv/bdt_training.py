@@ -1,4 +1,4 @@
-# Train BDTh using prelimcuts files
+# Train BDT using prelimcuts files
 
 import os
 import glob
@@ -55,17 +55,18 @@ def set_outputpath(outputpath):
 
 
 #Define function that does training
-def train_bdth(pickled_df_fname = "bdth_dataframe.pkl", 
+def train_bdt(pickled_df_fname = "bdth_dataframe.pkl", 
               config_bdtopts = cfg.bdth_opts,
               training_round = "baseline",
               hps_dict_name = "default-hps",#if not using default, name of hp config in config
-              features_list_name = "baseline-bdth-vars"): 
+              features_list_name = "baseline-bdth-vars",
+              bdt_label = 'h'): 
     
     
     ## PREPROCESSING AND CREATING df
 
     print(f"{30*'-'}")
-    print(f"BDTh TRAINING")
+    print(f"BDT{bdt_label} TRAINING")
     print(f"{30*'-'}\n")
     print("Initialising...")
 
@@ -78,7 +79,7 @@ def train_bdth(pickled_df_fname = "bdth_dataframe.pkl",
 
     #Getting BDT vars for training from yaml
     bdtvars      = vars_fromyaml(yamlpath, features_list_name)
-    bdtname      = f'BDTh_{hps_dict_name}_{features_list_name}'
+    bdtname      = f'BDT{bdt_label}_{hps_dict_name}_{features_list_name}'
 
     #loading saved data
     pickled_df_path = os.path.join(outputpath, pickled_df_fname)
@@ -101,7 +102,7 @@ def train_bdth(pickled_df_fname = "bdth_dataframe.pkl",
 
 
     # Set Default hyperparameters - updated with those input
-    default_hps = cfg.hp_opts['default_hps']
+    default_hps = cfg.hp_opts['default-hps']
 
     if hps_dict_name != 'default_hps':
         hps =  cfg.hp_opts[hps_dict_name]
@@ -117,7 +118,7 @@ def train_bdth(pickled_df_fname = "bdth_dataframe.pkl",
         #"min_child_weight": [1, 5],
 
  
-    ## TRAINING OF BDTh
+    ## TRAINING OF BDT
 
     ## Currently no cross validation - potentially TO IMPLEMENT LATER
     ## Also for now no hp opt - TO IMPLEMENT LATER

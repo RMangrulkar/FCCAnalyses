@@ -87,7 +87,7 @@ def histogram_settings():
         elif allocation=='Bdsignal':
             hist_settings[allocation]['histtype'] = 'step'
             hist_settings[allocation]['lw'] = 2
-            hist_settings[allocation]['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-1]) #'mediumblue'#'royalblue'
+            hist_settings[allocation]['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-2]) #'mediumblue'#'royalblue'
             hist_settings[allocation]['hatch'] = r'\\\\'
         elif allocation=='combined_signal':
             hist_settings[allocation]['histtype'] = 'step'

@@ -17,7 +17,7 @@ from sklearn.metrics import roc_curve, auc
 
 import config as cfg
 import efficiency_finder
-import variable_plotter as vp
+#import variable_plotter as vp
 
 
 # Function to load the BDT model from a JSON file
@@ -436,7 +436,7 @@ def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl",
     df = pd.read_pickle(pickled_df_path)
 
     #add bdt score
-    df["bdt_score"] =  bdt_model.predict(xgb.DMatrix(df[bdtvars])) #Add BDT1 score
+    df[f"bdt{bdt_label}_score"] =  bdt_model.predict(xgb.DMatrix(df[bdtvars])) #Add BDT1 score
 
     return bdt_model, bdtname, df
 

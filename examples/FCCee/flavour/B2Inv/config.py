@@ -63,6 +63,19 @@ processList = {
         "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},
         
     },
+        #"prelim_cuts": {  # ~2G or ~500k events per sample #ALL NUMBERS TO UPDATE
+        #"p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1, "chunks": 20},
+        #"p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1, "chunks": 20},
+        #"p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 500},
+        #"p8_ee_Zcc_ecm91": {"fraction": 1, "chunks": 500},
+        #"p8_ee_Zss_ecm91": {"fraction": 1, "chunks": 500},
+        #"p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 600},
+        #"p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 40}, 
+        #"p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
+        #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},
+
+    #},
+
 
 }
 
@@ -124,7 +137,7 @@ bdth_opts = {
     #"mvaPath":            os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdth_outputs/saved_bdth.root"),
     #"mvaRBDTName":        "bdth",                 # Name of the TMVA TObject in the .root file
     #"mvaCut":             0.,
-    "mvaBranchList":      "baseline-bdth-vars",  # key in the yaml file pointing to the feature list 
+    "mvaBranchList":      "baseline-bdth-vars",  #"bdth-plus-vars",# key in the yaml file pointing to the feature list 
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
 }

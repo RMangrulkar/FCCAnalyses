@@ -140,7 +140,7 @@ def plot_ROC_star(df, bdt_name = "BDTh",
         fig.savefig(os.path.join(outputpath,f'{bdt_name}_{output_file_name}_zoomedin.pdf'))
     else:
         #fig.savefig(f"{output_file_name}_zoomedin.png")
-        fig.savefig(f"f'{bdt_name}_{output_file_name}_zoomedin.pdf")
+        fig.savefig(f"{bdt_name}_{output_file_name}_zoomedin.pdf")
 
 
 
@@ -213,7 +213,7 @@ def plot_bdt_response(df, bdt_name = "BDTh",output_file_name = "response" ,outpa
 
     if outpath:
         #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-        fig.savefig(os.path.join(outputpath,f'{bdt_name}_{output_file_name}.pdf'))
+        fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}.pdf'))
     else:
         #fig.savefig(f"{output_file_name}.png")
         fig.savefig(f"{bdt_name}_{output_file_name}.pdf")
@@ -246,7 +246,7 @@ def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=
     fig.tight_layout()
     if outpath:
         #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-        fig.savefig(os.path.join(outputpath,f'{bdt_name}_{output_file_name}.pdf'))
+        fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}.pdf'))
     else:
         #fig.savefig(f"{output_file_name}.png")
         fig.savefig(f'{bdt_name}_{output_file_name}.pdf')
@@ -256,7 +256,7 @@ def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=
     ax.set_xlim(0.95,1.002)
     if outpath:
         #fig.savefig(os.path.join(outpath,output_file_name+"_zoomedin.png"))
-        fig.savefig(os.path.join(outputpath,f'{bdt_name}_{output_file_name}_zoomedin.pdf'))
+        fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_zoomedin.pdf'))
     else:
         #fig.savefig(f"{output_file_name}_zoomedin.png")
         fig.savefig(f'{bdt_name}_{output_file_name}_zoomedin.pdf')
@@ -401,7 +401,9 @@ def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl",
                         config_bdtopts = cfg.bdth_opts,
                         training_round = "baseline",
                         hps_dict_name = "default-hps",
-                        features_list_name = "baseline-bdth-vars"): # hps dict and features_list_name specift BDT used
+                        features_list_name = "baseline-bdth-vars",
+                        bdt_label = 'h'
+                        ): # hps dict and features_list_name specift BDT used
     
     
     #path to data and outputs
@@ -410,7 +412,7 @@ def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl",
 
     #Getting BDT vars for training from yaml
     bdtvars      = vars_fromyaml(yamlpath, features_list_name)
-    bdtname      = f'BDTh_{hps_dict_name}_{features_list_name}'
+    bdtname      = f'BDT{bdt_label}_{hps_dict_name}_{features_list_name}'
 
     #path to pickled data
     pickled_df_path = os.path.join(outputpath, pickled_df_fname)
@@ -443,13 +445,14 @@ def load_bdt_and_apply(pickled_df_fname = "bdth_dataframe.pkl",
 ########################################
 
 if __name__=="__main__":
-    model, bdtname, dataframe = load_bdt_and_apply( pickled_df_fname = "bdth_dataframe.pkl", 
-                            config_bdtopts = cfg.bdth_opts,
+    model, bdtname, dataframe = load_bdt_and_apply( pickled_df_fname = "bdtl_dataframe.pkl", 
+                            config_bdtopts = cfg.bdtl_opts,
                             training_round = "baseline",
                             hps_dict_name = "default-hps",
-                            features_list_name = "baseline-bdth-vars")
+                            features_list_name = "baseline-bdtl-vars",
+                            bdt_label = 'l')
 
-    outputpath = os.path.join(cfg.bdth_opts['outputPath'],"baseline","variables_post_bdt")
+    outputpath = os.path.join(cfg.bdtl_opts['outputPath'],"baseline")#,"variables_post_bdt")
 
     #plot_simple_ROC(df, bdt_name = bdtname,outpath=outputpath)
     #plot_bdt_response(df,bdt_name = bdtname,outpath=outputpath)
@@ -457,12 +460,13 @@ if __name__=="__main__":
     #plot_ROC_star(df,bdt_name = bdtname, outpath=outputpath)
 
     print('starting plotting')
+    '''
     #Getting BDT vars for training from yaml
     bdtvars      = vars_fromyaml(cfg.fccana_opts['yamlPath'], "baseline-bdth-vars")
 
     for var in bdtvars:
         post_bdt_variable_plot(dataframe,variable=var, bdt_cut='bdt_score>0.9',bdt_name = bdtname, outpath=outputpath,weight=True,density=True,signal_bf=1e-1, components=["Bssignal", "heavy_hadronic_background"], total=["heavy_hadronic_background"])
-
+    '''
 
 
 

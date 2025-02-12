@@ -23,6 +23,7 @@ sys.path.append(os.path.abspath(configPath))
 
 import config as cfg 
 import efficiency_finder
+import bdt_plotter as bp
 
 #import bdt_plotter as bdtplt
 
@@ -160,7 +161,8 @@ def train_bdt(pickled_df_fname = "bdth_dataframe.pkl",
     print( tabulate( zip( sorted_features, sorted_importances ) ) )
 
     # save the model to a file for use later
-    bdt.save_model(os.path.join(outputpath,training_round,f"{bdtname}.json"))
+    model_folder  = set_outputpath(os.path.join(outputpath,training_round))
+    bdt.save_model(os.path.join(model_folder,f"{bdtname}.json"))
 
     # Write key info about df to log file
     with open(os.path.join(outputpath,training_round,f'{bdtname}_training_info.log'), 'a') as log_file:
@@ -169,6 +171,10 @@ def train_bdt(pickled_df_fname = "bdth_dataframe.pkl",
     # Write key info about df to log file
     with open(os.path.join(outputpath,training_round,f'{bdtname}_training_vars.log'), 'a') as log_file:
         log_file.write(f'bdt_training_vars: {bdtvars}\n')
+
+    bp.plot_simple_ROC(df,bdt_name = f"BDT{bdt_label}",output_file_name = "ROC",outpath=model_folder)
+    bp.plot_bdt_response(df, bdt_name = f"BDT{bdt_label}",output_file_name = "response" ,outpath=model_folder)
+    bp.plot_eff(df, bdt_name =f"BDT{bdt_label}",output_file_name = 'efficiency_plot',outpath=model_folder)
 
     return bdt, df
 

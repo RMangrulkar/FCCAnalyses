@@ -526,6 +526,24 @@ class RDFanalysis():
             .Define("ln_Rec_vtx_d2PV_max_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_d2PV_max_hemisEmax,10)")
             .Define("ln_Rec_vtx_d2PV_ave_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_d2PV_ave_hemisEmax,10)")
 
+            # Add equivalent normd2PV ie. significance of d2PV
+            .Define("Rec_vtx_normd2PVStatsEmin",                  "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmin_andNotPV, Rec_vtx_normd2PV)")  # INTERMEDIATE
+            .Define("Rec_vtx_normd2PVStatsEmax",                  "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmax_andNotPV, Rec_vtx_normd2PV)")  # INTERMEDIATE
+            .Define("Rec_vtx_normd2PV_min_hemisEmin",             "Rec_vtx_normd2PVStatsEmin.at(0)")
+            .Define("Rec_vtx_normd2PV_max_hemisEmin",             "Rec_vtx_normd2PVStatsEmin.at(1)")
+            .Define("Rec_vtx_normd2PV_ave_hemisEmin",             "Rec_vtx_normd2PVStatsEmin.at(2)")
+            .Define("Rec_vtx_normd2PV_min_hemisEmax",             "Rec_vtx_normd2PVStatsEmax.at(0)")
+            .Define("Rec_vtx_normd2PV_max_hemisEmax",             "Rec_vtx_normd2PVStatsEmax.at(1)")
+            .Define("Rec_vtx_normd2PV_ave_hemisEmax",             "Rec_vtx_normd2PVStatsEmax.at(2)")
+
+            #Add log of normd2PV variables, map 0 -> 10
+            .Define("ln_Rec_vtx_normd2PV_min_hemisEmin",             "myUtils::log_with_0_map(Rec_vtx_normd2PV_min_hemisEmin,10)")
+            .Define("ln_Rec_vtx_normd2PV_max_hemisEmin",             "myUtils::log_with_0_map(Rec_vtx_normd2PV_max_hemisEmin,10)")
+            .Define("ln_Rec_vtx_normd2PV_ave_hemisEmin",             "myUtils::log_with_0_map(Rec_vtx_normd2PV_ave_hemisEmin,10)")
+            .Define("ln_Rec_vtx_normd2PV_min_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_normd2PV_min_hemisEmax,10)")
+            .Define("ln_Rec_vtx_normd2PV_max_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_normd2PV_max_hemisEmax,10)")
+            .Define("ln_Rec_vtx_normd2PV_ave_hemisEmax",             "myUtils::log_with_0_map(Rec_vtx_normd2PV_ave_hemisEmax,10)")      
+
             .Define("Rec_vtx_thrustCosThetaStatsEmin",        "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmin_andNotPV, Rec_vtx_thrustCosTheta)")  # INTERMEDIATE
             .Define("Rec_vtx_thrustCosThetaStatsEmax",        "myUtils::get_Stats_fromRVec(Rec_vtx_in_hemisEmax_andNotPV, Rec_vtx_thrustCosTheta)")  # INTERMEDIATE
             .Define("Rec_vtx_thrustCosTheta_min_hemisEmin",   "Rec_vtx_thrustCosThetaStatsEmin.at(0)")

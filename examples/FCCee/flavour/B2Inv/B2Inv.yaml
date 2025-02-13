@@ -103,6 +103,21 @@ full-vars: # just taken from previous run to ensure nothing missed
   - ln_Rec_vtx_d2PV_max_hemisEmax
   - ln_Rec_vtx_d2PV_ave_hemisEmax
 
+    #normd2PVs and their log
+  - Rec_vtx_normd2PV_min_hemisEmin
+  - Rec_vtx_normd2PV_max_hemisEmin
+  - Rec_vtx_normd2PV_ave_hemisEmin
+  - Rec_vtx_normd2PV_min_hemisEmax
+  - Rec_vtx_normd2PV_max_hemisEmax
+  - Rec_vtx_normd2PV_ave_hemisEmax
+  #New variables for log normd2PV with map for 0s to 10 (ie. events with no SV)
+  - ln_Rec_vtx_normd2PV_min_hemisEmin
+  - ln_Rec_vtx_normd2PV_max_hemisEmin
+  - ln_Rec_vtx_normd2PV_ave_hemisEmin
+  - ln_Rec_vtx_normd2PV_min_hemisEmax
+  - ln_Rec_vtx_normd2PV_max_hemisEmax
+  - ln_Rec_vtx_normd2PV_ave_hemisEmax
+
   ##Add log of IP-like variables, map 0 -> 10 (0s not as big a problem as with d2PV as to do with individual tracks not vertices)
   - ln_Rec_track_absd0_min_hemisEmin
   - ln_Rec_track_absd0_max_hemisEmin
@@ -217,7 +232,7 @@ full-vars: # just taken from previous run to ensure nothing missed
   - Rec_PV_x
   - Rec_PV_y
   - Rec_PV_z
-  #- Rec_PV_chi2
+  - Rec_PV_chi2
 
   # Reconstructed vertex variables
   - Rec_vtx_n
@@ -350,7 +365,7 @@ baseline-bdth-vars:
   #- EVT_hemisEmin_maxpChargedRP_pz
 
   # missing EP related variables not in old BDT1
-    #- EVT_hemisEmin_Emiss #have hemisEmin_e from BDT1 contains kinda same info
+    #- EVT_hemisEmin_Emiss #have hemisEmin_e contains kinda same info
   - EVT_e 
   - EVT_p
 
@@ -454,6 +469,7 @@ bdth-plus-vars:
   - Rec_track_n
   - Rec_PV_ntracks
   - Rec_vtx_n
+  - Rec_PV_chi2
 
 
 
@@ -490,8 +506,10 @@ bdth-plus-vars:
   # IP-like
   - ln_Rec_track_absd0_max_hemisEmin
   - ln_Rec_track_absz0_max_hemisEmin 
+  - ln_Rec_track_absd0chi2_max_hemisEmin
+  - ln_Rec_track_absz0chi2_max_hemisEmin 
   - ln_Rec_track_absz0chi2_min_hemisEmin #quite descriminating - to understand physics of why, equally performs badlly in BDT
-  
+  - ln_Rec_track_absd0chi2_min_hemisEmin
   #- ln_Rec_track_absz0chi2_max_hemisEmin #very little descrim
   #- ln_Rec_track_absd0_min_hemisEmin #small extra peak maybe helpful
   #- Rec_track_absd0_max_hemisEmin #probably only want one of these so keep absd0/error for now
@@ -533,6 +551,10 @@ bdth-plus-vars:
   #IP-like
   - ln_Rec_track_absd0chi2_max_hemisEmax
   - ln_Rec_track_absz0chi2_max_hemisEmax
+  - ln_Rec_track_absd0_max_hemisEmax
+  - ln_Rec_track_absz0_max_hemisEmax 
+  - ln_Rec_track_absz0chi2_min_hemisEmax 
+  - ln_Rec_track_absd0chi2_min_hemisEmax
   
 
 
@@ -554,6 +576,8 @@ baseline-bdtl-vars:
 
   #no. vertices
   - Rec_vtx_n
+  - Rec_PV_ntracks
+  - Rec_PV_chi2
 
   # hemisEmax variables
   # EP related
@@ -572,6 +596,11 @@ baseline-bdtl-vars:
     #IP-like
   - ln_Rec_track_absd0chi2_max_hemisEmax
   - ln_Rec_track_absz0chi2_max_hemisEmax
+    # possibly to remove but see if helpful
+  - ln_Rec_track_absd0_max_hemisEmax
+  - ln_Rec_track_absz0_max_hemisEmax 
+  - ln_Rec_track_absz0chi2_min_hemisEmax 
+  - ln_Rec_track_absd0chi2_min_hemisEmax
 
 
   #helpful to remove some uds bkg as well - could have in both? - try without and see

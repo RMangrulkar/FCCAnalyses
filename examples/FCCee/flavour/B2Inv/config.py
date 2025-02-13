@@ -16,7 +16,7 @@ run_mode_choices = ['no_selection','prelim_cuts'] #when add run mode, now need t
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'no_selection'
+run_mode = 'prelim_cuts'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -52,15 +52,15 @@ processList = {
     
 
     "prelim_cuts": {  # ~2G or ~500k events per sample #ALL NUMBERS TO UPDATE
-        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.30, "chunks": 5},
-        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.28, "chunks": 5},
-        "p8_ee_Zbb_ecm91": {"fraction": 0.025, "chunks": 15},
-        "p8_ee_Zcc_ecm91": {"fraction": 0.025, "chunks": 15},
-        "p8_ee_Zss_ecm91": {"fraction": 0.025, "chunks": 15},
-        "p8_ee_Zud_ecm91": {"fraction": 0.045, "chunks": 30},
-        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 40}, 
-        "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
-        "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.32, "chunks": 5},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.30, "chunks": 5},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.028, "chunks": 16},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.028, "chunks": 16},
+        "p8_ee_Zss_ecm91": {"fraction": 0.028, "chunks": 16},
+        "p8_ee_Zud_ecm91": {"fraction": 0.048, "chunks": 32},
+        #"p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 40}, 
+        #"p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
+        #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},
         
     },
         #"prelim_cuts": {  # ~2G or ~500k events per sample #ALL NUMBERS TO UPDATE
@@ -84,7 +84,7 @@ fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
-        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_noPV_ntracks_cut/"),
+        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
     },
     "testFile": {
@@ -106,8 +106,8 @@ fccana_opts = {
     "compGroup":      "group_u_FCC.local_gen",
     "yamlPath":       os.path.join(FCCAnalysesPath, "B2Inv.yaml"),  # Path to the YAML file containing feature names
     "outputBranches": {
-        "no_selection":"full_vars",
-        "prelim_cuts": "full_vars",
+        "no_selection":"full-vars",
+        "prelim_cuts": "full-vars",
 
     },
 }

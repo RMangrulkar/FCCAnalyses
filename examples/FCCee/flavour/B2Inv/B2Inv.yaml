@@ -156,6 +156,10 @@ full-vars: # just taken from previous run to ensure nothing missed
   # End Ella vars for testing
   ############################
 
+  #intermideiates incase they're needed later
+  - Rec_vtx_in_hemisEmin_andNotPV
+  - Rec_vtx_in_hemisEmax_andNotPV
+
 
   ###########################################
   # Variables to look at for BDT2 generally
@@ -523,7 +527,8 @@ bdth-plus-vars:
   
   #vtx or particle thrustCosTheta related
   - Rec_thrustCosTheta_ave_hemisEmin
-  - Rec_vtx_thrustCosTheta_max_hemisEmin #almost identical to ave, therefore max only
+  - Rec_vtx_thrustCosTheta_min_hemisEmin
+  - Rec_vtx_thrustCosTheta_max_hemisEmin #max and min look at different things [nb. this also different for different hemispheres as stuff in hemisEmax is negative]
 
   ############################################### 
   #Variables helpful for non-bb bkgs 
@@ -544,6 +549,7 @@ bdth-plus-vars:
   - Rec_vtx_ntracks_max_hemisEmax
   # angle to thrust
   - Rec_vtx_thrustCosTheta_max_hemisEmax #more discriminating than ave and very good correlations with hemisEmax vars
+  - Rec_vtx_thrustCosTheta_min_hemisEmax
   - Rec_thrustCosTheta_ave_hemisEmax 
   # d2PV
   - ln_Rec_vtx_d2PV_min_hemisEmax
@@ -557,6 +563,24 @@ bdth-plus-vars:
   - ln_Rec_track_absd0chi2_min_hemisEmax
   
 
+possible-additions:
+   #- EVT_hemisEmin_maxpChargedRP_px
+   #- EVT_hemisEmin_maxpChargedRP_py
+   #- EVT_hemisEmin_maxpChargedRP_pz
+    #normd2PVs and their log
+   #- Rec_vtx_normd2PV_min_hemisEmin
+   #- Rec_vtx_normd2PV_max_hemisEmin
+   #- Rec_vtx_normd2PV_ave_hemisEmin
+   - Rec_vtx_normd2PV_min_hemisEmax
+   #- Rec_vtx_normd2PV_max_hemisEmax
+   #- Rec_vtx_normd2PV_ave_hemisEmax
+  #New variables for log normd2PV with map for 0s to 10 (ie. events with no SV)
+   - ln_Rec_vtx_normd2PV_min_hemisEmin
+   #- ln_Rec_vtx_normd2PV_max_hemisEmin
+   #- ln_Rec_vtx_normd2PV_ave_hemisEmin
+   - ln_Rec_vtx_normd2PV_min_hemisEmax
+   #- ln_Rec_vtx_normd2PV_max_hemisEmax
+   #- ln_Rec_vtx_normd2PV_ave_hemisEmax
 
 baseline-bdtl-vars:
 
@@ -573,9 +597,9 @@ baseline-bdtl-vars:
   - EVT_unitThrust_x #Thrust vector components replaced by more physically helpful normalised component
   - EVT_unitThrust_z 
   - EVT_Thrust_mag #value of object that is minimised in Thrust calculation , T
+  - Rec_vtx_n #this inherently includes some mE effects
 
   #no. vertices
-  - Rec_vtx_n
   - Rec_PV_ntracks
   - Rec_PV_chi2
 
@@ -589,6 +613,7 @@ baseline-bdtl-vars:
   - Rec_vtx_ntracks_max_hemisEmax
   # angle to thrust
   - Rec_vtx_thrustCosTheta_max_hemisEmax #more discriminating than ave and very good correlations with hemisEmax vars
+  - Rec_vtx_thrustCosTheta_min_hemisEmax 
   - Rec_thrustCosTheta_ave_hemisEmax 
   # d2PV
   - ln_Rec_vtx_d2PV_max_hemisEmax
@@ -645,14 +670,18 @@ baseline-bdtmE-vars:
   # number of tracks related
   - EVT_hemisEmin_sum_Rec_vtx_ntracks_exclPV
   - Rec_vtx_ntracks_max_hemisEmin #no tracks from vtx with most tracks in hemis
-  
-  # overlap with nDV as if nDV=0, d2pv=0
+
+    # overlap with nDV as if nDV=0, d2pv=0
   - ln_Rec_vtx_d2PV_min_hemisEmin #log more helpful
-  #- ln_Rec_vtx_d2PV_max_hemisEmin #log more helpfu
+  - ln_Rec_vtx_d2PV_max_hemisEmin #log more helpfu
   
   # IP-like
   - ln_Rec_track_absd0_max_hemisEmin
   - ln_Rec_track_absz0_max_hemisEmin 
+  - ln_Rec_track_absd0chi2_max_hemisEmin
+  - ln_Rec_track_absz0chi2_max_hemisEmin 
+  - ln_Rec_track_absz0chi2_min_hemisEmin #quite descriminating - to understand physics of why, equally performs badlly in BDT
+  - ln_Rec_track_absd0chi2_min_hemisEmin
  
   # maximum momentum particle 
   - EVT_hemisEmin_maxpChargedRP_p
@@ -661,10 +690,8 @@ baseline-bdtmE-vars:
   
   #vtx or particle thrustCosTheta related
   - Rec_thrustCosTheta_ave_hemisEmin
-  - Rec_vtx_thrustCosTheta_max_hemisEmin #almost identical to ave, therefore max only
-
-  
-
+  - Rec_vtx_thrustCosTheta_min_hemisEmin
+  - Rec_vtx_thrustCosTheta_max_hemisEmin #max and min look at different things [nb. this also different for different hemispheres as stuff in hemisEmax is negative]
 
 
 

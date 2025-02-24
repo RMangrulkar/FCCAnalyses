@@ -591,7 +591,11 @@ class RDFanalysis():
 
         # If producing files for training BDTh/l then we are done
         if cfg.run_mode == 'prelim_cuts':
-            return df3            
+            return df3  
+
+         # If producing files for training BDTh/l then we are done
+        elif cfg.run_mode == 'prelim_cuts_full':
+            return df3                  
         
         ##########################################################################################
         #This section needs changing once trained BDTl/h

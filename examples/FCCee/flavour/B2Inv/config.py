@@ -9,7 +9,7 @@ FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts
+run_mode_choices = ['no_selection','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 #BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
 #BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
@@ -66,10 +66,10 @@ processList = {
     "prelim_cuts_full": {  # processing all data
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1, "chunks": 20},
         "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1, "chunks": 20},
-        "p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zcc_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zss_ecm91": {"fraction": 1, "chunks": 500},
-        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 600},
+        "p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 800},
+        "p8_ee_Zcc_ecm91": {"fraction": 1, "chunks": 800},
+        "p8_ee_Zss_ecm91": {"fraction": 1, "chunks": 800},
+        "p8_ee_Zud_ecm91": {"fraction": 1, "chunks": 800},
         "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 50}, 
         "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
         "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},

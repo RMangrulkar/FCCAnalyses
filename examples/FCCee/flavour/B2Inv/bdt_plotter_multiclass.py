@@ -14,6 +14,7 @@ from yaml import safe_load, YAMLError, dump
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import roc_curve, auc
 from xgboost import XGBClassifier
+from sklearn.metrics import log_loss
 
 
 import config_copy as cfg ##################TO CHANGE ONCE DATA FINISHED PROCESSING
@@ -619,7 +620,7 @@ def post_bdt_variable_plot(data,variable,
 # Load BDT and apply to loaded data - define as funtion
 #######################################################
 
-def load_bdt_and_apply(pickled_df_fname = "bdt-lh_dataframe.pkl", 
+def load_bdt_and_apply(pickled_df_fname = "bdt_lh_dataframe.pkl", 
                         config_bdtopts = cfg.bdt_lh_opts,
                         training_round = "multiclass_baseline",
                         hps_dict_name = "default-hps",
@@ -663,6 +664,24 @@ def load_bdt_and_apply(pickled_df_fname = "bdt-lh_dataframe.pkl",
     for i in range(probabilities.shape[1]):
         df[f'bdt_score_{class_names[i]}'] = probabilities[:, i]
 
+    #calculate logloss
+    validation_df = df[df["sample"]==2]
+    test_df = df[df["sample"]==1]
+
+    y_true_valid = validation_df['label']
+    y_true_test = test_df['label']
+    
+    # Corresponding predicted probabilities (softmax output)
+    y_pred_valid = validation_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
+    y_pred_test = test_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
+    
+    # Compute log loss
+    validation_loss = log_loss(y_true_valid, y_pred_valid)
+    test_loss = log_loss(y_true_test, y_pred_test)
+
+    print(f'validation logloss: {validation_loss}' )
+    print(f'test logloss: {test_loss}' )
+
 
     return bdt_model, bdtname, df
 
@@ -672,14 +691,21 @@ def load_bdt_and_apply(pickled_df_fname = "bdt-lh_dataframe.pkl",
 ########################################
 
 if __name__=="__main__":
-    model, bdtname, dataframe = load_bdt_and_apply( pickled_df_fname = "bdt_lh_dataframe.pkl", 
-                            config_bdtopts = cfg.bdt_lh_opts,
-                            training_round = "multiclass_baseline",
-                            hps_dict_name = "default-hps",
-                            features_list_name = "bdth-plus-vars",
-                            bdt_label = '_lh')
+    #model, bdtname, dataframe = load_bdt_and_apply( pickled_df_fname = "bdt_lh_dataframe.pkl", 
+                            #config_bdtopts = cfg.bdt_lh_opts,
+                            #training_round = "multiclass_baseline",
+                            #hps_dict_name = "default-hps",
+                            #features_list_name = "bdth-plus-vars",
+                            #bdt_label = '_lh')
 
-    outputpath = os.path.join(cfg.bdt_lh_opts['outputPath'],"multiclass_baseline")
+    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_fname = "bdt_lh_dataframe.pkl", 
+                        config_bdtopts = cfg.bdt_lh_opts,
+                        training_round = "multiclass_baseline",#"test_hpopt_small_sample/optimum_hps",
+                        hps_dict_name = "default-hps",
+                        features_list_name = "bdth-plus-vars",#"bdtlh-vars-v1",
+                        bdt_label = '_lh')
+
+    #outputpath = os.path.join(cfg.bdt_lh_opts['outputPath'],"test_hpopt_small_sample/optimum_hps")
 
     print('Now plotting...')
 
@@ -705,7 +731,7 @@ if __name__=="__main__":
     #plot_eff_combinedcut(dataframe,bdt_name = 'BDT_lh', outpath=outputpath)
     #plot_bdt_response_combinedcut(dataframe,bdt_name = 'BDT_lh',outpath=outputpath,xrange=(0.95,1))
 
-    post_bdt_variable_plot(dataframe,'EVT_unitThrust_z',bdt_cut='bdt_score_2>0.95', outpath=outputpath)
+    #post_bdt_variable_plot(dataframe,'EVT_unitThrust_z',bdt_cut='bdt_score_2>0.95', outpath=outputpath)
 
 
 '''

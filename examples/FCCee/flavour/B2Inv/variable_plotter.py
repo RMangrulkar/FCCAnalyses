@@ -345,7 +345,7 @@ def plot(varname,
 
         if allocation in total and stacked:
             ax.hist( 
-                np.concatenate( hist_x), 
+                np.concatenate(hist_x), 
                 bins = nbins,
                 range = (xmin,xmax),
                 density = density,

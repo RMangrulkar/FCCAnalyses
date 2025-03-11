@@ -1,0 +1,184 @@
+import os
+import glob
+import sys
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import xgboost as xgb  # Has to be imported first to avoid conflicts with PyROOT
+import json
+from time import time
+from datetime import timedelta
+from yaml import safe_load, YAMLError, dump
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import roc_curve, auc
+from xgboost import XGBClassifier
+
+import config as cfg
+import efficiency_finder
+#import variable_plotter as vp
+plt.style.use('fcc.mplstyle')
+
+# Function to load the BDT model from a JSON file
+def load_bdt_model(json_path):
+    bdt_model = xgb.Booster()
+    bdt_model.load_model(json_path)
+    return bdt_model
+
+# Function to load the BDT model from a JSON file
+def load_bdt_model_sklearn(json_path):
+    bdt_model = XGBClassifier()
+    bdt_model.load_model(json_path)
+    return bdt_model
+
+# Return list of variables to use in the bdt as a python list
+def vars_fromyaml(path, bdtlist):
+    with open(path) as stream:
+        try:
+            file = safe_load(stream)
+            bdtvars = file[bdtlist]
+        except YAMLError as exc:
+            print(exc)
+    return bdtvars
+
+def load_bdt_and_apply(pickled_df_fname = "bdt_lh_full_dataframe.pkl", # once have put ALL data into a df
+                        config_bdtopts = cfg.optimised_bdt_lh_opts,
+                        bdtname = 'BDT_lh_default_hps_bdtlh-vars-v1',
+                        training_round = "multiclass_hp_opt_v1", #to change if change multiclass
+                        features_list_name = "bdtlh-vars-v1",
+                        bdt_label = '_lh',
+                        ): # hps dict and features_list_name specift BDT used
+    
+
+    #path to data and outputs
+    outputpath   = config_bdtopts['outputPath']
+    yamlpath = cfg.fccana_opts['yamlPath']
+
+    #Getting BDT vars for training from yaml
+    bdtvars      = vars_fromyaml(yamlpath, features_list_name)
+
+
+    #path to pickled data
+    pickled_df_path = os.path.join(outputpath, pickled_df_fname)
+
+    #path to saved bdt
+    bdt_json_path = os.path.join(outputpath,training_round,f"{bdtname}.json")
+
+    # Load the BDT model
+    try:
+        print("Loading BDT model...")
+        bdt_model = load_bdt_model_sklearn(bdt_json_path)
+        print("BDT model loaded successfully.")
+    except Exception as e:
+        print(f"Error loading BDT model: {e}")
+        quit()
+
+    # Read df saved to pickle and add BDT 
+
+    #Getting BDT vars for training from yaml
+    # load pickled df
+    df = pd.read_pickle(pickled_df_path)
+
+    #add bdt score
+    class_names = bdt_model.classes_
+    probabilities = bdt_model.predict_proba(df[bdtvars])
+    for i in range(probabilities.shape[1]):
+        df[f'bdt_score_{class_names[i]}'] = probabilities[:, i]
+
+    return bdt_model, bdtname, df
+
+
+#multivariate map
+labels = {'signal':2,'heavy_background':1 ,'light_background':0}
+labels_dict_inverted = {v: k for k, v in labels.items()}
+colors = {'signal':'mediumblue','heavy_background':'y' ,'light_background':'g','background':'r'}
+blobs = {'signal':'bo','heavy_background':'y+' ,'light_background':'g+','background':'r+' }
+
+
+
+model, bdtname, dataframe = load_bdt_and_apply()
+
+outputpath = os.path.join(cfg.bdt_lh_opts['outputPath'],"multiclass_hp_opt_v1")
+
+
+df = dataframe
+lsearch = 1- np.linspace(0.00005,0.00501,100)
+hsearch= 1- np.linspace(0.00005,0.00501,100)
+eff_dict={}
+eff_df=np.zeros((len(lsearch), len(hsearch)))
+for decay in df["decay"].unique():
+    eff_df=np.zeros((len(lsearch), len(hsearch)))
+    subf = df[df["decay"]==decay]
+    l_arr=[]
+    h_arr=[]
+
+    for l in np.arange(0,len(lsearch),1):
+        for h in np.arange(0,len(hsearch),1):
+            l_arr.append(lsearch[l])
+            h_arr.append(hsearch[h])
+
+            cutdf = subf[((1-subf["bdt_score_1"])>hsearch[h])&((1-subf["bdt_score_0"])>lsearch[l])]
+            eff_lh = len(cutdf)/len(subf)
+            eff_df[l][h] = eff_lh
+
+    eff_dict[f"{decay}"] = eff_df
+    
+
+bf_df = np.zeros((len(lsearch), len(hsearch)))
+B_df = np.zeros((len(lsearch), len(hsearch)))
+B_eff_df = np.zeros((len(lsearch), len(hsearch)))
+
+
+#approximate prelim cut eff
+''''''
+prelim_eff = {"p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 0.876, 
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 0.884,  
+    "p8_ee_Zbb_ecm91": 0.058,
+    "p8_ee_Zcc_ecm91": 0.042,
+    "p8_ee_Zss_ecm91": 0.046,
+    "p8_ee_Zud_ecm91": 0.024,
+}
+''''''
+
+
+eff_err =  efficiency_finder.get_efficiencies('custom',
+                                                    further_analysis=True,
+                                                    samples = cfg.samples,
+                                                    raw=True, #ie. want full efficiency including tupling and prelim cuts
+                                                    custompath=cfg.optimised_bdt_lh_opts["inputPath"],
+                                                    verbose=False)
+
+prelim_eff = {key: value for key, value in eff_err.items() if key.endswith('_eff')}
+
+                                                                                                                                                                                      
+######################################'''Need to go through and extract ACTUAL PRELIM EFFICIENCIES IN HERE'''#######################################################################################
+
+k = 2* cfg.prod_frac["Bs"] * cfg.branching_fractions["p8_ee_Zbb_ecm91"][0]*cfg.N_z*prelim_eff["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"]
+
+sig_eff= eff_dict['p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu']
+
+l_elements = sorted(list(set(l_arr)))
+h_elements = sorted(list(set(h_arr)))
+
+
+for l in np.arange(0,len(l_elements), 1):
+    for h in np.arange(0,len(h_elements), 1): 
+        #3sigma bf for Bs so that comparable to old work
+        K = k * sig_eff[l,h]
+        B = sum([cfg.branching_fractions[s][0]*cfg.N_z*prelim_eff[s]* eff_dict[s][l,h] for s in cfg.sample_allocations["hadronic_background"]])
+        B_nocut = sum([cfg.branching_fractions[s][0]*cfg.N_z*prelim_eff[s] for s in cfg.sample_allocations["hadronic_background"]])
+        bf =1/(2*K)*(9+np.sqrt(81+36*B))
+        bf_df[l,h]=bf
+        B_df[l,h]=B
+        B_eff_df[l,h]=B/B_nocut
+
+
+# sensitivity all stored in bf_df = bf you would on average expect to see at 3 sigma
+print(f'Minimum BF at naive 3 sigma: {np.min(bf_df)}')
+print(f'Total hadronic B at this cut= {B_df[bf_df.index(np.min(bf_df))]}')
+print(f'signal eff at this cut= {sig_eff_arr_cut[min_bfs.index(np.min(bf_df))]}')
+print(f'Minimum BF at naive 3 sigma if B==0: {bf_B0_arr[min_bfs.index(np.min(bf_df))]}')
+print(f'cut on P(light) < {l_elements[bf_df.index(np.min(bf_df))][0]}')
+print(f'cut on P(heavy) < {h_elements[bf_df.index(np.min(bf_df))][1]}')
+print('-----------------------------------------------------------------')

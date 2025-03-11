@@ -83,7 +83,7 @@ fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
-        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts/"),
+        "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts_500k/"),
         "prelim_cuts_full": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_full_data/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
     },
@@ -151,6 +151,28 @@ bdtl_opts = {
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
 }
+
+
+bdt_lh_opts = {
+    "training":           True,                  
+    "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want to train on data with just preliminary cuts
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdt_lh_outputs/"),
+    "mvaBranchList":      "bdth-plus-vars",  # key in the yaml file pointing to the feature list 
+    "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "backgroundAllocation_light":  ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+    "backgroundAllocation_heavy":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
+}
+
+optimised_bdt_lh_opts = {
+    "training":           True,                  
+    "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want to train on data with just preliminary cuts
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdt_lh_outputs/"),
+    "mvaBranchList":      "bdtlh-vars-v1",  # key in the yaml file pointing to the feature list 
+    "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "backgroundAllocation_light":  ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
+    "backgroundAllocation_heavy":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
+}
+
 
 hp_opts = {
     "default-hps": {'n_estimators': 400, 
@@ -266,3 +288,4 @@ branching_fractions = {
 
 mass_Z = 91.188  # Ecm used in the winter2023 samples
 
+N_z = 6e12 # total number of Nz expected across all experiments during tera-Z run (from https://arxiv.org/pdf/2309.11353 Matt/Aidan paper)

@@ -23,7 +23,7 @@ import optuna
 configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'
 sys.path.append(os.path.abspath(configPath))
 
-import config as cfg 
+import config as cfg
 import efficiency_finder
 import bdt_plotter as bp
 
@@ -91,19 +91,19 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
     df = pd.read_pickle(pickled_df_path)
 
     # matrix of input vars
-    x_train = df[ df["sample"]==0][bdtvars]
-    x_test  = df[ df["sample"]==1][bdtvars]
-    x_valid = df[ df["sample"]==2][bdtvars]
+    x_train = df[ df["sample"]==0][bdtvars].head(500000)
+    x_test  = df[ df["sample"]==1][bdtvars].head(500000)
+    x_valid = df[ df["sample"]==2][bdtvars].head(500000)
 
     # array of target
-    y_train = df[ df["sample"]==0][ "label" ]
-    y_test  = df[ df["sample"]==1][ "label" ]
-    y_valid = df[ df["sample"]==2][ "label" ]
+    y_train = df[ df["sample"]==0][ "label" ].head(500000)
+    y_test  = df[ df["sample"]==1][ "label" ].head(500000)
+    y_valid = df[ df["sample"]==2][ "label" ].head(500000)
 
     # array of weights
-    w_train = df[ df["sample"]==0][ "total_weight_muliclass" ]
-    w_test  = df[ df["sample"]==1][ "total_weight_muliclass" ]
-    w_valid = df[ df["sample"]==2][ "total_weight_muliclass" ]
+    w_train = df[ df["sample"]==0][ "total_weight_muliclass" ].head(500000)
+    w_test  = df[ df["sample"]==1][ "total_weight_muliclass" ].head(500000)
+    w_valid = df[ df["sample"]==2][ "total_weight_muliclass" ].head(500000)
 
 
     ######################################################
@@ -330,11 +330,3 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
 
 
 
-#code snipet from cesca to plot importances of hps
-'''
-plt.figure(figsize=(15, 9))
-    optuna.visualization.matplotlib.plot_param_importances(study)
-    output_plot = f"{_PlotsDirPath}/{_Run}/hyperparameter-importance.pdf"
-    plt.savefig(output_plot)
-    plt.savefig(output_plot.replace(".pdf", ".png"))'
-'''

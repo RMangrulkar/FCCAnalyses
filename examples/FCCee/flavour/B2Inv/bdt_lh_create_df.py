@@ -14,7 +14,7 @@ from yaml import safe_load, YAMLError
 configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'
 sys.path.append(os.path.abspath(configPath))
 
-import config_copy as cfg ## TO CHANGE BACK ONCE PROCESSING FINISHED!
+import config as cfg 
 import efficiency_finder
 
 

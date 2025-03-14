@@ -108,7 +108,7 @@ def plot_ROC_star(df, bdt_name = "BDT_lh",
     fig.tight_layout()
     if outpath:
         #fig.savefig(os.path.join(outpath,output_file_name+"_zoomedin.png"))
-        fig.savefig(os.path.join(outputpath,f'{bdt_name}_{output_file_name}_zoomedin.pdf'))
+        fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_zoomedin.pdf'))
     else:
         #fig.savefig(f"{output_file_name}_zoomedin.png")
         fig.savefig(f"{bdt_name}_{output_file_name}_zoomedin.pdf")
@@ -620,7 +620,7 @@ def post_bdt_variable_plot(data,variable,
 # Load BDT and apply to loaded data - define as funtion
 #######################################################
 
-def load_bdt_and_apply(pickled_df_fname = "bdt_lh_dataframe.pkl", 
+def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
                         config_bdtopts = cfg.bdt_lh_opts,
                         training_round = "multiclass_baseline",
                         hps_dict_name = "default-hps",
@@ -638,7 +638,6 @@ def load_bdt_and_apply(pickled_df_fname = "bdt_lh_dataframe.pkl",
     bdtname      = f'BDT{bdt_label}_{hps_dict_name}_{features_list_name}'
 
     #path to pickled data
-    pickled_df_path = os.path.join(outputpath, pickled_df_fname)
 
     #path to saved bdt
     bdt_json_path = os.path.join(outputpath,training_round,f"{bdtname}.json")
@@ -698,7 +697,7 @@ if __name__=="__main__":
                             #features_list_name = "bdth-plus-vars",
                             #bdt_label = '_lh')
 
-    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_fname = "bdt_lh_dataframe.pkl", 
+    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
                         config_bdtopts = cfg.bdt_lh_opts,
                         training_round = "multiclass_baseline",#"test_hpopt_small_sample/optimum_hps",
                         hps_dict_name = "default-hps",

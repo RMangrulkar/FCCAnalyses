@@ -173,6 +173,7 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         #now training and saving model with best hps
 
         bdt = xgb.XGBClassifier( objective='multi:softprob', eval_metric= 'mlogloss',**best_hps) #I believe mlogloss is the default (also known as cross entropy) 
+        bdt.set_params(early_stopping_rounds=10)
     
         print(f"\n----> INFO: Training using {best_hps}")
 
@@ -220,6 +221,7 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         #now training and saving model with best hps
             # define Bdt to train
         bdt = xgb.XGBClassifier( objective='multi:softprob', eval_metric= 'mlogloss',**best_hps) #I believe mlogloss is the default (also known as cross entropy)
+        bdt.set_params(early_stopping_rounds=10)
 
 
         print(f"\n----> INFO: Training using {best_hps}")

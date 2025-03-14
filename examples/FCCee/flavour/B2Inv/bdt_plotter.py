@@ -54,10 +54,11 @@ def dec2type( dec ):
 ## Define functions for plotting ## - KEY PLOTTERS
 ###################################
 
-def plot_simple_ROC(df,bdt_name = "BDTh",output_file_name = "ROC",outpath=None):
+def plot_simple_ROC(df,bdtlabel = "h",output_file_name = "ROC",outpath=None):
+    bdt_name = f"BDT{bdtlabel}"
 # make roc curve (use test sample)
     y_test = df[ df["sample"]==1]["label"]
-    x_test_bdt = df[df["sample"]==1]["bdt_score"]
+    x_test_bdt = df[df["sample"]==1][f"bdt{bdtlabel}_score"]
     w_test =  df[ df["sample"]==1]["total_weight"]
 
     fpr, tpr, thresholds = roc_curve( y_test, x_test_bdt, sample_weight=w_test)
@@ -66,8 +67,8 @@ def plot_simple_ROC(df,bdt_name = "BDTh",output_file_name = "ROC",outpath=None):
 
     fig, ax = plt.subplots()
     ax.plot( tpr, 1-fpr, lw=1 )
-    ax.set_xlim(0.9,1)
-    ax.set_ylim(0.9,1)
+    ax.set_xlim(0.9,1.01)
+    ax.set_ylim(0.9,1.01)
     ax.set_xlabel( "Signal Efficiency" )
     ax.set_ylabel( "Background Rejection (1-fpr)" )
     ax.text(0.905, 0.905, f'AUC: {roc_auc:.5f}')
@@ -86,13 +87,15 @@ def plot_simple_ROC(df,bdt_name = "BDTh",output_file_name = "ROC",outpath=None):
 
 
 
-def plot_ROC_star(df, bdt_name = "BDTh",
+def plot_ROC_star(df, 
+                  bdtlabel='h',
                   decay_label_in_df="decay",
-                  bdtscore_label="bdt_score",
                   weight_label="total_weight", 
                   comps = [("signal", "heavy"), ("signal", "light"), ("heavy", "light"), ("signal", "background")],
                   output_file_name = "ROC_star",
                   outpath=None):
+    
+    bdt_name = f"BDT{bdtlabel}"
     
     # make roc curve (use test sample)
     
@@ -107,7 +110,7 @@ def plot_ROC_star(df, bdt_name = "BDTh",
             subf = df[ (df["Type"]==type1) | (df["Type"]==type2 ) ] 
 
         y_true = subf["Type"].map( { type1: 1, type2: 0} ).values 
-        y_pred = subf[bdtscore_label].values
+        y_pred = subf[f"bdt{bdtlabel}_score"].values
         weight = subf[weight_label].values
 
         fpr, tpr, thresholds = roc_curve( y_true, y_pred, sample_weight=weight )
@@ -145,14 +148,15 @@ def plot_ROC_star(df, bdt_name = "BDTh",
 
 
 
-def plot_bdt_response(df, bdt_name = "BDTh",output_file_name = "response" ,outpath=None):
+def plot_bdt_response(df, bdtlabel = "h",output_file_name = "response" ,outpath=None):
+    bdt_name = f"BDT{bdtlabel}"
     # plot of BDT output
     fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3,1]}, figsize=(6.4,6.4))
 
-    sig_train = df[ (df["sample"]==0) & (df["label"]==1) ]["bdt_score"].values
-    bkg_train = df[ (df["sample"]==0) & (df["label"]==0) ]["bdt_score"].values
-    sig_test = df[ (df["sample"]==1) & (df["label"]==1) ]["bdt_score"].values
-    bkg_test = df[ (df["sample"]==1) & (df["label"]==0) ]["bdt_score"].values
+    sig_train = df[ (df["sample"]==0) & (df["label"]==1) ][f"bdt{bdtlabel}_score"].values
+    bkg_train = df[ (df["sample"]==0) & (df["label"]==0) ][f"bdt{bdtlabel}_score"].values
+    sig_test = df[ (df["sample"]==1) & (df["label"]==1) ][f"bdt{bdtlabel}_score"].values
+    bkg_test = df[ (df["sample"]==1) & (df["label"]==0) ][f"bdt{bdtlabel}_score"].values
     sig_train_w = df[ (df["sample"]==0) & (df["label"]==1) ]["total_weight"].values
     bkg_train_w = df[ (df["sample"]==0) & (df["label"]==0) ]["total_weight"].values
     sig_test_w = df[ (df["sample"]==1) & (df["label"]==1) ]["total_weight"].values
@@ -221,11 +225,12 @@ def plot_bdt_response(df, bdt_name = "BDTh",output_file_name = "response" ,outpa
 
 
 # efficiency plot (on total sample)
-def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=None):
+def plot_eff(df, bdtlabel = "h",output_file_name = 'efficiency_plot',outpath=None):
+    bdt_name = f"BDT{bdtlabel}"
     fig, ax = plt.subplots()
     for decay in df["decay"].unique():
         subf = df[ df["decay"]==decay ]
-        mva_scores = subf["bdt_score"].values
+        mva_scores = subf[f"bdt{bdtlabel}_score"].values
         weights = subf["total_weight"].values
 
         sorted_indices = np.argsort( mva_scores )
@@ -264,7 +269,7 @@ def plot_eff(df, bdt_name = "BDTh",output_file_name = 'efficiency_plot',outpath=
 
 def post_bdt_variable_plot(data,variable,
                            bdt_cut = None, #must be string of correct format as in vp
-                           bdt_name = "BDTh",
+                           bdtlabel = "h",
                            weight=True,
                            density=True,
                            bins=50,
@@ -274,6 +279,9 @@ def post_bdt_variable_plot(data,variable,
                            total=["hadronic_background"], 
                            components=["Bssignal", "hadronic_background"], #currently not set up to do Bd and Bs with separate nominal bfs but thsi shouldnt be an issue
                            signal_bf=1e-6):
+    
+    bdt_name = f"BDT{bdtlabel}"
+
     if outpath:
         savepath=os.path.join(outpath,f'{variable}_with_{bdt_name}_cut_{bdt_cut}.pdf')
     else:

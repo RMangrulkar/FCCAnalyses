@@ -737,6 +737,92 @@ baseline-bdtl-vars:
   # ONLY REPEAT CURRENTLY PV MASS AND THRUST VECTOR COMPS
  
 
+
+bdttau-baseline-vars: 
+  #global ntrack based
+  - Rec_vtx_n
+  - Rec_track_n
+  - Rec_PV_ntracks
+  - Rec_PV_chi2
+  - EVT_Thrust_mag
+
+  #global kinematic
+  - PV_Rec_vtx_m
+  - EVT_p
+
+  #Emax ntrack based
+  - EVT_hemisEmax_n
+  # contains nCharged and nNetural
+  #nCharged included as global in n_tracks
+  - EVT_hemisEmax_nDV #overlap with Rec_vtx_n - maybe dont need
+  - EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV # encodes nDV - if 0 because nDV=0
+  - Rec_vtx_ntracks_max_hemisEmax
+
+  #Emax kinematic
+  - EVT_hemisEmax_e
+  - EVT_hemisEmax_maxpChargedRP_fromPV_transformed
+  - EVT_hemisEmax_maxpChargedRP_p
+  - ln_Rec_track_absd0_max_hemisEmax
+  - ln_Rec_track_absd0chi2_min_hemisEmax
+  - ln_Rec_track_absz0_max_hemisEmax
+  - ln_Rec_vtx_d2PV_max_hemisEmax
+  - ln_Rec_vtx_d2PV_min_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
+  - Rec_vtx_thrustCosTheta_max_hemisEmax
+
+  #Emin ntracks based
+  - EVT_hemisEmin_n
+  # again encompasses nNeutral and nCharged
+
+  #Emin kinematics based
+  - EVT_hemisEmin_e
+  - EVT_hemisEmin_maxpChargedRP_p
+
+bdttau-nonNeutrals-vars:
+  #global ntrack based
+  - Rec_vtx_n
+  - Rec_track_n
+  - Rec_PV_ntracks
+  - Rec_PV_chi2
+  - EVT_Thrust_mag
+
+  #global kinematic
+  - PV_Rec_vtx_m
+  - EVT_p
+
+  #Emax ntrack based
+  - EVT_hemisEmax_nCharged
+  #nCharged included as global in n_tracks
+  - EVT_hemisEmax_nDV #overlap with Rec_vtx_n - maybe dont need
+  - EVT_hemisEmax_sum_Rec_vtx_ntracks_exclPV # encodes nDV - if 0 because nDV=0
+  - Rec_vtx_ntracks_max_hemisEmax
+
+  #Emax kinematic
+  - EVT_hemisEmax_e
+  - EVT_hemisEmax_maxpChargedRP_fromPV_transformed
+  - EVT_hemisEmax_maxpChargedRP_p
+  - ln_Rec_track_absd0_max_hemisEmax
+  - ln_Rec_track_absd0chi2_min_hemisEmax
+  - ln_Rec_track_absz0_max_hemisEmax
+  - ln_Rec_vtx_d2PV_max_hemisEmax
+  - ln_Rec_vtx_d2PV_min_hemisEmax
+  - Rec_thrustCosTheta_ave_hemisEmax
+  - Rec_vtx_thrustCosTheta_max_hemisEmax
+
+  #Emin ntracks based
+  - EVT_hemisEmin_nCharged
+
+  #Emin kinematics based
+  - EVT_hemisEmin_e
+  - EVT_hemisEmin_maxpChargedRP_p
+
+
+
+######################################################################################################################################
+#This is all old - to remove at some point!
+######################################################################################################################################
+
+
 baseline-bdtmE-vars:
 
   # EVT level - hemisphere properties
@@ -790,18 +876,6 @@ baseline-bdtmE-vars:
   - Rec_vtx_thrustCosTheta_min_hemisEmin
   - Rec_vtx_thrustCosTheta_max_hemisEmin #max and min look at different things [nb. this also different for different hemispheres as stuff in hemisEmax is negative]
 
-
-
-
-
-
-
-
-
-
-######################################################################################################################################
-#This is all old - to remove at some point!
-######################################################################################################################################
 
 bdt1-training-vars:
   # EVT level - thrust axis

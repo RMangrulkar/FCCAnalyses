@@ -55,7 +55,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['mumu']
+testFile = cfg.fccana_opts['testFile']['ee']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -595,37 +595,30 @@ class RDFanalysis():
 
          # If producing files for training BDTh/l then we are done
         elif cfg.run_mode == 'prelim_cuts_full':
-            return df3                  
-        
-        ##########################################################################################
-        #This section needs changing once trained BDTl/h
-        ##########################################################################################
-        # Otherwise we evaluate the Stage 1 BDT
-        else:
-            # Read list of feature names used in the BDT from the config YAML file
-            with open(cfg.fccana_opts['yamlPath']) as stream:
-                yaml = safe_load(stream)
-                BDT1branchList = yaml[cfg.bdt1_opts['mvaBranchList']]
+            return df3   
 
-            ROOT.gInterpreter.ProcessLine(f'''
-            TMVA::Experimental::RBDT bdt1("{cfg.bdt1_opts['mvaRBDTName']}", "{cfg.bdt1_opts['mvaPath']}");
-            auto computeModel1 = TMVA::Experimental::Compute<{len(BDT1branchList)}, float> (bdt1);
-            ''')
+        elif cfg.run_mode == 'n_lept_cut_failed':
 
-            df3 = (
+            df4 = (
                 df2
                 #############################################
-                ##                Build BDT                ##
+                ##                  Filters                ##
                 #############################################
-                .Define("MVAVec",    ROOT.computeModel1, BDT1branchList)
-                .Define("EVT_MVA1",  "MVAVec.at(0)")
+                .Filter("EVT_e < 85")       
+                .Filter("EVT_hemisEmin_nCharged > 0")  
+                .Filter("EVT_hemisEmin_nLept > 0")    # Flipped so that events failing nLpt cut but passing all others - misID test
+                .Filter("PV_Rec_vtx_m<40")   
+                .Filter("Rec_PV_ntracks>1")
+                .Define("matching_vtx_assignment", "Rec_vtx_in_hemisEmin==Rec_vtx_in_hemisEmin_d2PV") #INTERMEDIATE
+                .Define("HasFormZeroOnes", "matching_vtx_assignment.size() > 0 && matching_vtx_assignment.at(0) == 0 && Sum(matching_vtx_assignment) == matching_vtx_assignment.size() - 1")   #INTERMEDIATE
+                .Filter("HasFormZeroOnes==1")
             )
+            
+            return df4    
 
-            # If the cut value is given filter on it else return the entire DataFrame
-            if cfg.bdt1_opts['mvaCut'] is not None:
-                return df3.Filter(f"EVT_MVA1 > {cfg.bdt1_opts['mvaCut']}")
-            else:
-                return df3
+        else:
+            raise ValueError('Please choose a valid RunMode')            
+        
 
     def output():
         # Get the output branchList from the config YAML file

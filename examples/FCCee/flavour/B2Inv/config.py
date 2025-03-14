@@ -9,14 +9,14 @@ FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
+run_mode_choices = ['no_selection','n_lept_cut_failed','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 #BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
 #BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'prelim_cuts_full'
+run_mode = 'n_lept_cut_failed'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -63,6 +63,7 @@ processList = {
         #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},    
     },
 
+
     "prelim_cuts_full": {  # processing all data
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1, "chunks": 20},
         "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1, "chunks": 20},
@@ -75,6 +76,15 @@ processList = {
         "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},
     },
 
+    
+    "n_lept_cut_failed": {  # ~2G or ~500k events per sample 
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1., "chunks": 8},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1., "chunks": 8},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.001, "chunks": 5},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.002, "chunks": 5},
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.1, "chunks": 1},    
+    },
+
 
 }
 
@@ -85,6 +95,7 @@ fccana_opts = {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts_500k/"),
         "prelim_cuts_full": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_full_data/"),
+        "n_lept_cut_failed":os.path.join(FCCAnalysesPath, "outputs/n_lept_cut_failed/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
     },
     "testFile": {
@@ -109,6 +120,7 @@ fccana_opts = {
         "no_selection":"full-vars",
         "prelim_cuts": "full-vars",
         "prelim_cuts_full": "full-vars",
+        "n_lept_cut_failed": "full-vars",
     },
 }
 
@@ -154,7 +166,8 @@ bdtl_opts = {
 
 
 bdt_lh_opts = {
-    "training":           True,                  
+    "label":               '_lh',
+    #"training":           True,                  
     "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want to train on data with just preliminary cuts
     "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdt_lh_outputs/"),
     "mvaBranchList":      "bdth-plus-vars",  # key in the yaml file pointing to the feature list 
@@ -164,7 +177,8 @@ bdt_lh_opts = {
 }
 
 optimised_bdt_lh_opts = {
-    "training":           True,                  
+    "label":               '_lh',
+    #"training":           True,                  
     "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want to train on data with just preliminary cuts
     "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts'], "bdt_lh_outputs/"),
     "mvaBranchList":      "bdtlh-vars-v1",  # key in the yaml file pointing to the feature list 
@@ -172,6 +186,25 @@ optimised_bdt_lh_opts = {
     "backgroundAllocation_light":  ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
     "backgroundAllocation_heavy":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
 }
+
+bdttau_opts = {
+    "label":               'tau',
+    "inputPath":          os.path.join(fccana_opts["outputDir"]["prelim_cuts_full"],'dataframes'),       
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts_full'], "bdttau_outputs/"),
+    "mvaBranchList":      "bdttau-baseline-vars",  # key in the yaml file pointing to the feature list 
+    "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "backgroundAllocation":  ["p8_ee_Ztautau_ecm91"],
+}
+
+bdttau_opts_nonNeutrals = {
+    "label":               'tau',
+    "inputPath":          os.path.join(fccana_opts["outputDir"]["prelim_cuts_full"],'dataframes'),       
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts_full'], "bdttau_outputs/"),
+    "mvaBranchList":      "bdttau-nonNeutrals-vars",  # key in the yaml file pointing to the feature list 
+    "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "backgroundAllocation":  ["p8_ee_Ztautau_ecm91"],
+}
+
 
 
 hp_opts = {
@@ -184,6 +217,14 @@ hp_opts = {
                     'subsample':1, }, #xgb default
 
     # for all hp configs that are not 'default_hps' only need to specify changes from default above
+
+    "default-hps-tau": {'n_estimators': 300, 
+                    'learning_rate': 0.1, #xgb default=0.3
+                    'max_depth': 4, #xgb default=6
+                    'gamma': 0, #xgb default (min_split_loss) 
+                    'min_child_weight': 1, #xgb default
+                    'max_delta_step': 0, #xgb default
+                    'subsample':1, }, #xgb default
 
     "hp1": {'learning_rate': 0.3,} 
 }
@@ -289,3 +330,16 @@ branching_fractions = {
 mass_Z = 91.188  # Ecm used in the winter2023 samples
 
 N_z = 6e12 # total number of Nz expected across all experiments during tera-Z run (from https://arxiv.org/pdf/2309.11353 Matt/Aidan paper)
+
+
+prelim_cut_effs = {
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.876092,0.00023297524277432458), 
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (0.8826863636363637,0.00021695335904454782),  
+    "p8_ee_Zbb_ecm91": (0.05767557918542743,1.1129951452027661e-05),
+    "p8_ee_Zcc_ecm91":(0.041443724884963125,8.915504990214572e-06),
+    "p8_ee_Zss_ecm91":(0.04597152896410762,9.367329309382369e-06),
+    "p8_ee_Zud_ecm91": (0.024312405153808926, 6.9020180597782595e-06),
+    "p8_ee_Ztautau_ecm91": (0.04472734,2.067046492437955e-05),
+    "p8_ee_Zmumu_ecm91": (2.29e-06,1.5165733068336503e-07),#ie. only 229 events left out of 100mn
+    "p8_ee_Zee_ecm91":(1.4e-06,  1.1874333418765638e-07) #ie. only 140 events left out of 100mn
+}

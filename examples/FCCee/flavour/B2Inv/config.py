@@ -176,6 +176,17 @@ bdt_lh_opts = {
     "backgroundAllocation_heavy":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
 }
 
+bdt_lh_opts_nleptfail = {
+    "label":               '_lh',
+    #"training":           True,                  
+    "inputPath":          fccana_opts['outputDir']['n_lept_cut_failed'], #ie. want to train on data with just preliminary cuts
+    "outputPath":         os.path.join(fccana_opts['outputDir']['n_lept_cut_failed'], "bdt_lh_outputs/"),
+    "mvaBranchList":      "bdth-plus-vars",  # key in the yaml file pointing to the feature list 
+    "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "backgroundAllocation_heavy":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
+}
+
+
 optimised_bdt_lh_opts = {
     "label":               '_lh',
     #"training":           True,                  
@@ -211,12 +222,22 @@ hp_opts = {
     "default-hps": {'n_estimators': 400, 
                     'learning_rate': 0.1, #xgb default=0.3
                     'max_depth': 3, #xgb default=6
-                    'gamma': 0, #xgb default (min_split_loss) 
+                    'gamma': 0, #xgb default (min_split_loss)
                     'min_child_weight': 1, #xgb default
                     'max_delta_step': 0, #xgb default
-                    'subsample':1, }, #xgb default
+                    'subsample':1, #xgb default
+                    'reg_alpha':0, #xgb default
+                    'reg_lambda':1}, #xgb default
 
     # for all hp configs that are not 'default_hps' only need to specify changes from default above
+
+    "multiclass-optimum":{'n_estimators': 339, 
+                'learning_rate': 0.19912998125518783, 
+                'max_depth': 10, 
+                'gamma': 1.687590612253541, 
+                'reg_alpha':2.1524117081043257,
+                'reg_lambda':1.8036463746236047}, 
+
 
     "default-hps-tau": {'n_estimators': 300, 
                     'learning_rate': 0.1, #xgb default=0.3
@@ -226,7 +247,8 @@ hp_opts = {
                     'max_delta_step': 0, #xgb default
                     'subsample':1, }, #xgb default
 
-    "hp1": {'learning_rate': 0.3,} 
+    "hp1": {'learning_rate': 0.3,} ,
+
 }
 
 

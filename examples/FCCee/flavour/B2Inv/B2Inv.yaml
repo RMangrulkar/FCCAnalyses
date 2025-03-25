@@ -677,7 +677,7 @@ bdtlh-vars-v1:
   #- EVT_hemisEmax_nCharged
   #- EVT_hemisEmax_nDV
   #- EVT_hemisEmin_nDV #probably remove as info in some cos theta vars
-  #   - EVT_sum_Rec_pz
+  #- EVT_sum_Rec_pz
 
 
 baseline-bdtl-vars:

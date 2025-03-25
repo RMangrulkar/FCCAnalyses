@@ -25,7 +25,7 @@ sys.path.append(os.path.abspath(configPath))
 
 import config as cfg 
 import efficiency_finder
-import bdt_plotter as bp
+import bdt_plotter_multiclass as bp
 
 #import bdt_plotter as bdtplt
 
@@ -264,26 +264,32 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
             # Update default hyperparameters with any provided 
             default_hps.update(hps)
         
-        print("CURRENTLY NO HP OPTIMISATION OR CROSS VALIDATION")
+        else:
+            print("CURRENTLY NO HP OPTIMISATION")
 
  
         ## TRAINING OF BDT
 
-        ## Currently no cross validation - potentially TO IMPLEMENT LATER
+        ## nb. no cross validation
 
-        #nb. could add early_stopping_rounds=10, eval_metric="auc",  - if specify first want to specify second as this is metric used for early stopping
+        bdt = xgb.XGBClassifier( objective='multi:softprob', eval_metric= 'mlogloss',**default_hps) 
+        bdt.set_params(early_stopping_rounds=10)
 
+        '''
         bdt.set_params(n_estimators=default_hps['n_estimators'],
                         learning_rate=default_hps['learning_rate'],
                         max_depth=default_hps['max_depth'],
                         gamma=default_hps['gamma'],
                         min_child_weight=default_hps['min_child_weight'],
                         max_delta_step=default_hps['max_delta_step'],
-                        subsample=default_hps['subsample']) 
+                        subsample=default_hps['subsample'],
+                        reg_alpha=default_hps['reg_alpha'],
+                        reg_lambda=default_hps['reg_lambda'],) 
+        '''
         
         print(f"\n----> INFO: Training using {default_hps}")
 
-        #let's finally run the training
+        #run the training
         print("\n Training model")
         bdt.fit( x_train, y_train, 
                 sample_weight=w_train, 
@@ -323,9 +329,26 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         with open(os.path.join(outputpath,training_round,f'{bdtname}_training_vars.log'), 'a') as log_file:
             log_file.write(f'bdt_training_vars: {bdtvars}\n')
 
-        #bp.plot_simple_ROC(df,bdt_name = f"BDT{bdt_label}",output_file_name = "ROC",outpath=model_folder)
-        #bp.plot_bdt_response(df, bdt_name = f"BDT{bdt_label}",output_file_name = "response" ,outpath=model_folder)
-        #bp.plot_eff(df, bdt_name =f"BDT{bdt_label}",output_file_name = 'efficiency_plot',outpath=model_folder)
+        bp.plot_ROC_star(df,bdt_name = f"BDT{bdt_label}",output_file_name = "ROC_star",outpath=model_folder)
+        bp.plot_bdt_response(df, bdt_name = f"BDT{bdt_label}",output_file_name = "response" ,outpath=model_folder)
+        bp.plot_eff(df, bdt_name =f"BDT{bdt_label}",output_file_name = 'efficiency_plot',outpath=model_folder)
+        bp.plot_bdt_response_combinedcut(df, bdt_name = f"BDT{bdt_label}",output_file_name = "response_combinedcut" ,outpath=model_folder)
+    
+
+        #also calculating and saving logloss as a check
+        # Predict probabilities
+        y_pred_valid = bdt.predict_proba(x_valid)
+        print(f'validation log loss = {log_loss(y_valid, y_pred_valid)}')
+        y_pred_test = bdt.predict_proba(x_test)
+        print(f'Test log loss = {log_loss(y_test, y_pred_test)}')
+        y_pred_train = bdt.predict_proba(x_train)
+        print(f'Train log loss = {log_loss(y_train, y_pred_train)}')
+
+        with open(os.path.join(outputpath,training_round,f'{bdtname}_training_info.log'), 'a') as log_file:
+            log_file.write(f'validation log loss = {log_loss(y_valid, y_pred_valid)}\n')
+            log_file.write(f'test log loss = {log_loss(y_test, y_pred_test)}\n')
+            log_file.write(f'train log loss = {log_loss(y_train, y_pred_train)}\n')
+
 
         return bdt, df
 
@@ -340,3 +363,13 @@ plt.figure(figsize=(15, 9))
     plt.savefig(output_plot)
     plt.savefig(output_plot.replace(".pdf", ".png"))'
 '''
+
+train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
+              config_bdtopts = cfg.bdt_lh_opts,
+              training_round = "optimised_hps",
+              hps_dict_name = "multiclass-optimum",#if not using default, name of hp config in config 
+              features_list_name = "bdth-plus-vars",
+              bdt_label = '_lh',
+              hp_opt=None,
+              opt_hp_val_path=None)
+    

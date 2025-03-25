@@ -260,7 +260,7 @@ check3 = np.isclose(sum(df_dict[s]["total_weight_muliclass"].sum() for s in sign
 #Check4: Ratio sum of weights in Bs:Bd = Bs_eff/Bd_eff"
 check4 = np.isclose(df_dict[signal_decays[0]]["total_weight_muliclass"].sum()/df_dict[signal_decays[1]]["total_weight_muliclass"].sum(), branching_fractions[signal_decays[0]][0]*efficiencies_dict[signal_decays[0]+'_eff']/ (branching_fractions[signal_decays[1]][0]*efficiencies_dict[signal_decays[1]+'_eff']),rtol=1e-07)
 #Check5:Ratio sum of weights in bb:cc = bb_eff*BF(Z->bb)/cc_eff*BF(Z->cc)
-check4 = np.isclose(df_dict[background_decays[0]]["total_weight_muliclass"].sum()/df_dict[background_decays[1]]["total_weight_muliclass"].sum(), branching_fractions[background_decays[0]][0]*efficiencies_dict[background_decays[0]+'_eff']/ (branching_fractions[background_decays[1]][0]*efficiencies_dict[background_decays[1]+'_eff']),rtol=1e-07)
+check5 = np.isclose(df_dict[background_decays[0]]["total_weight_muliclass"].sum()/df_dict[background_decays[1]]["total_weight_muliclass"].sum(), branching_fractions[background_decays[0]][0]*efficiencies_dict[background_decays[0]+'_eff']/ (branching_fractions[background_decays[1]][0]*efficiencies_dict[background_decays[1]+'_eff']),rtol=1e-07)
 # Check6: Ratio sum of weights in ss:ud = bb_eff*BF(Z->bb)/ud_eff*BF(Z->ud)
 check6 = np.isclose(df_dict[background_decays[2]]["total_weight_muliclass"].sum()/df_dict[background_decays[3]]["total_weight_muliclass"].sum(),branching_fractions[background_decays[2]][0]*efficiencies_dict[background_decays[2]+'_eff']/ (branching_fractions[background_decays[3]][0]*efficiencies_dict[background_decays[3]+'_eff']),rtol=1e-07)
 

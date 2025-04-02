@@ -17,6 +17,7 @@ from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import log_loss
 import optuna
+import json
 
 
 # Path to config.py and variable_plotter.py
@@ -59,12 +60,11 @@ def set_outputpath(outputpath):
 
 #Define function that does training
 def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
-              config_bdtopts = cfg.bdt_lh_opts,
+              config_bdtopts = cfg.optimised_bdt_lh_opts,
               training_round = "multiclass_baseline",
               hps_dict_name = "default-hps",#if not using default, name of hp config in config 
-              features_list_name = "bdth-plus-vars",
               bdt_label = '_lh',
-              hp_opt=None,
+              hp_opt=None,#'run_optimisation','use_optimised_hps' or none 
               opt_hp_val_path=None): #path to optimum hps want to use if hp_opt='use_optimised_hps'
     
     
@@ -83,6 +83,7 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
     yamlpath     = check_inputpath(cfg.fccana_opts['yamlPath'])
 
     #Getting BDT vars for training from yaml
+    features_list_name = config_bdtopts["mvaBranchList"]
     bdtvars      = vars_fromyaml(yamlpath, features_list_name)
     bdtname      = f'BDT{bdt_label}_{hps_dict_name}_{features_list_name}'
 
@@ -90,20 +91,20 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
     pickled_df_path = os.path.join(outputpath, pickled_df_fname)
     df = pd.read_pickle(pickled_df_path)
 
-    # matrix of input vars
-    x_train = df[ df["sample"]==0][bdtvars]
-    x_test  = df[ df["sample"]==1][bdtvars]
-    x_valid = df[ df["sample"]==2][bdtvars]
+    # matrix of input vars 
+    x_train = df[ df["sample"]==0][bdtvars]#.head(100000)
+    x_test  = df[ df["sample"]==1][bdtvars]#.head(100000)
+    x_valid = df[ df["sample"]==2][bdtvars]#.head(100000)
 
     # array of target
-    y_train = df[ df["sample"]==0][ "label" ]
-    y_test  = df[ df["sample"]==1][ "label" ]
-    y_valid = df[ df["sample"]==2][ "label" ]
+    y_train = df[ df["sample"]==0][ "label" ]#.head(100000)
+    y_test  = df[ df["sample"]==1][ "label" ]#.head(100000)
+    y_valid = df[ df["sample"]==2][ "label" ]#.head(100000)
 
     # array of weights
-    w_train = df[ df["sample"]==0][ "total_weight_muliclass" ]
-    w_test  = df[ df["sample"]==1][ "total_weight_muliclass" ]
-    w_valid = df[ df["sample"]==2][ "total_weight_muliclass" ]
+    w_train = df[ df["sample"]==0][ "total_weight_muliclass" ]#.head(100000)
+    w_test  = df[ df["sample"]==1][ "total_weight_muliclass" ]#.head(100000)
+    w_valid = df[ df["sample"]==2][ "total_weight_muliclass" ]#.head(100000)
 
 
     ######################################################
@@ -121,14 +122,13 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         # define a function that optuna is going to try and optimize
         # you can define min and max for each hyperpar
         # you can also pass log = True to some of them (e..g learning rate) so it knows to move around the space logartihmically not linearly
-        # instead of search in a grid it will move around in a more optimal way
-        # in this case it will train the BDT and return the log loss
+
         def objective( trial ):
             # example hyperparameters to try
             params = {
-                "n_estimators": trial.suggest_int("n_estimators", 50, 500),
+                "n_estimators": trial.suggest_int("n_estimators", 100, 500),
                 "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-                "max_depth": trial.suggest_int("max_depth", 3, 10),
+                "max_depth": trial.suggest_int("max_depth", 3, 8),
                 "gamma": trial.suggest_float("gamma", 0.0, 5.0),
                 "reg_alpha": trial.suggest_float("reg_alpha", 0.0, 10.0),
                 "reg_lambda": trial.suggest_float("reg_lambda", 0.0, 10.0),
@@ -146,29 +146,107 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
 
             # Predict probabilities
             y_pred = bdt.predict_proba(x_valid)
+            y_train_pred = bdt.predict_proba(x_train)
 
-            # Compute log loss
-            return log_loss(y_valid, y_pred) #don't need to use one-hot encodeing for labels (ie. yvalid)
+            valid_logloss = log_loss(y_valid, y_pred) #don't need to use one-hot encodeing for labels (ie. yvalid)
+            diff_logloss = np.abs(valid_logloss-log_loss(y_train, y_train_pred))/ valid_logloss
+
+            # add in pruning to stop trials with large log loss difference
+            # Define stopping threshold
+            threshold = 0.1  # loosish for now!
+
+            # Check if any diff_logloss exceeds the threshold → Stop trial early
+            if diff_logloss > threshold:
+                raise optuna.TrialPruned()  # Stop this trial
+
+
+            # Compute log loss and difference between train and valoidation log loss
+            return valid_logloss, diff_logloss
         
+        targetNames = ["valid_logloss", "diff_logloss"] 
+ 
         # Create Optuna study and optimize
-        study = optuna.create_study(direction="minimize")
-        study.optimize(objective, n_trials=50)
-
-        # Best hyperparameters
-        best_hps = study.best_params
-        print("Best hyperparameters:", best_hps)
-
-        #to look at from here
-        print(f"Best log loss score = {study.best_value:.5f}")
-
+        study = optuna.create_study(directions=['minimize', 'minimize'])
+        study.set_metric_names(targetNames)
+        study.optimize(objective, n_trials=40)
+        
+        
         model_folder  = set_outputpath(os.path.join(outputpath,training_round,'optimum_hps'))
         hp_file_path =  os.path.join(model_folder,f'opt_hps_bdt{bdt_label}_{training_round}.yaml')
 
-        ### Save optimum combination of hyperparameters
+
+        best_trials = study.best_trials
+        #print("Best trials:", best_trials)
+        ### Save optimum trials
         with open(hp_file_path, 'w') as outfile:
-            dump(best_hps, outfile)
-        print(f"----> INFO: Optimum hyperparameters saved to")
+            dump(best_trials, outfile)
+        print(f"----> INFO: Optimum trials saved to")
         print(f"{15*' '}{hp_file_path}")
+
+        print("Number of trials: ", len(study.trials))
+        print("Number of best (Pareto front) trials: ", len(study.best_trials))
+
+        ## plot hp importance
+        plt.figure(figsize=(15, 9))
+        optuna.visualization.matplotlib.plot_param_importances(study,target=lambda t: t.values[0], target_name="valid_logloss")
+        output_plot = os.path.join(model_folder,"hp_importance_validation_logloss.pdf")
+        plt.savefig(output_plot)
+        plt.savefig(output_plot.replace(".pdf", ".png"))
+        plt.close()
+
+        plt.figure(figsize=(15, 9))
+        optuna.visualization.matplotlib.plot_param_importances(study,target=lambda t: t.values[1], target_name="diff_logloss")
+        output_plot = os.path.join(model_folder,"hp_importance_logloss_difference.pdf")
+        plt.savefig(output_plot)
+        plt.savefig(output_plot.replace(".pdf", ".png"))
+        plt.close()
+
+        ## plot optimization history
+        plt.figure()
+        optuna.visualization.matplotlib.plot_optimization_history(
+        study, target=lambda t: t.values[0], target_name="valid_logloss")
+        output_plot = os.path.join(model_folder,"optimisation_valid_logloss.pdf")
+        plt.savefig(output_plot)
+        plt.savefig(output_plot.replace(".pdf", ".png"))
+        plt.close()
+
+        plt.figure()
+        optuna.visualization.matplotlib.plot_optimization_history(
+            study, target=lambda t: t.values[1], target_name="diff_logloss")
+        output_plot = os.path.join(model_folder,"optimisation_diff_logloss.pdf")
+        plt.savefig(output_plot)
+        plt.savefig(output_plot.replace(".pdf", ".png"))
+        plt.close()
+
+        fig = optuna.visualization.plot_pareto_front(study, target_names=["valid_logloss","diff_logloss"])
+        output_plot = os.path.join(model_folder,"pareto-plot.pdf")
+        fig.write_image(output_plot)
+        fig.write_image(output_plot.replace(".pdf", ".png"))
+
+
+        #save best model inputs
+        study_xgb_df = study.trials_dataframe()
+        assert isinstance(study_xgb_df, pd.DataFrame)
+        print(study_xgb_df.sort_values(by='values_valid_logloss', ascending=True).head(5))
+        study_xgb_df.to_csv(os.path.join(model_folder,"optuna_trials.csv"), index=False)
+
+        ## some way of determining best trial!
+        # Impose some constraint on loss_diff, take best solution from there
+        lossdiffThreshold = 0.04
+        threshold_df = study_xgb_df.query(f"values_diff_logloss<{lossdiffThreshold}")
+        best_trial_number = threshold_df.loc[threshold_df[f"values_valid_logloss"].idxmax()].number
+
+        best_trial = next((x for x in study.best_trials if x.number == best_trial_number), None)
+        print(best_trial)
+        optuna_results = best_trial.params
+        optuna_results.update(best_trial.user_attrs)
+        outputFileName = os.path.join(model_folder,"optuna_results.json")
+
+        with open(outputFileName, "w") as f:
+            json.dump(optuna_results, f, indent=4)
+
+        study_xgb_df.to_csv(os.path.join(model_folder,"optuna_trials.csv"), index=False)
+
 
         #now training and saving model with best hps
 
@@ -202,7 +280,6 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         # Write key info about df to log file
         with open(os.path.join(model_folder,f'{bdtname}_optimum_hps_training_vars.log'), 'a') as log_file:
             log_file.write(f'bdt_training_vars: {bdtvars}\n')
-
 
 
     elif hp_opt=='use_optimised_hps':
@@ -275,17 +352,6 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         bdt = xgb.XGBClassifier( objective='multi:softprob', eval_metric= 'mlogloss',**default_hps) 
         bdt.set_params(early_stopping_rounds=10)
 
-        '''
-        bdt.set_params(n_estimators=default_hps['n_estimators'],
-                        learning_rate=default_hps['learning_rate'],
-                        max_depth=default_hps['max_depth'],
-                        gamma=default_hps['gamma'],
-                        min_child_weight=default_hps['min_child_weight'],
-                        max_delta_step=default_hps['max_delta_step'],
-                        subsample=default_hps['subsample'],
-                        reg_alpha=default_hps['reg_alpha'],
-                        reg_lambda=default_hps['reg_lambda'],) 
-        '''
         
         print(f"\n----> INFO: Training using {default_hps}")
 
@@ -332,8 +398,7 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
         bp.plot_ROC_star(df,bdt_name = f"BDT{bdt_label}",output_file_name = "ROC_star",outpath=model_folder)
         bp.plot_bdt_response(df, bdt_name = f"BDT{bdt_label}",output_file_name = "response" ,outpath=model_folder)
         bp.plot_eff(df, bdt_name =f"BDT{bdt_label}",output_file_name = 'efficiency_plot',outpath=model_folder)
-        bp.plot_bdt_response_combinedcut(df, bdt_name = f"BDT{bdt_label}",output_file_name = "response_combinedcut" ,outpath=model_folder)
-    
+
 
         #also calculating and saving logloss as a check
         # Predict probabilities
@@ -355,21 +420,22 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
 
 
 
-#code snipet from cesca to plot importances of hps
-'''
-plt.figure(figsize=(15, 9))
-    optuna.visualization.matplotlib.plot_param_importances(study)
-    output_plot = f"{_PlotsDirPath}/{_Run}/hyperparameter-importance.pdf"
-    plt.savefig(output_plot)
-    plt.savefig(output_plot.replace(".pdf", ".png"))'
-'''
+
 
 train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
-              config_bdtopts = cfg.bdt_lh_opts,
-              training_round = "optimised_hps",
-              hps_dict_name = "multiclass-optimum",#if not using default, name of hp config in config 
-              features_list_name = "bdth-plus-vars",
+              config_bdtopts = cfg.optimised_bdt_lh_opts,
+              training_round = "default-plus-hps",
+              hps_dict_name = "default-plus-hps",#if not using default, name of hp config in config 
               bdt_label = '_lh',
               hp_opt=None,
               opt_hp_val_path=None)
-    
+
+'''
+train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
+              config_bdtopts = cfg.optimised_bdt_lh_opts,
+              training_round = "test_hp_optimisation",
+              bdt_label = '_lh',
+              hp_opt='run_optimisation',
+              opt_hp_val_path=None)
+
+'''

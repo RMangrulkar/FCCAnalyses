@@ -64,7 +64,7 @@ outputpath   = set_outputpath(os.path.join(inputpath,'dataframes'))
 yamlpath     = check_inputpath(cfg.fccana_opts['yamlPath'])
 
 #Getting BDT vars for training from yaml
-bdtvars_list_old = cfg.bdt_lh_opts['mvaBranchList']
+bdtvars_list_old = cfg.baseline_bdt_lh_opts['mvaBranchList']
 bdtvars_list_optimised = cfg.optimised_bdt_lh_opts['mvaBranchList']
 responsevars = ["EVT_hemisEmin_Emiss"] # Variables not used by the bdt which you want to plot
 bdtvars      = list(set(vars_fromyaml(yamlpath, bdtvars_list_old) + vars_fromyaml(yamlpath, bdtvars_list_optimised)  + responsevars))

@@ -156,7 +156,7 @@ def plot_bdt_response(df, bdt_name = "BDT_lh",output_file_name = "response" ,out
 
 
         cx = 0.5*(xe[1:]+xe[:-1])
-        ax[0].errorbar( cx, n, ne, fmt=pt_fmt[cat], label=f'{cat} train') 
+        ax[0].errorbar( cx, n, ne, fmt=pt_fmt[cat], label=f'{cat} test') 
 
 
         # now plot the residual
@@ -196,12 +196,12 @@ def plot_bdt_response(df, bdt_name = "BDT_lh",output_file_name = "response" ,out
         else:
             #fig.savefig(f"{output_file_name}.png")
             fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed.pdf")
-
+'''
 def plot_bdt_response_combinedcut(df, bdt_name = "BDT_lh",output_file_name = "response_combinedcut" ,outpath=None,categories = ['signal','background'],labels_map = labels, pt_fmt = blobs, colors = colors,xrange=(0,1)):
-    '''
-    categories (bool): which catagories to plot, must be valid category in labels_map or 'background'
     
-    '''
+    #categories (bool): which catagories to plot, must be valid category in labels_map or 'background'
+    
+    
     # plot of BDT output
     fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3,1]}, figsize=(6.4,6.4))
 
@@ -280,7 +280,7 @@ def plot_bdt_response_combinedcut(df, bdt_name = "BDT_lh",output_file_name = "re
         else:
             #fig.savefig(f"{output_file_name}.png")
             fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed..pdf")
-
+'''
 
 # efficiency plot (on total sample)
 def plot_eff(df, bdt_name = "BDT_lh",output_file_name = 'efficiency_plot',outpath=None):
@@ -620,8 +620,8 @@ def post_bdt_variable_plot(data,variable,
 # Load BDT and apply to loaded data - define as funtion
 #######################################################
 
-def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
-                        config_bdtopts = cfg.bdt_lh_opts,
+def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
+                        config_bdtopts = cfg.baseline_bdt_lh_opts,
                         training_round = "multiclass_baseline",
                         hps_dict_name = "default-hps",
                         features_list_name = "bdth-plus-vars",
@@ -666,20 +666,25 @@ def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPat
     #calculate logloss
     validation_df = df[df["sample"]==2]
     test_df = df[df["sample"]==1]
+    train_df = df[df["sample"]==0]
 
     y_true_valid = validation_df['label']
     y_true_test = test_df['label']
+    y_true_train = train_df['label']
     
     # Corresponding predicted probabilities (softmax output)
     y_pred_valid = validation_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
     y_pred_test = test_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
+    y_pred_train = train_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
     
     # Compute log loss
-    validation_loss = log_loss(y_true_valid, y_pred_valid)
-    test_loss = log_loss(y_true_test, y_pred_test)
+    validation_loss = log_loss(y_true_valid, y_pred_valid, labels=[0,1,2])
+    test_loss = log_loss(y_true_test, y_pred_test, labels=[0,1,2])
+    train_loss = log_loss(y_true_train, y_pred_train, labels=[0,1,2])
+    diff_logloss = np.abs(validation_loss-train_loss)/ validation_loss
 
     print(f'validation logloss: {validation_loss}' )
-    print(f'test logloss: {test_loss}' )
+    print(f'train-validation logloss fractional difference: {diff_logloss}' )
 
 
     return bdt_model, bdtname, df
@@ -690,28 +695,36 @@ def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPat
 ########################################
 
 if __name__=="__main__":
-    #model, bdtname, dataframe = load_bdt_and_apply( pickled_df_fname = "bdt_lh_dataframe.pkl", 
-                            #config_bdtopts = cfg.bdt_lh_opts,
-                            #training_round = "multiclass_baseline",
-                            #hps_dict_name = "default-hps",
-                            #features_list_name = "bdth-plus-vars",
-                            #bdt_label = '_lh')
-
-    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
+    '''
+    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"),
+                            config_bdtopts = cfg.baseline_bdt_lh_opts,
+                            training_round = "multiclass_baseline",
+                            hps_dict_name = "default-hps",
+                            features_list_name = "bdth-plus-vars",
+                            bdt_label = '_lh')
+    '''
+    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"),
+                            config_bdtopts = cfg.baseline_bdt_lh_opts,
+                            training_round = "test_hpopt_small_sample/optimum_hps",
+                            hps_dict_name = "default-hps",
+                            features_list_name = "bdtlh-vars-v1",
+                            bdt_label = '_lh')
+    '''
+    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts_nleptfail['outputPath'], "bdt_lh_dataframe_nlept_fail.pkl"), 
                         config_bdtopts = cfg.bdt_lh_opts,
                         training_round = "multiclass_baseline",#"test_hpopt_small_sample/optimum_hps",
                         hps_dict_name = "default-hps",
                         features_list_name = "bdth-plus-vars",#"bdtlh-vars-v1",
                         bdt_label = '_lh')
-
-    #outputpath = os.path.join(cfg.bdt_lh_opts['outputPath'],"test_hpopt_small_sample/optimum_hps")
+    '''
+    outputpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/full_prelim_cuts_500k/bdt_lh_outputs/test_hpopt_small_sample/optimum_hps'
 
     print('Now plotting...')
 
-    #plot_bdt_response(dataframe,bdt_name = 'BDT_lh',outpath=outputpath ,xrange=(0.95,1))
+    plot_bdt_response(dataframe,bdt_name = 'BDT_lh',outpath=outputpath)
     #plot_bdt_response(dataframe,bdt_name = 'BDT_lh',outpath=outputpath, categories=['signal','light_background','heavy_background'])
     #plot_eff(dataframe,bdt_name = 'BDT_lh', outpath=outputpath)
-    #plot_ROC_star(dataframe,bdt_name = 'BDT_lh', outpath=outputpath)
+    #plot_ROC_star(dataframe,bdt_name = 'BDT_lh', outpath=outputpath, comps = [("signal", "heavy_background")])
     
     #plot_2d_bdt_output(dataframe, outpath=outputpath, bdt_probs = [0,1],vmax=1)
     #plot_2d_bdt_output(dataframe, outpath=outputpath, bdt_probs = [0,2],vmax=1)

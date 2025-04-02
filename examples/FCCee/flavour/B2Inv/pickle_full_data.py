@@ -57,7 +57,6 @@ print(f"{30*'-'}")
 print(f"CREATING AND SAVING df each sample")
 print(f"{30*'-'}\n")
 
-
 #path to data and outputs
 inputpath    = check_inputpath(cfg.fccana_opts['outputDir']['prelim_cuts_full']) 
 outputpath   = set_outputpath(os.path.join(inputpath,'dataframes'))
@@ -76,7 +75,7 @@ print(f"{15*' '}{inputpath}")
 print(f"----> INFO: Output will be saved to")
 print(f"{15*' '}{outputpath}")
 
-samples = cfg.samples
+samples = ['p8_ee_Zbb_ecm91']#cfg.samples
 
 
 #calculating efficiencies and also saving files paths used to calculate efficiencies to ensure save same ones

@@ -625,7 +625,8 @@ def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['
                         training_round = "multiclass_baseline",
                         hps_dict_name = "default-hps",
                         features_list_name = "bdth-plus-vars",
-                        bdt_label = '_lh'
+                        bdt_label = '_lh',
+                        test_train_valid = True,
                         ): # hps dict and features_list_name specift BDT used
     
     
@@ -663,28 +664,29 @@ def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['
     for i in range(probabilities.shape[1]):
         df[f'bdt_score_{class_names[i]}'] = probabilities[:, i]
 
-    #calculate logloss
-    validation_df = df[df["sample"]==2]
-    test_df = df[df["sample"]==1]
-    train_df = df[df["sample"]==0]
+    if test_train_valid == True:
+        #calculate logloss
+        validation_df = df[df["sample"]==2]
+        test_df = df[df["sample"]==1]
+        train_df = df[df["sample"]==0]
 
-    y_true_valid = validation_df['label']
-    y_true_test = test_df['label']
-    y_true_train = train_df['label']
-    
-    # Corresponding predicted probabilities (softmax output)
-    y_pred_valid = validation_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
-    y_pred_test = test_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
-    y_pred_train = train_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
-    
-    # Compute log loss
-    validation_loss = log_loss(y_true_valid, y_pred_valid, labels=[0,1,2])
-    test_loss = log_loss(y_true_test, y_pred_test, labels=[0,1,2])
-    train_loss = log_loss(y_true_train, y_pred_train, labels=[0,1,2])
-    diff_logloss = np.abs(validation_loss-train_loss)/ validation_loss
+        y_true_valid = validation_df['label']
+        y_true_test = test_df['label']
+        y_true_train = train_df['label']
+        
+        # Corresponding predicted probabilities (softmax output)
+        y_pred_valid = validation_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
+        y_pred_test = test_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
+        y_pred_train = train_df[['bdt_score_0','bdt_score_1','bdt_score_2']]
+        
+        # Compute log loss
+        validation_loss = log_loss(y_true_valid, y_pred_valid, labels=[0,1,2])
+        test_loss = log_loss(y_true_test, y_pred_test, labels=[0,1,2])
+        train_loss = log_loss(y_true_train, y_pred_train, labels=[0,1,2])
+        diff_logloss = np.abs(validation_loss-train_loss)/ validation_loss
 
-    print(f'validation logloss: {validation_loss}' )
-    print(f'train-validation logloss fractional difference: {diff_logloss}' )
+        print(f'validation logloss: {validation_loss}' )
+        print(f'train-validation logloss fractional difference: {diff_logloss}' )
 
 
     return bdt_model, bdtname, df

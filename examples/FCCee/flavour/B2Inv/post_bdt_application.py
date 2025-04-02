@@ -308,8 +308,8 @@ def post_bdt_variable_plot(data,variable,
 # Load BDT and apply to loaded data - define as funtion
 #######################################################
 
-def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
-                        config_bdtopts = cfg.bdt_lh_opts,
+def load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"), 
+                        config_bdtopts = cfg.baseline_bdt_lh_opts,
                         training_round = "multiclass_baseline",
                         hps_dict_name = "default-hps",
                         features_list_name = "bdth-plus-vars",

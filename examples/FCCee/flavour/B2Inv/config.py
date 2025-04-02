@@ -165,7 +165,7 @@ bdtl_opts = {
 }
 
 
-bdt_lh_opts = {
+baseline_bdt_lh_opts = {
     "label":               '_lh',
     #"training":           True,                  
     "inputPath":          fccana_opts['outputDir']['prelim_cuts'], #ie. want to train on data with just preliminary cuts
@@ -228,15 +228,47 @@ hp_opts = {
                     'subsample':1, #xgb default
                     'reg_alpha':0, #xgb default
                     'reg_lambda':1}, #xgb default
+    
+    "baseline-plus-hps": {'n_estimators': 400, 
+                    'learning_rate': 0.1, #xgb default=0.3
+                    'max_depth': 4, #xgb default=6
+                    'gamma': 0, #xgb default (min_split_loss)
+                    'min_child_weight': 1, #xgb default
+                    'max_delta_step': 0, #xgb default
+                    'subsample':1, #xgb default
+                    'reg_alpha':0, #xgb default
+                    'reg_lambda':1}, #xgb default
+
 
     # for all hp configs that are not 'default_hps' only need to specify changes from default above
 
-    "multiclass-optimum":{'n_estimators': 339, 
+    "multiclass-optimum-overtrained":{'n_estimators': 339, 
                 'learning_rate': 0.19912998125518783, 
                 'max_depth': 10, 
                 'gamma': 1.687590612253541, 
                 'reg_alpha':2.1524117081043257,
                 'reg_lambda':1.8036463746236047}, 
+
+    "multiclass-optimum-smallovertraining":{'n_estimators': 452, 
+                          'learning_rate': 0.14133102917518017, 
+                          'max_depth': 6, 
+                          'gamma': 0.23241307970342628, 
+                          'reg_alpha': 0.5171660043477355, 
+                          'reg_lambda': 8.027583972204095}, 
+    
+    "multiclass-optimum":{'n_estimators': 452, 
+                          'learning_rate': 0.14133102917518017, 
+                          'max_depth': 5, 
+                          'gamma': 0.23241307970342628, 
+                          'reg_alpha': 0.5171660043477355, 
+                          'reg_lambda': 8.027583972204095}, 
+                          
+    "multiclass-smalltest-optimum":{'gamma': 1.2084995905144988,
+                                    'learning_rate': 0.19693924973969526,
+                                    'max_depth': 8,
+                                    'n_estimators': 493,
+                                    'reg_alpha': 7.565153585635452,
+                                    'reg_lambda': 9.828959456263297,},
 
 
     "default-hps-tau": {'n_estimators': 300, 

@@ -59,6 +59,8 @@ for sample in samples:
                             test_train_valid = False)
         
         dataframe_chunk['decay'] = sample
+        dataframe_chunk['eventsProcessed'] = cfg.eventsProcessed[sample]
+
         savepath = os.path.join(save_folder,f)
         dataframe_chunk.to_pickle(savepath)
 

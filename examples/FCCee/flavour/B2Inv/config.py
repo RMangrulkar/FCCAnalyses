@@ -397,3 +397,15 @@ prelim_cut_effs = {
     "p8_ee_Zmumu_ecm91": (2.29e-06,1.5165733068336503e-07),#ie. only 229 events left out of 100mn
     "p8_ee_Zee_ecm91":(1.4e-06,  1.1874333418765638e-07) #ie. only 140 events left out of 100mn
 }
+
+eventsProcessed = {
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 2000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 2200000,
+    "p8_ee_Zbb_ecm91":438738637,
+    "p8_ee_Zcc_ecm91":499786495,
+    "p8_ee_Zss_ecm91":499825860,
+    "p8_ee_Zud_ecm91":497950940,
+    "p8_ee_Ztautau_ecm91":100000000,
+    "p8_ee_Zmumu_ecm91":100000000,
+    "p8_ee_Zee_ecm91":100000000,
+}

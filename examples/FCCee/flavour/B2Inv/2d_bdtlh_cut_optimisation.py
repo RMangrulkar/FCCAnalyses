@@ -78,7 +78,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
             plt.xlabel('BDT_lh 1-P(heavy)')
             plt.ylabel(r'Number of MC events remaining')
             plt.legend()
-            plt.show()
             plt.savefig(os.path.join(set_outputpath(save_path),f'N_MC_events_remaining_{decay}_heavy.pdf'))
 
 
@@ -88,7 +87,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
             plt.xlabel('BDT_lh 1-P(light)')
             plt.ylabel(r'Number of MC events remaining')
             plt.legend()
-            plt.show()
             plt.savefig(os.path.join(set_outputpath(save_path),f'N_MC_events_remaining_{decay}_light.pdf'))
 
 
@@ -98,7 +96,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel(r'Number of MC events remaining')
         plt.legend()
-        plt.show()
         plt.savefig(os.path.join(set_outputpath(save_path),f'N_MC_events_remaining_allbkg_heavy.pdf'))
 
 
@@ -108,7 +105,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
         plt.xlabel('BDT_lh 1-P(light)')
         plt.ylabel(r'Number of MC events remaining')
         plt.legend()
-        plt.show()
         plt.savefig(os.path.join(set_outputpath(save_path),f'N_MC_events_remaining_allbkg_light.pdf'))
 
     if eff_plot == True:
@@ -120,7 +116,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
             plt.xlabel('BDT_lh 1-P(heavy)')
             plt.ylabel(r'Total efficiency')
             plt.legend()
-            plt.show()
             plt.savefig(os.path.join(set_outputpath(save_path),f'Total_efficiency_{decay}_heavy.pdf'))
 
 
@@ -130,7 +125,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
             plt.xlabel('BDT_lh 1-P(light)')
             plt.ylabel(r'Total efficiency')
             plt.legend()
-            plt.show()
             plt.savefig(os.path.join(set_outputpath(save_path),f'Total_efficiency_{decay}_light.pdf'))
 
 
@@ -140,7 +134,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel(r'Total efficiency')
         plt.legend()
-        plt.show()
         plt.savefig(os.path.join(set_outputpath(save_path),f'efficiency_allbkg_heavy.pdf'))
 
 
@@ -150,7 +143,6 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
         plt.xlabel('BDT_lh 1-P(light)')
         plt.ylabel(r'Number of MC events remaining')
         plt.legend()
-        plt.show()
         plt.savefig(os.path.join(set_outputpath(save_path),f'efficiency_allbkg_light.pdf'))
 
 
@@ -232,49 +224,62 @@ def make_interpolated_eff_map(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smooth
 
 
 
-def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrange=(0.99,1), slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/',nlh=40):
+def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict, lrange=(0.99,1) ,  hrange=(0.99,1),  nlh=40, lrangeplot=(0.99,1) ,hrangeplot=(0.99,1),slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/',nlh_plot=40, vmin=-5,vmax=5):
+    
+
     lsearch = np.linspace(*lrange,nlh) 
     hsearch = np.linspace(*hrange,nlh)
 
+    lplot = lsearch[-nlh_plot:] #np.linspace(*lrangeplot,nlh_plot) 
+    hplot = hsearch[-nlh_plot:] #np.linspace(*hrangeplot,nlh_plot)       
+
     for decay in interp_eff_dict.keys():
-        lsearchinterp = np.linspace(*lrange,400) 
-        hsearchinterp = np.linspace(*hrange,400)
+        
+        #to remove ee
+        if decay =='p8_ee_Zee_ecm91':
+            continue
+       
+        lsearchinterp = np.linspace(*lrangeplot,nlh_plot*10) 
+        hsearchinterp = np.linspace(*hrangeplot,nlh_plot*10)
 
         fine_grid_splined =np.zeros((len(lsearchinterp), len(hsearchinterp)))
-        splined=np.zeros((len(lsearch), len(hsearch)))
-        pull=np.zeros((len(lsearch), len(hsearch)))
+        splined=np.zeros((len(lplot), len(hplot)))
+        pull=np.zeros((len(lplot), len(hplot)))
 
-        error = eff_err_dict[decay]
-        E = eff_dict[decay]
-
-        for l in np.arange(0,len(lsearch),1):
-            for h in np.arange(0,len(hsearch),1):
-                splined[l,h] = interp_eff_dict[f"{decay}"](lsearch[l],hsearch[h],grid=False)
+        error = eff_err_dict[decay][-nlh_plot:, -nlh_plot:]
+        E = eff_dict[decay][-(nlh_plot):, -(nlh_plot):]
+        #print(E[0,0])
+        #print(eff_dict[f"{decay}"][20,20])
+    
+        for l in np.arange(0,len(lplot),1):
+            for h in np.arange(0,len(hplot),1):
+                splined[l,h] = interp_eff_dict[f"{decay}"](lplot[l],hplot[h],grid=False)
                 if error[l,h]>0:
                     pull[l,h] = (E[l,h] - splined[l,h])/error[l,h]
                 else:
                     pull[l,h]=0
 
+
         for l in np.arange(0,len(lsearchinterp),1):
             for h in np.arange(0,len(hsearchinterp),1):
-                fine_grid_splined[l,h] = interp_eff_dict[f"{decay}"](lsearch[l],hsearch[h],grid=False)
+                fine_grid_splined[l,h] = interp_eff_dict[f"{decay}"](lsearchinterp[l],hsearchinterp[h],grid=False)
                 
 
         #plotting 2D pulls
 
         plt.figure()
-        plt.imshow(pull, origin='lower',vmin=-5,vmax=5)
+        plt.imshow(pull, origin='lower',vmin=vmin,vmax=vmax)
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel('BDT_lh 1-P(light)')
         plt.colorbar(label='pulls')
         
         # Set tick labels for every 10th bin
-        ytick_indices = np.arange(0,len(lsearch), round(len(lsearch)/5))
-        xtick_indices = np.arange(0, len(hsearch), round(len(hsearch)/5))
+        ytick_indices = np.arange(0,len(lplot), round(len(lplot)/5))
+        xtick_indices = np.arange(0, len(hplot), round(len(hplot)/5))
         
         # Use ytick_indices and xtick_indices to set the ticks
-        plt.yticks(ytick_indices, [round(lsearch[i],5) for i in ytick_indices])
-        plt.xticks(xtick_indices, [round(hsearch[i],5) for i in xtick_indices], rotation=90)
+        plt.yticks(ytick_indices, [round(lplot[i],5) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hplot[i],5) for i in xtick_indices], rotation=90)
         plt.title(f'Efficiency spline pulls for {decay} decay')
         plt.savefig(os.path.join(set_outputpath(save_path),f'2D_pulls_{decay}.pdf'))
 
@@ -282,7 +287,7 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrang
         #plotting splined efficiencies themselves (finely gridded)
 
         plt.figure()
-        plt.imshow(fine_grid_splined[l,h], origin='lower',vmin=-5,vmax=5)
+        plt.imshow(fine_grid_splined, origin='lower')
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel('BDT_lh 1-P(light)')
         plt.colorbar(label='efficiency')
@@ -301,18 +306,18 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrang
     
 
         plt.figure()
-        plt.imshow(E[l,h], origin='lower',vmin=-5,vmax=5)
+        plt.imshow(E, origin='lower')
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel('BDT_lh 1-P(light)')
         plt.colorbar(label='efficiency')
         
         # Set tick labels for every 10th bin
-        ytick_indices = np.arange(0,len(lsearch), round(len(lsearch)/5))
-        xtick_indices = np.arange(0, len(hsearch), round(len(hsearch)/5))
+        ytick_indices = np.arange(0,len(lplot), round(len(lplot)/5))
+        xtick_indices = np.arange(0, len(hplot), round(len(hplot)/5))
         
         # Use ytick_indices and xtick_indices to set the ticks
-        plt.yticks(ytick_indices, [round(lsearch[i],5) for i in ytick_indices])
-        plt.xticks(xtick_indices, [round(hsearch[i],5) for i in xtick_indices], rotation=90)
+        plt.yticks(ytick_indices, [round(lplot[i],5) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hplot[i],5) for i in xtick_indices], rotation=90)
         plt.title(f'Efficiency spline pulls for {decay} decay')
         plt.savefig(os.path.join(set_outputpath(save_path),f'raw_efficiency_{decay}.pdf'))
 
@@ -347,13 +352,13 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrang
 
 
         if slice == True:
-            n = 30
+            n = 10
             fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3,1]}, figsize=(6,6))
             #ax[0].plot(hsearch,eff_dict[f"{decay}"][n,:], label=r'efficiency slice at 1-P(light) $>$'+ f'{lsearch[n]}',color='b')
-            ax[0].errorbar(hsearch[::3],eff_dict[f"{decay}"][n,::3],error[n,::3],label=r'efficiency slice at 1-P(light) $>$'+ f'{lsearch[n]}')
-            ax[0].errorbar(hsearchinterp,interp_eff_dict[f"{decay}"](lsearch[n],hsearchinterp,grid=False), label=r'interpolated efficiency slice a 1-P(light) $>$'+ f'{lsearch[n]}')
+            ax[0].errorbar(hplot[:],E[n, :],error[n,:],label=r'efficiency slice at 1-P(light) $>$'+ f'{lplot[n]}')
+            ax[0].errorbar(hsearchinterp,interp_eff_dict[f"{decay}"](lplot[n],hsearchinterp,grid=False), label=r'interpolated efficiency slice a 1-P(light) $>$'+ f'{lplot[n]}')
         
-            ax[1].errorbar( hsearch[::3], pull[n,::3], np.ones_like(pull[n,::3]) )
+            ax[1].errorbar( hplot[:], pull[n, :], np.ones_like(pull[n, :]) )
             ax[1].axhline(0, c='k', ls='--' )   
             ax[1].set_ylabel('Pull')
             ax[1].set_ylim(-3,3)
@@ -366,10 +371,10 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrang
             
             fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3,1]}, figsize=(6,6))
             #ax[0].plot(lsearch,eff_dict[f"{decay}"][:,n], label=r'efficiency slice at 1-P(heavy) $>$'+ f'{hsearch[n]}',color='b')
-            ax[0].errorbar(lsearch[::3],eff_dict[f"{decay}"][::3,n],error[::3,n],label=r'efficiency slice at 1-P(heavy) $>$'+ f'{hsearch[n]}')
-            ax[0].errorbar(lsearchinterp,interp_eff_dict[f"{decay}"](lsearchinterp,hsearch[n],grid=False), label=r'interpolated efficiency slice a 1-P(heavy) $>$'+ f'{hsearch[n]}')
+            ax[0].errorbar(lplot[:],E[:,n],error[ :,n],label=r'efficiency slice at 1-P(heavy) $>$'+ f'{hplot[n]}')
+            ax[0].errorbar(lsearchinterp,interp_eff_dict[f"{decay}"](lsearchinterp,hplot[n],grid=False), label=r'interpolated efficiency slice a 1-P(heavy) $>$'+ f'{hplot[n]}')
         
-            ax[1].errorbar( lsearch[::3], pull[::3,n], np.ones_like(pull[::3,n]) )
+            ax[1].errorbar( lplot[:], pull[ :,n], np.ones_like(pull[ :,n]) )
             ax[1].axhline(0, c='k', ls='--' )   
             ax[1].set_ylabel('Pull')
             ax[1].set_ylim(-3,3)
@@ -380,15 +385,6 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrang
             plt.savefig(os.path.join(save_path,f'light_slice_{decay}.pdf'))
 
 
-        ## to add integrated projection
-        else:
-            plt.plot(hsearch[::3],np.sum(eff_dict[f"{decay}"],axis=0),label=' efficiency summed along grid in 1-P(light)')
-            plt.plot(hsearchinterp,np.sum(interp_eff_dict[f"{decay}"](lsearchinterp,hsearchinterp,grid=False),axis=1), label=r'interpolated efficiency summed along grid in 1-P(light)')
-            plt.xlabel('BDT_lh 1-P(heavy)')
-            plt.ylabel(f'{decay} efficiency')
-            plt.legend()
-            plt.savefig(os.path.join(save_path,f'heavy_slice_{decay}.pdf'))
-
          ##to check if this plot does what you want it to
          ## Add optimisation
             
@@ -396,6 +392,7 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrang
 
 
 if __name__=="__main__":
+
 
     #Load dataframe with bdtlh version applied
     data={}
@@ -416,9 +413,21 @@ if __name__=="__main__":
     #add any extra cuts need here###########################
     full_data = full_data.query('EVT_hemisEmax_n>10') #veto on taus
 
-    eff_dict, interp_eff_dict, eff_err_dict, s_values_dict = make_interpolated_eff_map(full_data,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smoothing=False, kx=2, ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/')
+    eff_dict, interp_eff_dict, eff_err_dict, s_values_dict = make_interpolated_eff_map(full_data,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=True, kx=2, ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/')
+    '''
+    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/'
 
-    make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrange=(0.99,1) ,hrange=(0.99,1), slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/')
+    with open(os.path.join(set_outputpath(save_path), "efficiencies_dictionary"), "rb") as dill_file:
+        eff_dict = dill.load(dill_file)
+
+    with open(os.path.join(set_outputpath(save_path), "interpolated_efficiencies_dictionary"), "rb") as dill_file:
+        interp_eff_dict = dill.load(dill_file)
+
+    with open(os.path.join(set_outputpath(save_path), "efficiency_errors_dictionary"), "rb") as dill_file:
+        eff_err_dict = dill.load(dill_file)
+    '''
+    
+    make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrangeplot=(0.995,1) ,hrangeplot=(0.995,1), nlh_plot = 20, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/',vmin=-3,vmax=3)
     
     
 

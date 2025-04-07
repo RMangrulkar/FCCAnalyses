@@ -409,3 +409,15 @@ eventsProcessed = {
     "p8_ee_Zmumu_ecm91":100000000,
     "p8_ee_Zee_ecm91":100000000,
 }
+
+eventsSelected_preBDT = {
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1752184,
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1941910,
+    "p8_ee_Zbb_ecm91":25304505,
+    "p8_ee_Zcc_ecm91":20713014,
+    "p8_ee_Zss_ecm91":22977759,
+    "p8_ee_Zud_ecm91":12046354,
+    "p8_ee_Ztautau_ecm91":4472734,
+    "p8_ee_Zmumu_ecm91":229,
+    "p8_ee_Zee_ecm91":140,
+}

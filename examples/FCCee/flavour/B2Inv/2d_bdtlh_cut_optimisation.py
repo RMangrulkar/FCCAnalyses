@@ -548,11 +548,17 @@ def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange
     plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
     plt.ylabel(r'$S/\sqrt{S+B}$')
     plt.xscale('log')
+    plt.ylim(0,8)
     plt.legend()
     plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
     plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
 
 
+    print(f"5 sigma BFs =  {[BFs[k] for k in (np.where(np.array([round(max_FOM[i], 1) for i in range(len(max_FOM))]) == round(5.0, 1)))[0]]}")
+
+    print(f"3 sigma BF =  {[BFs[k] for k in (np.where(np.array([round(max_FOM[i], 1) for i in range(len(max_FOM))]) == round(3.0, 1)))[0]]}")
+
+    
     #convert sigma to CL - for now one sided
 
     CL = sigma_to_percentage(max_FOM)

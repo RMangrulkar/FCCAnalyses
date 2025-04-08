@@ -8,6 +8,7 @@ import pandas as pd
 from yaml import safe_load, YAMLError, dump
 from tabulate import tabulate
 from scipy.interpolate import RectBivariateSpline
+from scipy.stats import norm
 
 
 import config as cfg 
@@ -28,6 +29,12 @@ def set_outputpath(outputpath):
     if not os.path.exists(outputpath):
         os.makedirs(outputpath)
     return outputpath
+
+#function to turn #sigma to CL
+def sigma_to_percentage(sigma):
+    # Calculate the percentage
+    percentage = norm.cdf(sigma) * 100
+    return percentage
 
 def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/N_MC/', N_plot=True,eff_plot=False): 
     lsearch = np.linspace(*lrange,nlh) 
@@ -509,6 +516,60 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
         plt.legend()
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
+def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(1e-9,1e-4,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
+    
+    #create dictionaries to store results
+    max_FOM=np.zeros(len(sig_BFs))
+    BFs=np.zeros(len(sig_BFs))
+    light_cut=np.zeros(len(sig_BFs))
+    heavy_cut=np.zeros(len(sig_BFs))
+    i=0
+
+    for BF in sig_BFs:
+        
+        FOM, S_arr, B_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_eff_dict,err_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nl=nl,nh=nh , sig_BF=BF)
+
+        ## finding maximum so can plot slices
+        indices = np.unravel_index(np.argmax(FOM), np.shape(FOM)) #nb argmax returns indices of the max value
+        l = lsearch[indices[0]]
+        h = hsearch[indices[1]]
+
+        max_FOM[i] = FOM.max()
+        light_cut[i] = l
+        heavy_cut[i] = h    
+        BFs[i] = sig_BF
+        i+=1
+
+
+    #plotting
+
+    plt.figure()
+    plt.plot(BFs,max_FOM)
+    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.ylabel(r'$S/\sqrt{S+B}$')
+    plt.xscale('log')
+    plt.legend()
+    plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
+
+
+    #convert sigma to CL - for now one sided
+
+    CL = sigma_to_percentage(max_FOM)
+
+    plt.figure()
+    plt.plot(BFs,CL)
+    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.ylabel(r'CL exclude in 1-sided test')
+    plt.xscale('log')
+    plt.legend()
+    plt.title(r'CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
+
+
+    
+    
+
 
 if __name__=="__main__":
 
@@ -534,7 +595,9 @@ if __name__=="__main__":
 
     eff_dict, interp_eff_dict, eff_err_dict, s_values_dict = make_interpolated_eff_map(full_data,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=True, kx=2, ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/')
     '''
-    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995'
+    
+    
+    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0990'
 
     with open(os.path.join(set_outputpath(save_path), "efficiencies_dictionary"), "rb") as dill_file:
         eff_dict = dill.load(dill_file)
@@ -545,11 +608,16 @@ if __name__=="__main__":
     with open(os.path.join(set_outputpath(save_path), "efficiency_errors_dictionary"), "rb") as dill_file:
         eff_err_dict = dill.load(dill_file)
     
-    
-    #make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrangeplot=(0.995,1) ,hrangeplot=(0.995,1), nlh_plot = 20, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/',vmin=-3,vmax=3)
+    '''
+    make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrangeplot=(0.995,1) ,hrangeplot=(0.995,1), nlh_plot = 20, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/',vmin=-3,vmax=3)
     FOM, S_arr, B_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BF=1e-7)
     plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
+    '''
     
+    plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.99,1) ,hrange_plot=(0.99,1), nl=1000,nh=1000 , sig_BFs=np.logspace(-9,-5,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0990')
+
+
+
 
 
 #possible method fro adding extra weight to edges

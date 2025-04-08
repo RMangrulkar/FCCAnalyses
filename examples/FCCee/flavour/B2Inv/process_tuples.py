@@ -92,20 +92,20 @@ class RDFanalysis():
             # 22 - intermediate particles of hardest process (Z)
             # 23 - outgoing particles of hardest process (quark pair produced from Z)
             #  1 - final-state particles
-            #.Define("MC_ee",          "MCParticle::sel_genStatus(21)(Particle)")   # INTERMEDIATE
+            .Define("MC_ee",          "MCParticle::sel_genStatus(21)(Particle)")   # INTERMEDIATE
             .Define("MC_Z",           "MCParticle::sel_genStatus(22)(Particle)")   # INTERMEDIATE
-            #.Define("MC_qq",          "MCParticle::sel_genStatus(23)(Particle)")   # INTERMEDIATE
-            #.Define("MCem_p",         "(MCParticle::get_p(MC_ee)).at(0)")
-            #.Define("MCep_p",         "(MCParticle::get_p(MC_ee)).at(1)")
+            .Define("MC_qq",          "MCParticle::sel_genStatus(23)(Particle)")   # INTERMEDIATE
+            .Define("MCem_p",         "(MCParticle::get_p(MC_ee)).at(0)")
+            .Define("MCep_p",         "(MCParticle::get_p(MC_ee)).at(1)")
             .Define("MCZ_p",          "(MCParticle::get_p(MC_Z)).at(0)")
-            #.Define("MCq1_p",         "(MCParticle::get_p(MC_qq)).at(0)")
-            #.Define("MCq1_px",        "(MCParticle::get_px(MC_qq)).at(0)")
-            #.Define("MCq1_py",        "(MCParticle::get_py(MC_qq)).at(0)")
-            #.Define("MCq1_pz",        "(MCParticle::get_pz(MC_qq)).at(0)")
-            #.Define("MCq2_p",         "(MCParticle::get_p(MC_qq)).at(1)")
-            #.Define("MCq2_px",        "(MCParticle::get_px(MC_qq)).at(1)")
-            #.Define("MCq2_py",        "(MCParticle::get_py(MC_qq)).at(1)")
-            #.Define("MCq2_pz",        "(MCParticle::get_pz(MC_qq)).at(1)")
+            .Define("MCq1_p",         "(MCParticle::get_p(MC_qq)).at(0)")
+            .Define("MCq1_px",        "(MCParticle::get_px(MC_qq)).at(0)")
+            .Define("MCq1_py",        "(MCParticle::get_py(MC_qq)).at(0)")
+            .Define("MCq1_pz",        "(MCParticle::get_pz(MC_qq)).at(0)")
+            .Define("MCq2_p",         "(MCParticle::get_p(MC_qq)).at(1)")
+            .Define("MCq2_px",        "(MCParticle::get_px(MC_qq)).at(1)")
+            .Define("MCq2_py",        "(MCParticle::get_py(MC_qq)).at(1)")
+            .Define("MCq2_pz",        "(MCParticle::get_pz(MC_qq)).at(1)")
             
             #############################################
             ##         Perform vertex fitting          ##

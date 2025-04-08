@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from yaml import safe_load, YAMLError, dump
+from tabulate import tabulate
 from scipy.interpolate import RectBivariateSpline
 
 
@@ -385,15 +386,133 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict, lrange=(0.99,1) ,  hr
             plt.savefig(os.path.join(save_path,f'light_slice_{decay}.pdf'))
 
 
-         ##to check if this plot does what you want it to
-         ## Add optimisation
-            
+def run_2d_optimisation(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=1000,nh=1000 , sig_BF=1e-7):
+    
+    lsearch = np.linspace(*lrange_plot,nl) #need to be the same lrange and hrange as efficiency map was generated with 
+    hsearch = np.linspace(*hrange_plot,nh)
 
+    S_arr = np.zeros((len(lsearch), len(hsearch)))
+    B_arr = np.zeros((len(lsearch), len(hsearch)))
+    FOM = np.zeros((len(lsearch), len(hsearch)))
+
+    print('Calculating S and B')
+
+    #defining constants needed
+    N_z = cfg.N_z
+    k = 2 * N_z * cfg.branching_fractions["p8_ee_Zbb_ecm91"][0] * sig_BF # common part of signal expectation
+    
+    for l in np.arange(0,len(lsearch), 1):
+        for h in np.arange(0,len(hsearch), 1): 
+            S = k * sum([cfg.prod_frac[decay][0]*interp_eff_dict[decay](lsearch[l],hsearch[h]).item() for decay in cfg.sample_allocations["combined_signal"]])
+            B = N_z* sum([cfg.branching_fractions[decay][0]*interp_eff_dict[decay](lsearch[l],hsearch[h]).item() for decay in cfg.sample_allocations["hadronic_background"]])
+            S_arr[l,h]=S
+            B_arr[l,h]=B
+            if S+B>0:
+                FOM[l,h] = S/np.sqrt(S+B)
+            else:
+                FOM[l,h] = 0
+
+    ## finding maximum so can plot slices
+    max_sigma =FOM.max()
+    indices = np.unravel_index(np.argmax(FOM), np.shape(FOM)) #nb argmax returns indices of the max value
+    l = lsearch[indices[0]]
+    h = hsearch[indices[1]]
+
+    # Prepare the data for the table
+    table_data = [["Optimal FOM", "Optimal 1-P(l) cut", "Optimal 1-P(h) cut"],
+                  [f"{max_sigma:.4f}", f"{l:.4f}", f"{h:.4f}"]]
+    
+    # Print the table
+    print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
+     
+    return FOM, S_arr, B_arr, lsearch, hsearch, sig_BF
+
+
+def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_plots = False, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/'):
+    
+    #set output path
+    set_outputpath(save_path)
+
+    #plot FOM space
+    plt.figure()
+    plt.imshow(FOM, origin='lower',vmax=vmax)
+    plt.xlabel('BDT_lh 1-P(heavy)')
+    plt.ylabel('BDT_lh 1-P(light)')
+    plt.colorbar(label=r'$S/\sqrt{S+B}$')
+    plt.title('FOM with for common signal BF = '+f'{sigBF:.2e}')
+    
+    # Set tick labels for every 10th bin
+    ytick_indices = np.arange(0,len(lsearch), round(len(lsearch)/5))
+    xtick_indices = np.arange(0, len(hsearch), round(len(hsearch)/5))
+    
+    # Use ytick_indices and xtick_indices to set the ticks
+    plt.yticks(ytick_indices, [round(lsearch[i],5) for i in ytick_indices])
+    plt.xticks(xtick_indices, [round(hsearch[i],5) for i in xtick_indices], rotation=90)
+    
+    plt.savefig(os.path.join(save_path,f'FOM_heatmap.pdf'))
+
+
+    ## finding maximum so can plot slices
+    max_sigma =FOM.max()
+    indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
+    l = lsearch[indices[0]]
+    h = hsearch[indices[1]]
+    
+    plt.figure()
+    plt.plot(hsearch,FOM[indices[0],:], label=r'FOM slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
+    plt.xlabel('BDT_lh 1-P(heavy)')
+    plt.ylabel(r'$S/\sqrt{S+B}$')
+    plt.legend()
+    plt.title('FOM slice with for common signal BF = '+f'{sigBF:.2e}')
+    plt.savefig(os.path.join(save_path,f'FOM_slice_heavy.pdf'))
+
+    plt.figure()
+    plt.plot(lsearch,FOM[:,indices[1]], label=r'FOM slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
+    plt.xlabel('BDT_lh 1-P(light)')
+    plt.ylabel(r'$S/\sqrt{S+B}$')
+    plt.legend()
+    plt.title('FOM slice with for common signal BF = '+f'{sigBF:.2e}')
+    plt.savefig(os.path.join(save_path,f'FOM_slice_light.pdf'))
+
+
+
+    if SB_plots == True:
+        #plot S
+        plt.figure()
+        plt.plot(lsearch,S_arr[:,indices[1]], label=r'S slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
+        plt.xlabel('BDT_lh 1-P(light)')
+        plt.ylabel(r'S')
+        plt.legend()
+        plt.title('Signal expectation slice with for common signal BF = '+f'{sigBF:.2e}')
+        plt.savefig(os.path.join(save_path,f'S_slice_light.pdf'))
+
+        plt.figure()
+        plt.plot(hsearch,S_arr[indices[0],:], label=r'S slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
+        plt.xlabel('BDT_lh 1-P(heavy)')
+        plt.ylabel(r'S')
+        plt.legend()
+        plt.title('Signal expectation slice with for common signal BF = '+f'{sigBF:.2e}')
+        plt.savefig(os.path.join(save_path,f'S_slice_heavy.pdf'))
+        
+        #plot B
+        plt.figure()
+        plt.plot(lsearch,B_arr[:,indices[1]], label=r'B slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
+        plt.xlabel('BDT_lh 1-P(light)')
+        plt.ylabel(r'B')
+        plt.legend()
+        plt.savefig(os.path.join(save_path,f'B_slice_light.pdf'))
+
+        plt.figure()
+        plt.plot(hsearch,B_arr[indices[0],:], label=r'B slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
+        plt.xlabel('BDT_lh 1-P(heavy)')
+        plt.ylabel(r'B')
+        plt.legend()
+        plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
 if __name__=="__main__":
 
-
+    '''
     #Load dataframe with bdtlh version applied
     data={}
     dir = cfg.fccana_opts["outputDir"]["prelim_cuts_full"]
@@ -415,7 +534,7 @@ if __name__=="__main__":
 
     eff_dict, interp_eff_dict, eff_err_dict, s_values_dict = make_interpolated_eff_map(full_data,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=True, kx=2, ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/')
     '''
-    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/'
+    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995'
 
     with open(os.path.join(set_outputpath(save_path), "efficiencies_dictionary"), "rb") as dill_file:
         eff_dict = dill.load(dill_file)
@@ -425,10 +544,11 @@ if __name__=="__main__":
 
     with open(os.path.join(set_outputpath(save_path), "efficiency_errors_dictionary"), "rb") as dill_file:
         eff_err_dict = dill.load(dill_file)
-    '''
     
-    make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrangeplot=(0.995,1) ,hrangeplot=(0.995,1), nlh_plot = 20, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/',vmin=-3,vmax=3)
     
+    #make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrangeplot=(0.995,1) ,hrangeplot=(0.995,1), nlh_plot = 20, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/',vmin=-3,vmax=3)
+    FOM, S_arr, B_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BF=1e-7)
+    plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
     
 
 

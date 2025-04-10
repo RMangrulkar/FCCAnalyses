@@ -516,6 +516,7 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
         plt.legend()
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
+
 def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(1e-9,1e-4,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
     
     #create dictionaries to store results
@@ -566,10 +567,10 @@ def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange
     plt.figure()
     plt.plot(BFs,CL)
     plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    plt.ylabel(r'CL exclude in 1-sided test')
+    plt.ylabel(r'1-CL (1-sided test)')
     plt.xscale('log')
     plt.legend()
-    plt.title(r'CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
     plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
 
 
@@ -603,7 +604,7 @@ if __name__=="__main__":
     '''
     
     
-    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0990'
+    save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995'
 
     with open(os.path.join(set_outputpath(save_path), "efficiencies_dictionary"), "rb") as dill_file:
         eff_dict = dill.load(dill_file)
@@ -620,7 +621,7 @@ if __name__=="__main__":
     plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
     '''
     
-    plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.99,1) ,hrange_plot=(0.99,1), nl=1000,nh=1000 , sig_BFs=np.logspace(-9,-5,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0990')
+    plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=1000,nh=1000 , sig_BFs=np.logspace(-9,-5,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
 
 
 

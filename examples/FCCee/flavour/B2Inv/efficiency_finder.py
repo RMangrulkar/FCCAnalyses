@@ -200,6 +200,9 @@ def get_efficiencies(inputtype,
                     before += int(f['eventsProcessed'])
                     after  += int(f['eventsSelected'])
                 else:
+                    if int(f['eventsSelected']) ==0: #add exception for if file is empty as no events passed preselection
+                        continue
+
                     if raw:
                         before += int(f['eventsProcessed'])
                     else:

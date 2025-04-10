@@ -398,6 +398,25 @@ prelim_cut_effs = {
     "p8_ee_Zee_ecm91":(1.4e-06,  1.1874333418765638e-07) #ie. only 140 events left out of 100mn
 }
 
+Presel_eff_incl_tau = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_eff': 0.8591695,
+ 'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_err': 0.00024596478082094744,
+ 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_eff': 0.8659218181818182,
+ 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_err': 0.00022972444759674417,
+ 'p8_ee_Zbb_ecm91_eff': 0.05682641759221219,
+ 'p8_ee_Zbb_ecm91_err': 1.1052690730233407e-05,
+ 'p8_ee_Zcc_ecm91_eff': 0.039435947543960743,
+ 'p8_ee_Zcc_ecm91_err': 8.705967773060812e-06,
+ 'p8_ee_Zss_ecm91_eff': 0.041542190314042576,
+ 'p8_ee_Zss_ecm91_err': 8.925279870387284e-06,
+ 'p8_ee_Zud_ecm91_eff': 0.021884987304170968,
+ 'p8_ee_Zud_ecm91_err': 6.556542046474177e-06,
+ 'p8_ee_Ztautau_ecm91_eff': 3.434e-05,
+ 'p8_ee_Ztautau_ecm91_err': 5.860786496716766e-07,
+ 'p8_ee_Zmumu_ecm91_eff': 1.2903225806451614e-07,
+ 'p8_ee_Zmumu_ecm91_err': 3.876936480150191e-08,
+ 'p8_ee_Zee_ecm91_eff': 7.894736842105264e-08,
+ 'p8_ee_Zee_ecm91_err': 3.481251450249334e-08}
+
 eventsProcessed = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 2000000,
     "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 2200000,

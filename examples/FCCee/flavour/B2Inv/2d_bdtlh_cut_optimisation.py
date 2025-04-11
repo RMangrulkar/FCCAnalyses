@@ -161,7 +161,7 @@ def make_n_remaining_plots(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, save_path
 
 
 
-def make_interpolated_eff_map(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smoothing=False, kx=3,ky=3, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/'): #df should be full data for final result
+def make_interpolated_eff_map(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smoothing=False, kx=2,ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/'): #df should be full data for final result
 
     lsearch = np.linspace(*lrange,nlh) 
     hsearch = np.linspace(*hrange,nlh)
@@ -170,6 +170,7 @@ def make_interpolated_eff_map(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smooth
     eff_dict={}
     eff_err_dict={}
     interp_eff_dict={}
+    interp_err_dict={}
     s_values_dict={}
     N_dict={}
     print('Creating efficiency map for decay:')
@@ -206,13 +207,20 @@ def make_interpolated_eff_map(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smooth
 
         if smoothing == True:
             s_value = np.sum(np.square(err_df))
+            s_value_forerr = 1
             s_values_dict[decay] = s_value
+
         else:
             s_value = 0
+            s_value_forerr = 0
             s_values_dict[decay] = s_value
+   
 
         interp_eff = RectBivariateSpline(lsearch, hsearch, eff_df,kx=kx, ky=ky, s=s_value)
         interp_eff_dict[decay] = interp_eff
+
+        interp_err = RectBivariateSpline(lsearch, hsearch, err_df,kx=kx, ky=ky, s=s_value_forerr)
+        interp_err_dict[decay] = interp_err
 
     print(s_values_dict)
 
@@ -224,11 +232,140 @@ def make_interpolated_eff_map(df,lrange=(0.99,1) ,hrange=(0.99,1),nlh=40, smooth
 
     with open(os.path.join(set_outputpath(save_path),"efficiency_errors_dictionary"), "wb") as dill_file3:
         dill.dump(eff_err_dict, dill_file3)
+    
+    with open(os.path.join(set_outputpath(save_path),"interpolated_efficiency_errors_dictionary"), "wb") as dill_file5:
+        dill.dump(interp_err_dict, dill_file5)
 
     with open(os.path.join(set_outputpath(save_path),"N_remaining_dictionary"), "wb") as dill_file4:
         dill.dump(N_dict, dill_file4)
 
-    return eff_dict, interp_eff_dict, eff_err_dict, s_values_dict
+    return eff_dict, interp_eff_dict, eff_err_dict,interp_err_dict, s_values_dict
+
+
+def interpolate_and_plot_error(eff_err_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,smoothing=False, kx=2,ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/', save_pathplot = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/', slice=True): #df should be full data for final result
+    
+    interp_err_dict = {}
+    lsearch = np.linspace(*lrange,nlh) 
+    hsearch = np.linspace(*hrange,nlh)
+
+    if smoothing == True:
+        s_value = 1
+    else:
+        s_value = 0
+
+    for decay in eff_err_dict.keys():
+
+        interp_err = RectBivariateSpline(lsearch, hsearch, eff_err_dict[decay],kx=kx, ky=ky, s=s_value)
+        interp_err_dict[decay] = interp_err
+
+    with open(os.path.join(set_outputpath(save_path),"interpolated_efficiency_errors_dictionary"), "wb") as dill_file:
+        dill.dump(interp_err_dict, dill_file)
+
+
+    #now plotting to check
+
+    # make finely gridded spline
+    lsearchinterp = np.linspace(*lrange,nlh*10) 
+    hsearchinterp = np.linspace(*hrange,nlh*10)
+
+    fine_grid_splined =np.zeros((len(lsearchinterp), len(hsearchinterp))) 
+    
+    for decay in interp_err_dict.keys():
+        error = eff_err_dict[decay]
+        for l in np.arange(0,len(lsearchinterp),1):
+            for h in np.arange(0,len(hsearchinterp),1):
+                fine_grid_splined[l,h] = interp_err_dict[decay](lsearchinterp[l],hsearchinterp[h],grid=False)
+                
+    
+        plt.figure()
+        plt.imshow(fine_grid_splined, origin='lower')
+        plt.xlabel('BDT_lh 1-P(heavy)')
+        plt.ylabel('BDT_lh 1-P(light)')
+        plt.colorbar(label='efficiency error')
+        
+        # Set tick labels for every 10th bin
+        ytick_indices = np.arange(0,len(lsearchinterp), round(len(lsearchinterp)/5))
+        xtick_indices = np.arange(0, len(hsearchinterp), round(len(hsearchinterp)/5))
+        
+        # Use ytick_indices and xtick_indices to set the ticks
+        plt.yticks(ytick_indices, [round(lsearchinterp[i],5) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hsearchinterp[i],5) for i in xtick_indices], rotation=90)
+        plt.title(f'Interpolated error on efficiency for {decay} decay')
+        plt.savefig(os.path.join(set_outputpath(save_pathplot),f'interpolated_efficiency_error_{decay}.pdf'))
+
+        # plotting raw efficiencies
+
+        plt.figure()
+        plt.imshow(error, origin='lower')
+        plt.xlabel('BDT_lh 1-P(heavy)')
+        plt.ylabel('BDT_lh 1-P(light)')
+        plt.colorbar(label='efficiency error')
+        
+        # Set tick labels for every 10th bin
+        ytick_indices = np.arange(0,len(lsearch), round(len(lsearch)/5))
+        xtick_indices = np.arange(0, len(hsearch), round(len(hsearch)/5))
+        
+        # Use ytick_indices and xtick_indices to set the ticks
+        plt.yticks(ytick_indices, [round(lsearch[i],5) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hsearch[i],5) for i in xtick_indices], rotation=90)
+        plt.title(f'Raw efficiency error for {decay} decay')
+        plt.savefig(os.path.join(set_outputpath(save_pathplot),f'raw_efficiency_error_{decay}.pdf'))
+
+        
+        if slice == True:
+            n = 10
+            fig, ax = plt.subplots()
+            #ax[0].plot(hsearch,eff_dict[f"{decay}"][n,:], label=r'efficiency slice at 1-P(light) $>$'+ f'{lsearch[n]}',color='b')
+            ax.errorbar(hsearch[:],error[n,:],label=r'efficiency error slice at 1-P(light) $>$'+ f'{lsearch[n]}')
+            ax.errorbar(hsearchinterp,interp_err_dict[f"{decay}"](lsearch[n],hsearchinterp,grid=False), label=r'interpolated efficiency slice a 1-P(light) $>$'+ f'{lsearch[n]}')
+            ax.set_xlabel('BDT_lh 1-P(heavy)')
+            ax.set_ylabel(f'{decay} efficiency error')
+            ax.legend()
+            fig.tight_layout()
+            plt.savefig(os.path.join(save_pathplot,f'heavy_slice_{decay}_error.pdf'))
+
+            
+            fig, ax = plt.subplots()
+            #ax[0].plot(lsearch,eff_dict[f"{decay}"][:,n], label=r'efficiency slice at 1-P(heavy) $>$'+ f'{hsearch[n]}',color='b')
+            ax.errorbar(lsearch[:],error[ :,n],label=r'efficiency slice at 1-P(heavy) $>$'+ f'{hsearch[n]}')
+            ax.errorbar(lsearchinterp,interp_err_dict[f"{decay}"](lsearchinterp,hsearch[n],grid=False), label=r'interpolated efficiency slice a 1-P(heavy) $>$'+ f'{hsearch[n]}')
+    
+            ax.set_xlabel('BDT_lh 1-P(light)')
+            ax.set_ylabel(f'{decay} efficiency error')
+            ax.legend()
+            fig.tight_layout()
+            plt.savefig(os.path.join(save_pathplot,f'light_slice_{decay}_error.pdf'))
+
+
+    return interp_err_dict
+
+def plot_interp_frac_error(interp_eff_dict, interp_err_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, save_pathplot = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/'):
+
+    lsearchinterp = np.linspace(*lrange,nlh*10) 
+    hsearchinterp = np.linspace(*hrange,nlh*10)
+
+    frac_err = np.zeros((len(lsearchinterp), len(hsearchinterp)))
+      
+    for decay in interp_err_dict.keys():
+        for l in np.arange(0,len(lsearchinterp),1):
+            for h in np.arange(0,len(hsearchinterp),1):
+                frac_err[l,h] = interp_err_dict[decay](lsearchinterp[l],hsearchinterp[h],grid=False)/interp_eff_dict[decay](lsearchinterp[l],hsearchinterp[h],grid=False)
+                
+        plt.figure()
+        plt.imshow(frac_err, origin='lower')
+        plt.xlabel('BDT_lh 1-P(heavy)')
+        plt.ylabel('BDT_lh 1-P(light)')
+        plt.colorbar(label='fractional efficiency error')
+        
+        # Set tick labels for every 10th bin
+        ytick_indices = np.arange(0,len(lsearchinterp), round(len(lsearchinterp)/5))
+        xtick_indices = np.arange(0, len(hsearchinterp), round(len(hsearchinterp)/5))
+        
+        # Use ytick_indices and xtick_indices to set the ticks
+        plt.yticks(ytick_indices, [round(lsearchinterp[i],5) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hsearchinterp[i],5) for i in xtick_indices], rotation=90)
+        plt.title(f'Interpolated fractional error on efficiency for {decay} decay')
+        plt.savefig(os.path.join(set_outputpath(save_pathplot),f'interpolated_fractional_efficiency_error_{decay}.pdf'))
 
 
 
@@ -307,7 +444,7 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict, lrange=(0.99,1) ,  hr
         # Use ytick_indices and xtick_indices to set the ticks
         plt.yticks(ytick_indices, [round(lsearchinterp[i],5) for i in ytick_indices])
         plt.xticks(xtick_indices, [round(hsearchinterp[i],5) for i in xtick_indices], rotation=90)
-        plt.title(f'Efficiency spline pulls for {decay} decay')
+        plt.title(f'Interpolated efficiency for {decay} decay')
         plt.savefig(os.path.join(set_outputpath(save_path),f'splined_efficiency_{decay}.pdf'))
 
         # plotting raw efficiencies
@@ -326,7 +463,7 @@ def make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict, lrange=(0.99,1) ,  hr
         # Use ytick_indices and xtick_indices to set the ticks
         plt.yticks(ytick_indices, [round(lplot[i],5) for i in ytick_indices])
         plt.xticks(xtick_indices, [round(hplot[i],5) for i in xtick_indices], rotation=90)
-        plt.title(f'Efficiency spline pulls for {decay} decay')
+        plt.title(f'Raw efficiency for {decay} decay')
         plt.savefig(os.path.join(set_outputpath(save_path),f'raw_efficiency_{decay}.pdf'))
 
         #plotting in region care about
@@ -647,23 +784,30 @@ if __name__=="__main__":
     
     
     save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995'
+    save_pathplot='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995'
 
-    with open(os.path.join(set_outputpath(save_path), "efficiencies_dictionary"), "rb") as dill_file:
-        eff_dict = dill.load(dill_file)
+   # with open(os.path.join(set_outputpath(save_path), "efficiencies_dictionary"), "rb") as dill_file:
+   #     eff_dict = dill.load(dill_file)
 
     with open(os.path.join(set_outputpath(save_path), "interpolated_efficiencies_dictionary"), "rb") as dill_file:
         interp_eff_dict = dill.load(dill_file)
 
-    with open(os.path.join(set_outputpath(save_path), "efficiency_errors_dictionary"), "rb") as dill_file:
-        eff_err_dict = dill.load(dill_file)
-    
+    #with open(os.path.join(set_outputpath(save_path), "efficiency_errors_dictionary"), "rb") as dill_file:
+    #    eff_err_dict = dill.load(dill_file)
+
+    with open(os.path.join(set_outputpath(save_path), "interpolated_efficiency_errors_dictionary"), "rb") as dill_file:
+        interp_err_dict = dill.load(dill_file)
+
+    plot_interp_frac_error(interp_eff_dict, interp_err_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, save_pathplot=save_pathplot)
+
     '''
     make_eff_plots(eff_dict, interp_eff_dict,eff_err_dict,lrangeplot=(0.995,1) ,hrangeplot=(0.995,1), nlh_plot = 20, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/smoothing/0995/',vmin=-3,vmax=3)
     FOM, S_arr, B_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BF=1e-7)
     plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
     '''
+    #interpolate_and_plot_error(eff_err_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,smoothing=False, kx=2,ky=2, save_path=save_path, save_pathplot=save_pathplot, slice=True) #df should be full data for final result
     
-    plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(-9,-5,500), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
+    #plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(-9,-5,500), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
 
 
 

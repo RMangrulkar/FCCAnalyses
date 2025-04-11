@@ -517,7 +517,7 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
-def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(1e-9,1e-4,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
+def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(1e-9,1e-4,250), plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
     
     #create dictionaries to store results
     max_FOM=np.zeros(len(sig_BFs))
@@ -542,38 +542,80 @@ def plot_BF_sensitivitise(interp_eff_dict,err_dict,lrange_plot=(0.995,1) ,hrange
         i+=1
 
 
-    #plotting
+    #find 3 sigma and 5 sigma points
 
-    plt.figure()
-    plt.plot(BFs,max_FOM)
-    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    plt.ylabel(r'$S/\sqrt{S+B}$')
-    plt.xscale('log')
-    plt.ylim(0,8)
-    plt.legend()
-    plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
+    closest_index_5 = np.argmin(np.abs(np.array(max_FOM) - 5))
+    highlight_x_5 = BFs[closest_index_5]
+    highlight_y_5 = max_FOM[closest_index_5]
+
+    closest_index_3 = np.argmin(np.abs(np.array(max_FOM) - 3))
+    highlight_x_3 = BFs[closest_index_3]
+    highlight_y_3 = max_FOM[closest_index_3]
+
+    print(f"5 sigma BFs = {BFs[closest_index_5]}" )
+    print(f"3 sigma BFs = {BFs[closest_index_3]}" )
 
 
-    print(f"5 sigma BFs =  {[BFs[k] for k in (np.where(np.array([round(max_FOM[i], 1) for i in range(len(max_FOM))]) == round(5.0, 1)))[0]]}")
+    if plot==True:
 
-    print(f"3 sigma BF =  {[BFs[k] for k in (np.where(np.array([round(max_FOM[i], 1) for i in range(len(max_FOM))]) == round(3.0, 1)))[0]]}")
+        #plotting
+        plt.figure()
+        plt.plot(BFs,max_FOM)
+        plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+        plt.ylabel(r'$S/\sqrt{S+B}$')
+        plt.xscale('log')
+        plt.ylim(0,8)
+
+        # Add vertical and horizontal lines stopping at the points
+        plt.vlines(x=highlight_x_5, ymin=0, ymax=highlight_y_5, color='deeppink', linestyle='--', label=r'5$\sigma$')
+        plt.hlines(y=highlight_y_5, xmin=min(BFs), xmax=highlight_x_5, color='deeppink', linestyle='--')
+
+        plt.vlines(x=highlight_x_3, ymin=0, ymax=highlight_y_3, color='purple', linestyle='--', label=r'3$\sigma$')
+        plt.hlines(y=highlight_y_3, xmin=min(BFs), xmax=highlight_x_3, color='purple', linestyle='--')
+
+        plt.legend()
+        plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+        plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
+
 
     
     #convert sigma to CL - for now one sided
 
     CL = sigma_to_percentage(max_FOM)
 
-    plt.figure()
-    plt.plot(BFs,CL)
-    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    plt.ylabel(r'1-CL (1-sided test)')
-    plt.xscale('log')
-    plt.legend()
-    plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
+    #find 90 sigma and 95 % points
+
+    closest_index_90 = np.argmin(np.abs(np.array(CL) - 90))
+    highlight_x_90 = BFs[closest_index_90]
+    highlight_y_90 = CL[closest_index_90]
+
+    closest_index_95 = np.argmin(np.abs(np.array(CL) - 95))
+    highlight_x_95 = BFs[closest_index_95]
+    highlight_y_95 = CL[closest_index_95]
 
 
+    if plot == True: 
+        plt.figure()
+        plt.plot(BFs,CL)
+        plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+        plt.ylabel(r'1-CL (1-sided test)')
+        plt.xscale('log')
+
+        # Add vertical and horizontal lines stopping at the points
+        plt.vlines(x=highlight_x_95, ymin=52, ymax=highlight_y_95, color='deeppink', linestyle='--', label=r'95$\%$')
+        plt.hlines(y=highlight_y_95, xmin=min(BFs), xmax=highlight_x_95, color='deeppink', linestyle='--')
+
+        plt.vlines(x=highlight_x_90, ymin=52, ymax=highlight_y_90, color='purple', linestyle='--', label=r'90$\%$')
+        plt.hlines(y=highlight_y_90, xmin=min(BFs), xmax=highlight_x_90, color='purple', linestyle='--')
+        plt.ylim(52,102)
+        plt.legend()
+        plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+        plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
+
+    print(f"95% BFs = {BFs[closest_index_95]}" )
+    print(f"90% BFs = {BFs[closest_index_90]}" )
+
+    return max_FOM, light_cut, heavy_cut, BFs, CL
     
     
 
@@ -621,7 +663,7 @@ if __name__=="__main__":
     plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
     '''
     
-    plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=1000,nh=1000 , sig_BFs=np.logspace(-9,-5,250), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
+    plot_BF_sensitivitise(interp_eff_dict,eff_err_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nl=500,nh=500 , sig_BFs=np.logspace(-9,-5,500), savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995')
 
 
 

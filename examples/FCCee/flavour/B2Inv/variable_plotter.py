@@ -8,6 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import awkward as ak  # Needed if using awkward arrays
 plt.style.use('fcc.mplstyle')
+from cycler import cycler
 
 
 import config as cfg
@@ -69,6 +70,9 @@ def outlier_removal(values, threshold=7):
     values = values[ np.abs(pull)<=threshold ]
 
     return values
+
+# Define a custom cycle for hatching patterns - to work on #############################################################
+hatch_cycle = cycler(hatch=['///', r'\\\\'])
 
 
 def histogram_settings():
@@ -144,6 +148,7 @@ def plot(varname,
          composition=None,
          signal_bf=1e-6,#used for both signal and bkg
          cut=None,
+         plot_cutline = None,
          nchunks=None,
          stacked=True, 
          weight=True, 
@@ -152,6 +157,7 @@ def plot(varname,
          interactive=False, 
          save=None, 
          bins=50,
+         binwidth_units=None,
          xtitle=None,
          xrange=None, 
          yrange=None,
@@ -185,6 +191,8 @@ def plot(varname,
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     cut : str, optional
         Cut branch varname according to a (valid) UPROOT expression. Default: None
+    plot_cutline: float,optional
+        Plot vertical dashed line at this x value to show prelim cuts if desired. Default: None
     nchunks : int or list of ints, optional
         Provide number of files to use per sample for the plot. Default: None (all files are used)
     stacked : bool, optional
@@ -301,6 +309,8 @@ def plot(varname,
     else:
         nbins=50
 
+    binwidth = (xmax-xmin)/nbins
+
     fig, ax = plt.subplots()
 
     hist_settings,total_colours = histogram_settings()
@@ -355,6 +365,9 @@ def plot(varname,
                 color = tot_colour,#'k',
                 lw = 2,
             )
+    if plot_cutline is not None:
+        ax.axvline(x=plot_cutline, color='k', linestyle='--', lw=1, label=f'Preselection cut')
+
 
     ax.legend(reverse=True)
 
@@ -395,9 +408,9 @@ def plot(varname,
                 ax.set_xlabel(f"{varname} (cut={cut})")
 
     if density:
-        ax.set_ylabel('Density')
+        ax.set_ylabel('Density/a.u.')
     else:
-        ax.set_ylabel('Counts')
+        ax.set_ylabel(f'Expected Counts/{binwidth}{binwidth_units}')
    
     if yrange:
         ax.set_ylim(yrange)

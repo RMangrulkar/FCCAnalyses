@@ -559,6 +559,9 @@ class RDFanalysis():
         # If producing raw_tuples we are done
         if cfg.run_mode == 'no_selection':
             return df2 
+        elif cfg.run_mode == 'no_selection_taus':
+            return df2 
+
 
 
         #Add prelim cuts if running in this mode    
@@ -620,12 +623,3 @@ class RDFanalysis():
             raise ValueError('Please choose a valid RunMode')            
         
 
-    def output():
-        # Get the output branchList from the config YAML file
-        with open(cfg.fccana_opts['yamlPath']) as stream:
-            yaml = safe_load(stream)
-            branchList = yaml[cfg.fccana_opts['outputBranches'][cfg.run_mode]]
-            print(f"----> INFO:")
-            print(f"            Output branch list used = {cfg.fccana_opts['outputBranches'][cfg.run_mode]}")
-
-        return branchList

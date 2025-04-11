@@ -9,14 +9,14 @@ FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','n_lept_cut_failed','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
+run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 #BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
 #BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'n_lept_cut_failed'
+run_mode = 'no_selection_taus'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -49,6 +49,11 @@ processList = {
         "p8_ee_Zmumu_ecm91": {"fraction": 0.05, "chunks": 40},
         "p8_ee_Zee_ecm91": {"fraction": 0.05, "chunks": 40},
     },
+
+    "no_selection_taus": {  # 100,000 events per sample just to look at
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.05, "chunks": 40}, 
+    },
+    
     
 
     "prelim_cuts": {  # ~2G or ~500k events per sample 
@@ -93,6 +98,7 @@ fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
+        "no_selection_taus": os.path.join(FCCAnalysesPath, "outputs/no_selection_taus/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts_500k/"),
         "prelim_cuts_full": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_full_data/"),
         "n_lept_cut_failed":os.path.join(FCCAnalysesPath, "outputs/n_lept_cut_failed/"),
@@ -118,6 +124,7 @@ fccana_opts = {
     "yamlPath":       os.path.join(FCCAnalysesPath, "B2Inv.yaml"),  # Path to the YAML file containing feature names
     "outputBranches": {
         "no_selection":"full-vars",
+        "no_selection_taus":"full-vars",
         "prelim_cuts": "full-vars",
         "prelim_cuts_full": "full-vars",
         "n_lept_cut_failed": "full-vars",

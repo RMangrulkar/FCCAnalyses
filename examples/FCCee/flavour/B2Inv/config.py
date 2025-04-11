@@ -9,14 +9,14 @@ FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
+run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 #BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
 #BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'no_selection_taus'
+run_mode = 'prelims_incltauveto_evtdisp'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -51,7 +51,7 @@ processList = {
     },
 
     "no_selection_taus": {  # 100,000 events per sample just to look at
-        "p8_ee_Ztautau_ecm91": {"fraction": 0.05, "chunks": 40}, 
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.1, "chunks": 40}, 
     },
     
     
@@ -68,6 +68,17 @@ processList = {
         #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},    
     },
 
+    "prelims_incltauveto_evtdisp":{ 
+        "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 0.001, "chunks": 1},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 0.001, "chunks": 1},
+        "p8_ee_Zbb_ecm91": {"fraction": 0.0001, "chunks": 1},
+        "p8_ee_Zcc_ecm91": {"fraction": 0.0001, "chunks": 1},
+        "p8_ee_Zss_ecm91": {"fraction": 0.0001, "chunks": 1},
+        "p8_ee_Zud_ecm91": {"fraction": 0.0001, "chunks": 1},
+        "p8_ee_Ztautau_ecm91": {"fraction": 0.1, "chunks":10}, 
+        #"p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
+        #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100}, 
+    },
 
     "prelim_cuts_full": {  # processing all data
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1, "chunks": 20},
@@ -100,6 +111,7 @@ fccana_opts = {
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
         "no_selection_taus": os.path.join(FCCAnalysesPath, "outputs/no_selection_taus/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts_500k/"),
+        "prelims_incltauveto_evtdisp": os.path.join(FCCAnalysesPath, "outputs/prelims_incltauveto_evtdisp/"),
         "prelim_cuts_full": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_full_data/"),
         "n_lept_cut_failed":os.path.join(FCCAnalysesPath, "outputs/n_lept_cut_failed/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
@@ -126,6 +138,7 @@ fccana_opts = {
         "no_selection":"full-vars",
         "no_selection_taus":"full-vars",
         "prelim_cuts": "full-vars",
+        "prelims_incltauveto_evtdisp": "eventdisplay-vars",
         "prelim_cuts_full": "full-vars",
         "n_lept_cut_failed": "full-vars",
     },

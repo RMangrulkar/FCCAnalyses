@@ -312,6 +312,103 @@ full-vars: # just taken from previous run to ensure nothing missed
   #to allow application of cuts manually
   - EVT_hemisEmin_nLept
 
+eventdisplay-vars:
+  - MCem_p
+  - MCem_px
+  - MCem_py
+  - MCem_pz
+  - MCem_orivtx_x
+  - MCem_orivtx_y
+  - MCem_orivtx_z
+
+  - MCep_p
+  - MCep_px
+  - MCep_py
+  - MCep_pz
+  - MCep_orivtx_x
+  - MCep_orivtx_y
+  - MCep_orivtx_z
+
+  - MCZ_p
+  - MCZ_px
+  - MCZ_py
+  - MCZ_pz
+  - MCZ_orivtx_x
+  - MCZ_orivtx_y
+  - MCZ_orivtx_z
+
+  - MC_PDG
+  - MC_p
+  - MC_px
+  - MC_py
+  - MC_pz
+  - MC_orivtx_x
+  - MC_orivtx_y
+  - MC_orivtx_z
+
+  - EVT_Thrust_x
+  - EVT_Thrust_y
+  - EVT_Thrust_z 
+
+  - Rec_true_PDG
+  - Rec_true_M1
+  - Rec_true_M2
+  - Rec_true_M1ofM1
+  - Rec_true_M2ofM1
+  - Rec_true_M1ofM2
+  - Rec_true_M2ofM2
+  - Rec_true_p
+  - Rec_true_px
+  - Rec_true_py
+  - Rec_true_pz
+  - Rec_true_orivtx_x
+  - Rec_true_orivtx_y
+  - Rec_true_orivtx_z
+
+
+  #other MC varibles have not in Ritwik's script just in case
+  - MC_n
+  - MC_genStatus
+  - MC_M1
+  - MC_M2
+  - MC_D1
+  - MC_D2
+  - MC_D3
+  - MC_D4
+  - MC_e
+  - MC_m
+  - MC_q
+  - MC_eta
+  - MC_phi
+
+  - MCZ_e
+  - MCfinal_PDG
+  - MCfinal_e
+  - MCfinal_m
+  - MCfinal_q
+  - MCfinal_p
+  - MCfinal_px
+  - MCfinal_py
+  - MCfinal_pz
+  - MCfinal_eta
+  - MCfinal_phi
+  - MCfinal_orivtx_x
+  - MCfinal_orivtx_y
+  - MCfinal_orivtx_z
+
+  - MC_PV_x
+  - MC_PV_y
+  - MC_PV_z
+
+  - MC_vtx_x
+  - MC_vtx_y
+  - MC_vtx_z
+  - MC_vtx_n
+  - MC_vtx_indMC
+
+  - Rec_true_q
+
+
 
 baseline-bdth-vars: 
 
@@ -1083,7 +1180,7 @@ stage2-vars:
   - Rec_track_absz0chi2_ave_hemisEmax
 
 
-#max p charge RP variables
+  #max p charge RP variables
   - EVT_hemisEmin_maxpChargedRP_p
   - EVT_hemisEmin_maxpChargedRP_e
   - EVT_hemisEmin_maxpChargedRP_PDG

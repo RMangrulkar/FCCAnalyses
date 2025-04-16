@@ -342,6 +342,25 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995
         plt.title(f'{cfg.titles[decay]}')
         plt.savefig(os.path.join(set_outputpath(save_path),f'frac_eff_error_{decay}_interpN.pdf'))
 
+        # plot  error in efficiency extracted from 
+        plt.figure()
+        plt.imshow(interp_eff_err_dict[decay], origin='lower')
+        plt.xlabel('BDT_lh 1-P(heavy)')
+        plt.ylabel('BDT_lh 1-P(light)')
+        plt.colorbar(label='Error on the efficiency')
+        
+        # Set tick labels for every 10th bin
+        ytick_indices = np.arange(0,len(lsearchinterp), round(len(lsearchinterp)/5))
+        xtick_indices = np.arange(0, len(hsearchinterp), round(len(hsearchinterp)/5))
+        
+        # Use ytick_indices and xtick_indices to set the ticks
+        plt.yticks(ytick_indices, [round(lsearchinterp[i],5) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hsearchinterp[i],5) for i in xtick_indices], rotation=90)
+        plt.title(f'{cfg.titles[decay]}')
+        plt.savefig(os.path.join(set_outputpath(save_path),f'eff_error_{decay}_interpN.pdf'))
+
+            
+
             
         if slice == True:
             i=6
@@ -353,7 +372,7 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995
 
         
                 plt.figure()
-                plt.plot(hsearch,eff_dict[decay][round(nlh*i/10),:], label=r'raw efficiency slice 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10)],5)}')
+                plt.errorbar(hsearch,eff_dict[decay][round(nlh*i/10),:], err_dict[decay][round(nlh*i/10),:],label=r'raw efficiency slice 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10)],5)}')
                 eff_interp_slice = interp_eff_dict[decay][round((nlh*i/10)*10),:]
                 plt.plot(hsearchinterp,eff_interp_slice, label=r'interpolated efficiency slice 1-P(light) $>$'+f'{round(lsearchinterp[round((nlh*i/10)*10)],5)}')
                 plt.xlabel('BDT_lh 1-P(heavy)')
@@ -363,7 +382,7 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995
 
 
                 plt.figure()
-                plt.plot(lsearch,eff_dict[decay][:,round(nlh*i/10)], label=r'raw efficiency slice 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10)],5)}')
+                plt.errorbar(lsearch,eff_dict[decay][:,round(nlh*i/10)], err_dict[decay][:,round(nlh*i/10)], label=r'raw efficiency slice 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10)],5)}')
                 eff_interp_slice = interp_eff_dict[decay][:, round((nlh*i/10)*10)]
                 plt.plot(lsearchinterp,eff_interp_slice, label=r'interpolated efficiency slice 1-P(heavy) $>$'+f'{round(hsearchinterp[round((nlh*i/10)*10)],5)}')
                 plt.xlabel('BDT_lh 1-P(light)')
@@ -390,9 +409,30 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995
                 plt.legend()
                 plt.savefig(os.path.join(set_outputpath(save_path),f'frac_eff_error_{decay}_light.pdf'))
 
+                plt.figure()
+                plt.plot(hsearch,err_dict[decay][round(nlh*i/10),:], label=r'raw error slice 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10)],5)}')
+                err_interp_slice = interp_eff_err_dict[decay][round((nlh*i/10)*10),:] 
+                plt.plot(hsearchinterp,err_interp_slice, label=r'interpolated error slice  1-P(light) $>$'+f'{round(lsearchinterp[round((nlh*i/10)*10)],5)}')
+                plt.xlabel('BDT_lh 1-P(heavy)')
+                plt.ylabel(r'Error in the efficiency')
+                plt.legend()
+                plt.savefig(os.path.join(set_outputpath(save_path),f'eff_error_{decay}_heavy.pdf'))
+
+
+                plt.figure()
+                plt.plot(lsearch,err_dict[decay][:,round(nlh*i/10)], label=r'raw error slice 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10)],5)}')
+                err_interp_slice = interp_eff_err_dict[decay][:, round((nlh*i/10)*10)]
+                plt.plot(lsearchinterp,err_interp_slice, label=r'interpolated error slice 1-P(heavy) $>$'+f'{round(hsearchinterp[round((nlh*i/10)*10)],5)}')
+                plt.xlabel('BDT_lh 1-P(light)')
+                plt.ylabel(r'Error in the efficiency')
+                plt.legend()
+                plt.savefig(os.path.join(set_outputpath(save_path),f'eff_error_{decay}_light.pdf'))
+
+
+
 
   
-def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=1000 , sig_BF=1e-7):
+def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=1000, sig_BF=1e-7,incl_ZqqBFerror = True):
     
     lsearch = np.linspace(*lrange_plot,nlh) #need to be the same lrange and hrange as efficiency map was generated with 
     hsearch = np.linspace(*hrange_plot,nlh)
@@ -403,24 +443,120 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
 
     S_arr = np.zeros((len(lsearch), len(hsearch)))
     B_arr = np.zeros((len(lsearch), len(hsearch)))
+    S_error_arr = np.zeros((len(lsearch), len(hsearch)))
+    B_error_arr = np.zeros((len(lsearch), len(hsearch)))
     FOM = np.zeros((len(lsearch), len(hsearch)))
+    err_FOM = np.zeros((len(lsearch), len(hsearch)))
+    full_err_FOM = np.zeros((len(lsearch), len(hsearch)))
+    full_S_error_arr = np.zeros((len(lsearch), len(hsearch)))
+    full_B_error_arr = np.zeros((len(lsearch), len(hsearch)))
+
 
     print('Calculating S and B')
+    
+    ''' 
+    # alternative method using post bdtlh efficiency finder script  probably less clear to follow but gives same reuslts :)
+    for l in np.arange(0,len(lsearch), 1):
+        for h in np.arange(0,len(hsearch), 1):
 
+            lh_interp_eff_dict = {sample: interp_eff_dict[sample][l,h] for sample in interp_eff_dict.keys()}
+            lh_interp_eff_err_dict = {sample: interp_eff_err_dict[sample][l,h] for sample in interp_eff_err_dict.keys()}
+ 
+            lh_n_expect_dict, lh_n_err_dict, lh_BFZbb_err_dict_components = eff_finder.get_n_expected(lh_interp_eff_dict, lh_interp_eff_err_dict, signal_bf=sig_BF)
+
+            S = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["combined_signal"]])
+            B = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["hadronic_background"]])
+            
+            S_arr[l,h]=S
+            B_arr[l,h]=B
+
+            var_S = sum([lh_n_err_dict[sample]**2 for sample in cfg.sample_allocations["combined_signal"]])
+            var_B = sum([lh_n_err_dict[sample]**2 for sample in cfg.sample_allocations["hadronic_background"]])
+            
+            S_error_arr[l,h]=np.sqrt(var_S)
+            B_error_arr[l,h]=np.sqrt(var_B)
+
+            if S+B>0:
+                FOM[l,h] = S/np.sqrt(S+B)
+                #also calculate error in FOM itself from S,B error
+                err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*var_S + S**2*var_B))
+            else:
+                FOM[l,h] = 0
+                err_FOM[l,h] = 0
+            
+            
+            if incl_ZqqBFerror == True:
+
+                var_S_BF = lh_BFZbb_err_dict_components["combined_signal"]**2
+                var_B_BF = lh_BFZbb_err_dict_components["hadronic_background"]**2
+
+                full_var_S = var_S + var_S_BF
+                full_var_B = var_B + var_B_BF
+
+                full_S_error_arr[l,h]=np.sqrt(full_var_S)
+                full_B_error_arr[l,h]=np.sqrt(full_var_B)
+
+                if S+B>0:
+                    #also calculate error in FOM itself from S,B error
+                    full_err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*full_var_S + S**2*full_var_B))
+                else:
+                    FOM[l,h] = 0
+                    full_err_FOM[l,h] = 0
+
+
+    '''#Alternative method without using eff_finder script as cross check - proabably easier to follow
+    
     #defining constants needed
     N_z = cfg.N_z
     k = 2 * N_z * cfg.branching_fractions["p8_ee_Zbb_ecm91"][0] * sig_BF # common part of signal expectation
     
     for l in np.arange(0,len(lsearch), 1):
-        for h in np.arange(0,len(hsearch), 1): 
+        for h in np.arange(0,len(hsearch), 1):
+            
             S = k * sum([cfg.prod_frac[decay][0]*interp_eff_dict[decay][l,h] for decay in cfg.sample_allocations["combined_signal"]])
             B = N_z* sum([cfg.branching_fractions[decay][0]*interp_eff_dict[decay][l,h] for decay in cfg.sample_allocations["hadronic_background"]])
             S_arr[l,h]=S
             B_arr[l,h]=B
+
+            #also calculating S and B errors
+            var_S = k**2 * sum([(cfg.prod_frac[decay][0]*interp_eff_err_dict[decay][l,h])**2 for decay in cfg.sample_allocations["combined_signal"]])
+            var_B = N_z**2 * sum([(cfg.branching_fractions[decay][0]*interp_eff_err_dict[decay][l,h])**2 for decay in cfg.sample_allocations["hadronic_background"]])
+           
+            sigma_S = np.sqrt(var_S)
+            sigma_B = np.sqrt(var_B)
+            
+            S_error_arr[l,h]=sigma_S
+            B_error_arr[l,h]=sigma_B
+
             if S+B>0:
                 FOM[l,h] = S/np.sqrt(S+B)
+                #also calculate error in FOM itself from S,B error
+                err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*sigma_S**2 + S**2*sigma_B**2))
             else:
                 FOM[l,h] = 0
+                err_FOM[l,h] = 0
+
+            
+            if incl_ZqqBFerror == True:
+
+                full_var_S = var_S + ((S/cfg.branching_fractions["p8_ee_Zbb_ecm91"][0])*cfg.branching_fractions["p8_ee_Zbb_ecm91"][1])**2
+                full_var_B = var_B + N_z**2 * sum([(cfg.branching_fractions[decay][1]*interp_eff_dict[decay][l,h])**2 for decay in cfg.sample_allocations["hadronic_background"]])
+            
+
+                full_sigma_S = np.sqrt(full_var_S)
+                full_sigma_B = np.sqrt(full_var_B)
+
+                full_S_error_arr[l,h]=full_sigma_S
+                full_B_error_arr[l,h]=full_sigma_B
+
+                if S+B>0:
+                    #also calculate error in FOM itself from S,B error
+                    full_err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*full_sigma_S**2 + S**2*full_sigma_B**2))
+                else:
+                    FOM[l,h] = 0
+                    full_err_FOM[l,h] = 0
+    
+
 
     ## finding maximum so can plot slices
     max_sigma =FOM.max()
@@ -434,11 +570,18 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
     
     # Print the table
     print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
-     
-    return FOM, S_arr, B_arr, lsearch, hsearch, sig_BF
+
+    #print(S_error_arr)
+
+    #print(B_error_arr)
+    
+    if incl_ZqqBFerror == True:
+        return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, full_S_error_arr, full_B_error_arr, full_err_FOM    
+    else:
+        return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF
 
 
-def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_plots = False, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/'):
+def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sigBF,vmax=5,SB_plots = False, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/'):
     
     #set output path
     set_outputpath(save_path)
@@ -469,7 +612,7 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
     h = hsearch[indices[1]]
     
     plt.figure()
-    plt.plot(hsearch,FOM[indices[0],:], label=r'FOM slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
+    plt.errorbar(hsearch,FOM[indices[0],:], err_FOM[indices[0],:], label=r'FOM slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
     plt.xlabel('BDT_lh 1-P(heavy)')
     plt.ylabel(r'$S/\sqrt{S+B}$')
     plt.legend()
@@ -477,7 +620,7 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
     plt.savefig(os.path.join(save_path,f'FOM_slice_heavy.pdf'))
 
     plt.figure()
-    plt.plot(lsearch,FOM[:,indices[1]], label=r'FOM slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
+    plt.plot(lsearch,FOM[:,indices[1]],err_FOM[:,indices[1]], label=r'FOM slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
     plt.xlabel('BDT_lh 1-P(light)')
     plt.ylabel(r'$S/\sqrt{S+B}$')
     plt.legend()
@@ -489,7 +632,7 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
     if SB_plots == True:
         #plot S
         plt.figure()
-        plt.plot(lsearch,S_arr[:,indices[1]], label=r'S slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
+        plt.errorbar(lsearch,S_arr[:,indices[1]],S_error_arr[:,indices[1]], label=r'S slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
         plt.xlabel('BDT_lh 1-P(light)')
         plt.ylabel(r'S')
         plt.legend()
@@ -497,7 +640,7 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
         plt.savefig(os.path.join(save_path,f'S_slice_light.pdf'))
 
         plt.figure()
-        plt.plot(hsearch,S_arr[indices[0],:], label=r'S slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
+        plt.errorbar(hsearch,S_arr[indices[0],:],S_error_arr[indices[0],:], label=r'S slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel(r'S')
         plt.legend()
@@ -506,32 +649,41 @@ def plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sigBF,vmax=5,SB_pl
         
         #plot B
         plt.figure()
-        plt.plot(lsearch,B_arr[:,indices[1]], label=r'B slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
+        plt.errorbar(lsearch,B_arr[:,indices[1]],B_error_arr[:,indices[1]], label=r'B slice at optimum cut in 1-P(heavy) $>$'+f'{round(h,5)}')
         plt.xlabel('BDT_lh 1-P(light)')
         plt.ylabel(r'B')
         plt.legend()
         plt.savefig(os.path.join(save_path,f'B_slice_light.pdf'))
 
         plt.figure()
-        plt.plot(hsearch,B_arr[indices[0],:], label=r'B slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
+        plt.plot(hsearch,B_arr[indices[0],:],B_error_arr[indices[0],:], label=r'B slice at optimum cut in 1-P(light) $>$'+f'{round(l,5)}')
         plt.xlabel('BDT_lh 1-P(heavy)')
         plt.ylabel(r'B')
         plt.legend()
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
-def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250), plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
+def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
     
     #create dictionaries to store results
-    max_FOM=np.zeros(len(sig_BFs))
+    max_FOM = np.zeros(len(sig_BFs))
+    max_FOM_err = np.zeros(len(sig_BFs))
     BFs=np.zeros(len(sig_BFs))
     light_cut=np.zeros(len(sig_BFs))
     heavy_cut=np.zeros(len(sig_BFs))
+    S_exp = np.zeros(len(sig_BFs))
+    B_exp = np.zeros(len(sig_BFs))
+    S_err = np.zeros(len(sig_BFs))
+    B_err = np.zeros(len(sig_BFs))
+    full_S_err= np.zeros(len(sig_BFs))
+    full_B_err= np.zeros(len(sig_BFs))
+
+
     i=0
 
     for BF in sig_BFs:
         
-        FOM, S_arr, B_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=BF)
+        FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, full_S_error_arr, full_B_error_arr, full_err_FOM   = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=BF, incl_ZqqBFerror=True)
 
         ## finding maximum so can plot slices
         indices = np.unravel_index(np.argmax(FOM), np.shape(FOM)) #nb argmax returns indices of the max value
@@ -539,9 +691,19 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         h = hsearch[indices[1]]
 
         max_FOM[i] = FOM.max()
+        max_FOM_err[i] = err_FOM[indices[0],indices[1]]
         light_cut[i] = l
         heavy_cut[i] = h    
         BFs[i] = sig_BF
+        S_exp[i] = S_arr[indices[0],indices[1]]
+        B_exp[i] = B_arr[indices[0],indices[1]]
+        S_err[i] = S_error_arr[indices[0],indices[1]]
+        B_err[i] = B_error_arr[indices[0],indices[1]]
+        
+        if incl_ZqqBFerror == True:
+            full_S_err[i] = full_S_error_arr[indices[0],indices[1]]
+            full_B_err[i] = full_B_error_arr[indices[0],indices[1]]
+
         i+=1
 
 
@@ -558,35 +720,67 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     print(f"5 sigma BFs = {BFs[closest_index_5]}" )
     print(f"3 sigma BFs = {BFs[closest_index_3]}" )
 
+    #calulating S/sqrt(S+B+varS+varB)
+    significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+S_err**2+B_err**2)
+    inclerr_closest_index_5 = np.argmin(np.abs(np.array(significance_incl_error) - 5))
+    inclerr_highlight_x_5 = BFs[inclerr_closest_index_5]
+    inclerr_highlight_y_5 = significance_incl_error[inclerr_closest_index_5]
+
+    inclerr_closest_index_3 = np.argmin(np.abs(np.array(significance_incl_error) - 3))
+    inclerr_highlight_x_3 = BFs[inclerr_closest_index_3]
+    inclerr_highlight_y_3 = significance_incl_error[inclerr_closest_index_3]
+
+    print(f"5 sigma BFs incl syst error = {BFs[inclerr_closest_index_5]}" )
+    print(f"3 sigma BFs incl syst error  = {BFs[inclerr_closest_index_3]}" )
+
+
+
 
     if plot==True:
 
-        #plotting
+        #plotting S/sqrt(S+B) line
         plt.figure()
-        plt.plot(BFs,max_FOM)
+        plt.plot(BFs,max_FOM, label = r'$S/\sqrt{S+B}$')
+        plt.fill_between(BFs, max_FOM-max_FOM_err, max_FOM+max_FOM_err,alpha=0.55)
+        plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        if incl_ZqqBFerror == True:
+            significance_incl_full_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
+            plt.plot(BFs,significance_incl_full_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
+        
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-        plt.ylabel(r'$S/\sqrt{S+B}$')
+        plt.ylabel(r'Significance')
         plt.xscale('log')
         plt.ylim(0,8)
 
         # Add vertical and horizontal lines stopping at the points
         plt.vlines(x=highlight_x_5, ymin=0, ymax=highlight_y_5, color='deeppink', linestyle='--', label=r'5$\sigma$')
-        plt.hlines(y=highlight_y_5, xmin=min(BFs), xmax=highlight_x_5, color='deeppink', linestyle='--')
+        plt.vlines(x=inclerr_highlight_x_5, ymin=0, ymax=inclerr_highlight_y_5, color='deeppink', linestyle='--')
+        #plt.hlines(y=highlight_y_5, xmin=min(BFs), xmax=inclerr_highlight_x_5, color='deeppink', linestyle='--')
 
         plt.vlines(x=highlight_x_3, ymin=0, ymax=highlight_y_3, color='purple', linestyle='--', label=r'3$\sigma$')
-        plt.hlines(y=highlight_y_3, xmin=min(BFs), xmax=highlight_x_3, color='purple', linestyle='--')
+        plt.vlines(x=inclerr_highlight_x_3, ymin=0, ymax=inclerr_highlight_y_3, color='purple', linestyle='--')
+        #plt.hlines(y=highlight_y_3, xmin=min(BFs), xmax=inclerr_highlight_x_3, color='purple', linestyle='--')
+
+        #Add equivalent lines for with error
 
         plt.legend()
         plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-        plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
+        if incl_ZqqBFerror == True:
+            plt.savefig(os.path.join(savepath,f'FOMvsBF_inclfullerr.pdf'))
+        else:
+            plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
 
 
     
     #convert sigma to CL - for now one sided
 
     CL = sigma_to_percentage(max_FOM)
+    CL_incl_error = sigma_to_percentage(significance_incl_error)
+    if incl_ZqqBFerror == True:
+        CL_incl_full_error = sigma_to_percentage(significance_incl_full_error)
 
-    #find 90 sigma and 95 % points
+
+    #find 90 % and 95 % points
 
     closest_index_90 = np.argmin(np.abs(np.array(CL) - 90))
     highlight_x_90 = BFs[closest_index_90]
@@ -597,26 +791,48 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     highlight_y_95 = CL[closest_index_95]
 
 
+    #repeat for incl error
+    inclerr_closest_index_90 = np.argmin(np.abs(np.array(CL_incl_error) - 90))
+    inclerr_highlight_x_90 = BFs[inclerr_closest_index_90]
+    inclerr_highlight_y_90 = CL_incl_error[inclerr_closest_index_90]
+
+    inclerr_closest_index_95 = np.argmin(np.abs(np.array(CL_incl_error) - 95))
+    inclerr_highlight_x_95 = BFs[inclerr_closest_index_95]
+    inclerr_highlight_y_95 = CL_incl_error[inclerr_closest_index_95]
+
+
     if plot == True: 
         plt.figure()
-        plt.plot(BFs,CL)
+        plt.plot(BFs,CL,label='$S/\sqrt{S+B}$' )
+        plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        if incl_ZqqBFerror == True:
+            plt.plot(BFs,CL_incl_full_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
+    
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'1-CL (1-sided test)')
         plt.xscale('log')
 
         # Add vertical and horizontal lines stopping at the points
         plt.vlines(x=highlight_x_95, ymin=52, ymax=highlight_y_95, color='deeppink', linestyle='--', label=r'95$\%$')
-        plt.hlines(y=highlight_y_95, xmin=min(BFs), xmax=highlight_x_95, color='deeppink', linestyle='--')
+        plt.vlines(x=inclerr_highlight_x_95, ymin=52, ymax=inclerr_highlight_y_95, color='deeppink', linestyle='--')
+        #plt.hlines(y=highlight_y_95, xmin=min(BFs), xmax=inclerr_highlight_x_95, color='deeppink', linestyle='--')
 
         plt.vlines(x=highlight_x_90, ymin=52, ymax=highlight_y_90, color='purple', linestyle='--', label=r'90$\%$')
-        plt.hlines(y=highlight_y_90, xmin=min(BFs), xmax=highlight_x_90, color='purple', linestyle='--')
+        plt.vlines(x=inclerr_highlight_x_90, ymin=52, ymax=inclerr_highlight_y_90, color='purple', linestyle='--')
+        #plt.hlines(y=highlight_y_90, xmin=min(BFs), xmax=inclerr_highlight_x_90, color='purple', linestyle='--')
         plt.ylim(52,102)
         plt.legend()
         plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-        plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
+        if incl_ZqqBFerror == True:
+            plt.savefig(os.path.join(savepath,f'CLvsBF_inclfullerr.pdf'))
+        else:
+            plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
 
     print(f"95% BFs = {BFs[closest_index_95]}" )
     print(f"90% BFs = {BFs[closest_index_90]}" )
+
+    print(f"95% BFs incl error = {BFs[inclerr_closest_index_95]}" )
+    print(f"90% BFs incl error = {BFs[inclerr_closest_index_90]}" )
 
     return max_FOM, light_cut, heavy_cut, BFs, CL
     
@@ -660,11 +876,10 @@ if __name__=="__main__":
         N_dict = dill.load(dill_file)
     
     
+    plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/'
     #plot_interpolted_effs(interp_N_dict, N_dict ,nlh=20, slice=True, save_path=plotpath)
-    plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation'
+    #FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BF=1e-7)
+    #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
     
-    #FOM, S_arr, B_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BF=1e-7)
-    #plot_2d_optimisation(FOM, S_arr, B_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
-    
-    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250), plot=True,savepath = plotpath)
+    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,200), incl_ZqqBFerror=True, plot=True,savepath = plotpath)
     

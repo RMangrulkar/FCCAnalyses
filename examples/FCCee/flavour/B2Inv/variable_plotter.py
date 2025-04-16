@@ -408,7 +408,7 @@ def plot(varname,
                 ax.set_xlabel(f"{varname} (cut={cut})")
 
     if density:
-        ax.set_ylabel('Density/a.u.')
+        ax.set_ylabel('Density')
     else:
         ax.set_ylabel(f'Expected Counts/{binwidth}{binwidth_units}')
    

@@ -57,35 +57,53 @@ def get_total_eff_post_bdt(df,
 
 
 
-def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6):
-    print('Note: error on n_expected is currently only from efficiency (assuming that dominant)')
+def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6): #set up to take efficiencies which is a disctionary of floats
+    #print('Note: error on n_expected is currently only from efficiency (assuming that dominant)')
     
     # Dict to store output
-    n_expect = {}
-    n_err={}
+    n_expect_dict = {}
+    n_err_dict={}
+    BFZbb_err_dict={}
+    BFZbb_err_dict_components={}
 
     
     # COMPUTING EXPECTATION
     for sample in efficiencies.keys():
-        bfs_val = cfg.branching_fractions[sample][0]
+        bfs_val = cfg.branching_fractions[sample][0] #1 for signal
+        bfs_err = cfg.branching_fractions[sample][1] #0 for signal modes
         eff_val = efficiencies[sample]
         eff_err_val = efficiencies_err[sample]
+        N_z = cfg.N_z
         if eff_val >0:
             frac_eff_err = eff_err_val/eff_val # for now assuming that errors from efficiency are the ones that dominate
         else:
             frac_eff_err = 0
 
         
-        num = 6e12*bfs_val*eff_val
+        num = N_z*bfs_val*eff_val
 
         if sample in cfg.sample_allocations['combined_signal']:
             num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
 
         num_err = num*frac_eff_err # nb. for now just includes the efficiency error
 
-        n_expect[sample] = num
-        n_err[sample] = num_err
+        BFZbb_err = num*bfs_err/bfs_val #0 for signal
 
-    return n_expect, n_err
+        if sample in cfg.sample_allocations['combined_signal']:
+            BFZbb_err = num * cfg.branching_fractions['p8_ee_Zbb_ecm91'][1]/cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]
+
+        n_expect_dict[sample] = num
+        n_err_dict[sample] = num_err
+        BFZbb_err_dict[sample] = BFZbb_err
+
+        #due to different error formula for signal and background for BF error (as in signal Zbb common to both terms whilst for B Zqq different for each term)
+        # make BF error per component (ie. S and B)
+
+    BFZbb_err_dict_components['combined_signal'] = sum([BFZbb_err_dict[sample] for sample in cfg.sample_allocations['combined_signal']])
+    BFZbb_err_dict_components['hadronic_background'] = np.sqrt(sum([BFZbb_err_dict[sample]**2 for sample in cfg.sample_allocations['hadronic_background']]))
+
+
+
+    return n_expect_dict, n_err_dict, BFZbb_err_dict_components
 
         

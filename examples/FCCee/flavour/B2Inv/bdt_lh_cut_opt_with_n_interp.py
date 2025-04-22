@@ -875,16 +875,15 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
     for decay in samples:
         
         if nMC_plots_path is not None:
+            plt.figure()
             h=plt.hist2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins, cmap=plt.cm.Blues,vmin=0,density=False,range = [[h_cut, 1], [l_cut, 1]])
             plt.ylabel('1-P(light)')
             plt.xlabel('1-P(heavy)') 
             plt.title(cfg.titles[decay])
             plt.colorbar(h[3])
-            plt.show()
             N_dict_MC[decay] =  h[0] 
-            plt.savefig(set_outputpath(os.path.join(nMC_plots_path,f'NMC_remaining_a_BF={signal_BF}_optcut.pdf')))
-
-            
+            plt.savefig(os.path.join(set_outputpath(nMC_plots_path),f'NMC_remaining_{decay}_at_BF={signal_BF}_optcut.pdf'))
+    
         else:
             h=np.histogram2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins,density=False,range = [[h_cut, 1], [l_cut, 1]])
             N_dict_MC[decay] =  h[0] #take counts per bin rather than bin edges
@@ -896,7 +895,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
     if final_plot_path:
         if histbins==(2,2):
-        
+            plt.figure()
             tot_arr=[0,0,0,0]
             for allocation in cfg.sample_allocations:
                 i=0
@@ -948,8 +947,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
             plt.title(r'Signal $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles)$=$ '+ f'{signal_BF}')
             plt.legend()
             plt.ylabel('Expected Counts')
-            plt.show()
-            plt.savefig(set_outputpath(os.path.join(final_plot_path,f'final_binning_plot_BF={signal_BF}.pdf')))
+            plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}.pdf'))
 
         else:
             print('Warning: currently only set up to plot 2x2 binning')
@@ -1000,5 +998,5 @@ if __name__=="__main__":
     #FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BF=1e-7)
     #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
     
-    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,200), incl_ZqqBFerror=True, plot=True,savepath = plotpath)
-    make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-6, histbins=(2,2), nMC_plots_path='{plotpath}final_binning/1e-6/', final_plot_path = f'{plotpath}final_binning/1e-6/')
+    #plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,200), incl_ZqqBFerror=True, plot=True,savepath = plotpath)
+    make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-7, histbins=(2,2), nMC_plots_path=f'{plotpath}final_binning/1e-7/', final_plot_path = f'{plotpath}final_binning/1e-7/')

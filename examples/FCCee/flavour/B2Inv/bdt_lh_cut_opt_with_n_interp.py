@@ -35,6 +35,9 @@ def sigma_to_percentage(sigma):
     percentage = norm.cdf(sigma) * 100
     return percentage
 
+def flatten_list(nested_list):
+    return [item for sublist in nested_list for item in sublist]
+
 
 #plan: create and save map of N and N interpolated
 #can then use to calculate efficiency and error properly!
@@ -462,7 +465,7 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
             lh_interp_eff_dict = {sample: interp_eff_dict[sample][l,h] for sample in interp_eff_dict.keys()}
             lh_interp_eff_err_dict = {sample: interp_eff_err_dict[sample][l,h] for sample in interp_eff_err_dict.keys()}
  
-            lh_n_expect_dict, lh_n_err_dict, lh_BFZbb_err_dict_components = eff_finder.get_n_expected(lh_interp_eff_dict, lh_interp_eff_err_dict, signal_bf=sig_BF)
+            lh_n_expect_dict, lh_n_err_dict, lh_BFZbb_err_dict_components = eff_finder.get_n_expected(lh_interp_eff_dict, lh_interp_eff_err_dict, signal_bf=sig_BF,  BFZbb_err=True)
 
             S = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["combined_signal"]])
             B = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["hadronic_background"]])
@@ -742,11 +745,11 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.figure()
         plt.plot(BFs,max_FOM, label = r'$S/\sqrt{S+B}$')
         plt.fill_between(BFs, max_FOM-max_FOM_err, max_FOM+max_FOM_err,alpha=0.55)
-        plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         if incl_ZqqBFerror == True:
-            significance_incl_full_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
-            plt.plot(BFs,significance_incl_full_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
-        
+            significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
+            plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
+        else:
+            plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'Significance')
         plt.xscale('log')
@@ -775,9 +778,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     #convert sigma to CL - for now one sided
 
     CL = sigma_to_percentage(max_FOM)
-    CL_incl_error = sigma_to_percentage(significance_incl_error)
-    if incl_ZqqBFerror == True:
-        CL_incl_full_error = sigma_to_percentage(significance_incl_full_error)
+    CL_incl_error = sigma_to_percentage(significance_incl_error) # this dependent on if have full error or not above
 
 
     #find 90 % and 95 % points
@@ -804,10 +805,10 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     if plot == True: 
         plt.figure()
         plt.plot(BFs,CL,label='$S/\sqrt{S+B}$' )
-        plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         if incl_ZqqBFerror == True:
-            plt.plot(BFs,CL_incl_full_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
-    
+            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
+        else:
+            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'1-CL (1-sided test)')
         plt.xscale('log')
@@ -837,13 +838,130 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     return max_FOM, light_cut, heavy_cut, BFs, CL
     
 
+def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], nMC_plots_path=None, final_plot_path = None):
 
+    def histogram_settings():
+        hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
+        total_color = { allocation: {} for allocation in cfg.sample_allocations }
+        for allocation in cfg.sample_allocations:
+            samples = cfg.sample_allocations[allocation]
+            if allocation=='combined_signal':
+                hist_settings[allocation]['edgecolor'] =plt.cm.Blues( np.linspace(0, 1, 6)[3:-1] ) 
+                hist_settings[allocation]['facecolor'] = ['none','none']
+                hist_settings[allocation]['hatch'] = ['////',r'\\\\']
+            elif allocation=='hadronic_background':
+                hist_settings[allocation]['facecolor'] = plt.cm.Reds_r( np.linspace(0, 1, 6)[1:-1] )
+                hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
+                hist_settings[allocation]['hatch'] =  [None,None,None,None] 
+        return hist_settings
+    
+    print('--> Finding optimum cut')
+    # find optimum cut
+    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=500 , sig_BF=signal_BF, incl_ZqqBFerror = False)
+    indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
+    l_cut = lsearch[indices[0]]
+    h_cut = hsearch[indices[1]]
+
+    #cut df on optimal BDT cuts
+    cut_data = df.copy().query(f'(P_not_light>{l_cut})&(P_not_heavy>{h_cut})')
+
+    # define samples want from components input 
+    samples = flatten_list([cfg.sample_allocations[component] for component in components])
+
+    print('--> Finding number of events per bin')
+    # get number of events per bin in MC using np.2d histogram
+    N_dict_MC={}
+    
+    for decay in samples:
+        
+        if nMC_plots_path is not None:
+            h=plt.hist2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins, cmap=plt.cm.Blues,vmin=0,density=False,range = [[h_cut, 1], [l_cut, 1]])
+            plt.ylabel('1-P(light)')
+            plt.xlabel('1-P(heavy)') 
+            plt.title(cfg.titles[decay])
+            plt.colorbar(h[3])
+            plt.show()
+            N_dict_MC[decay] =  h[0] 
+            plt.savefig(set_outputpath(os.path.join(nMC_plots_path,f'NMC_remaining_a_BF={signal_BF}_optcut.pdf')))
+
+            
+        else:
+            h=np.histogram2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins,density=False,range = [[h_cut, 1], [l_cut, 1]])
+            N_dict_MC[decay] =  h[0] #take counts per bin rather than bin edges
+
+    #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
+    efficienies, efficiencies_err, N_dict_MC = eff_finder.get_eff_from_nMC_list(N_dict_MC)
+    per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err=eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
+    S, B, S_err, B_err = eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
+
+    if final_plot_path:
+        if histbins==(2,2):
+        
+            tot_arr=[0,0,0,0]
+            for allocation in cfg.sample_allocations:
+                i=0
+        
+                if allocation not in components:
+                    continue
+                
+                for sample in cfg.sample_allocations[allocation]:
+                    h = per_sample_n_expect_dict[sample]
+                    x = np.array([['Baseline','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']])
+                    hist_opts = histogram_settings()[allocation]
+                    plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                    i+=1
+                    tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
+            
+            # sorting ticks so at edges but name still at centre
+            bars = plt.gca().patches
+            # sets major ticks so that name but no visible tick mark
+            plt.tick_params(axis='x', which='major', length=0)  # hide tick marks at centres
+            # Edge ticks (visible, no labels)
+            edges = [b.get_x() for b in bars] + \
+                    [b.get_x() + b.get_width() for b in bars]
+            plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
+            plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
+    
+            #add systematic error to B - error bar
+            
+            plt.errorbar([x[1,0],x[0,0],x[0,1],x[1,1]],[B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]],label='Systematic error on B',  fmt='None', ecolor='black',lw=1.5)
+            '''
+            #add systematic error to B - lines instead of error bar
+            # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
+            for i, (x_label, b_val, b_err) in enumerate(zip([x[1,0], x[0,0], x[0,1], x[1,1]], 
+                                                           [B[1,0], B[0,0], B[0,1], B[1,1]], 
+                                                           [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]])):
+                # Convert x_label to a numerical index
+                x_val = i 
+            
+                # Top and bottom of the error bar
+                top_error = b_val + b_err
+                bottom_error = b_val - b_err
+            
+                # Draw horizontal lines at the top and bottom of the error bars
+                plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)                                       
+                if i ==3:
+                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2,label='Systematic error band on B')
+                else:
+                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)
+            '''
+            plt.title(r'Signal $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles)$=$ '+ f'{signal_BF}')
+            plt.legend()
+            plt.ylabel('Expected Counts')
+            plt.show()
+            plt.savefig(set_outputpath(os.path.join(final_plot_path,f'final_binning_plot_BF={signal_BF}.pdf')))
+
+        else:
+            print('Warning: currently only set up to plot 2x2 binning')
+
+    return per_sample_n_expect_dict, S, B, S_err, B_err
+    
 
 
 
 if __name__=="__main__":
 
-    '''
+    
     #Load dataframe with bdtlh version applied
     data={}
     dir = cfg.fccana_opts["outputDir"]["prelim_cuts_full"]
@@ -862,7 +980,8 @@ if __name__=="__main__":
 
     #add any extra cuts need here###########################
     full_data = full_data.query('EVT_hemisEmax_n>10') #veto on taus
-
+    
+    '''
     N_dict, interp_N_dict, s_values_dict, eff_dict, err_dict = create_N_map(full_data,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, kx=2, ky=2, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/')
     plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice=True, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/')
     '''
@@ -882,4 +1001,4 @@ if __name__=="__main__":
     #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
     
     plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,200), incl_ZqqBFerror=True, plot=True,savepath = plotpath)
-    
+    make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-6, histbins=(2,2), nMC_plots_path='{plotpath}final_binning/1e-6/', final_plot_path = f'{plotpath}final_binning/1e-6/')

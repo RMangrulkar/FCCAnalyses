@@ -667,6 +667,202 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
+def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], nMC_plots_path=None, final_plot_path = None):
+
+    def histogram_settings():
+        hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
+        total_color = { allocation: {} for allocation in cfg.sample_allocations }
+        for allocation in cfg.sample_allocations:
+            samples = cfg.sample_allocations[allocation]
+            if allocation=='combined_signal':
+                hist_settings[allocation]['edgecolor'] =plt.cm.Blues( np.linspace(0, 1, 6)[3:-1] ) 
+                hist_settings[allocation]['facecolor'] = ['none','none']
+                hist_settings[allocation]['hatch'] = ['////',r'\\\\']
+            elif allocation=='hadronic_background':
+                hist_settings[allocation]['facecolor'] = plt.cm.Reds_r( np.linspace(0, 1, 6)[1:-1] )
+                hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
+                hist_settings[allocation]['hatch'] =  [None,None,None,None] 
+        return hist_settings
+    
+    print('--> Finding optimum cut')
+    # find optimum cut
+    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=500 , sig_BF=signal_BF, incl_ZqqBFerror = False)
+    indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
+    l_cut = lsearch[indices[0]]
+    h_cut = hsearch[indices[1]]
+
+    #cut df on optimal BDT cuts
+    cut_data = df.copy().query(f'(P_not_light>{l_cut})&(P_not_heavy>{h_cut})')
+
+    # define samples want from components input 
+    samples = flatten_list([cfg.sample_allocations[component] for component in components])
+
+    print('--> Finding number of events per bin')
+    # get number of events per bin in MC using np.2d histogram
+    N_dict_MC={}
+    
+    for decay in samples:
+        
+        if nMC_plots_path is not None:
+            plt.figure()
+            h=plt.hist2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins, cmap=plt.cm.Blues,vmin=0,density=False,range = [[h_cut, 1], [l_cut, 1]])
+            plt.ylabel('1-P(light)')
+            plt.xlabel('1-P(heavy)') 
+            plt.title(cfg.titles[decay])
+            plt.colorbar(h[3])
+            N_dict_MC[decay] =  h[0] 
+            plt.savefig(os.path.join(set_outputpath(nMC_plots_path),f'NMC_remaining_{decay}_at_BF={signal_BF}_optcut.pdf'))
+    
+        else:
+            h=np.histogram2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins,density=False,range = [[h_cut, 1], [l_cut, 1]])
+            N_dict_MC[decay] =  h[0] #take counts per bin rather than bin edges
+
+    #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
+    efficienies, efficiencies_err, N_dict_MC = eff_finder.get_eff_from_nMC_list(N_dict_MC)
+    per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err=eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
+    S, B, S_err, B_err = eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
+
+    if final_plot_path:
+        if histbins==(2,2):
+            plt.figure()
+            tot_arr=[0,0,0,0]
+            for allocation in cfg.sample_allocations:
+                i=0
+        
+                if allocation not in components:
+                    continue
+                
+                for sample in cfg.sample_allocations[allocation]:
+                    h = per_sample_n_expect_dict[sample]
+                    x = np.array([['Baseline','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']])
+                    hist_opts = histogram_settings()[allocation]
+                    plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                    i+=1
+                    tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
+            
+            # sorting ticks so at edges but name still at centre
+            bars = plt.gca().patches
+            # sets major ticks so that name but no visible tick mark
+            plt.tick_params(axis='x', which='major', length=0)  # hide tick marks at centres
+            # Edge ticks (visible, no labels)
+            edges = [b.get_x() for b in bars] + \
+                    [b.get_x() + b.get_width() for b in bars]
+            plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
+            plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
+    
+            #add systematic error to B - error bar
+            
+            plt.errorbar([x[1,0],x[0,0],x[0,1],x[1,1]],[B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]],label='Systematic error on B',  fmt='None', ecolor='black',lw=1.5)
+            '''
+            #add systematic error to B - lines instead of error bar
+            # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
+            for i, (x_label, b_val, b_err) in enumerate(zip([x[1,0], x[0,0], x[0,1], x[1,1]], 
+                                                           [B[1,0], B[0,0], B[0,1], B[1,1]], 
+                                                           [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]])):
+                # Convert x_label to a numerical index
+                x_val = i 
+            
+                # Top and bottom of the error bar
+                top_error = b_val + b_err
+                bottom_error = b_val - b_err
+            
+                # Draw horizontal lines at the top and bottom of the error bars
+                plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)                                       
+                if i ==3:
+                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2,label='Systematic error band on B')
+                else:
+                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)
+            '''
+            plt.title(r'Signal $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles)$=$ '+ f'{signal_BF}')
+            plt.legend()
+            plt.ylabel('Expected Counts')
+            plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}.pdf'))
+
+        else:
+            print('Warning: currently only set up to plot 2x2 binning')
+
+    return per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF
+
+
+def likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF, # these need to be binned
+                             ntoys = 250,
+                             fit_plotpath=None, spread_plotpath=None):
+
+    """ 
+    likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
+
+    """
+
+    poisson_expectation = B + S
+    max_background_error = np.max(B_err/B)  #need fractional error as it propagates through on scale factor                            
+    
+    ## define fit to toy (this is the negative log likelihood to minimize)
+    def poisson_likelihood(sc_b, sc_s): #scale S and B separately, assuming know shape perfectly
+        expectation = sc_b * B + sc_s * S # assumes know shape perfectly
+        poiss_term = -np.sum( poisson.logpmf(toy_data, expectation)) #logpmf = Log of the probability mass function
+        bkg_constraint_term = -norm.logpdf( sc_b, 1, max_background_error )
+        return poiss_term + bkg_constraint_term
+    
+    significance_arr=[]
+    av_significance_for_bf = []
+    stdev_significance_for_bf=[]
+
+    # throw and refit toys
+    for n in range(ntoys):
+        toy_data = np.random.poisson(poisson_expectation) #throw toys
+        mi = Minuit(poisson_likelihood, sc_b=1, sc_s=1 ) #fit toy
+        mi.migrad()
+        mi.hesse()
+        sc_s = mi.values['sc_s']
+        sc_b = mi.values['sc_b']
+        sc_s_err = mi.errors['sc_s']
+        sc_b_err = mi.errors['sc_b']
+
+                                
+        # refit with S=0 fixed for significance
+        mi0 = Minuit(poisson_likelihood, sc_b=1, sc_s=0 )
+        mi0.fixed['sc_s'] = True
+        mi0.migrad()
+        mi0.hesse()
+        sc_s0 = mi0.values['sc_s']
+        sc_b0 = mi0.values['sc_b']
+           
+
+        significance = np.sqrt(abs(2*(mi.fval-mi0.fval)))
+        significance_arr.append(significance)  
+
+        if fit_plotpath:
+            if n ==0:
+                x = np.array([['A','B'],['C','D']])
+                plt.figure() 
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch=r'\\\\')
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor='blue',hatch='////', facecolor='none')
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[max_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[max_background_error*sc_b*i/2 for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label='Gaussian constraint from maximum per-bin \n error on generator B', color='black', alpha=0.4, width=1)
+                plt.plot([x[1,0],x[0,0],x[0,1],x[1,1]], [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],'+',label='Toy Data', color='k')
+                plt.legend()
+                plt.ylabel('Counts')
+                plt.title(f'Example toy fit for signal BF = {signal_BF}')
+                plt.savefig(os.path.join(set_outputpath(fit_plotpath),'toy_fit_for_first_toy.pdf'))
+    
+    if spread_plotpath:
+        plt.figure()        
+        plt.title(f'Histogram of significance values over {ntoys} toys')
+        plt.hist(significance_arr)
+        plt.xlabel('Significance')
+        plt.ylabel('Counts')
+        plt.savefig(os.path.join(set_outputpath(fit_plotpath),'histogram_of_all_toys.pdf'))
+    
+        
+    significance_av = np.average(significance_arr)
+    significance_stdev = np.std(significance_arr)    
+    av_significance_for_bf.append(significance_av)
+    stdev_significance_for_bf.append(significance_stdev)
+        
+
+    return av_significance_for_bf, stdev_significance_for_bf
+
+
+
 def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
     
     #create dictionaries to store results
@@ -839,199 +1035,12 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     return max_FOM, light_cut, heavy_cut, BFs, CL
     
 
-def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], nMC_plots_path=None, final_plot_path = None):
-
-    def histogram_settings():
-        hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
-        total_color = { allocation: {} for allocation in cfg.sample_allocations }
-        for allocation in cfg.sample_allocations:
-            samples = cfg.sample_allocations[allocation]
-            if allocation=='combined_signal':
-                hist_settings[allocation]['edgecolor'] =plt.cm.Blues( np.linspace(0, 1, 6)[3:-1] ) 
-                hist_settings[allocation]['facecolor'] = ['none','none']
-                hist_settings[allocation]['hatch'] = ['////',r'\\\\']
-            elif allocation=='hadronic_background':
-                hist_settings[allocation]['facecolor'] = plt.cm.Reds_r( np.linspace(0, 1, 6)[1:-1] )
-                hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
-                hist_settings[allocation]['hatch'] =  [None,None,None,None] 
-        return hist_settings
-    
-    print('--> Finding optimum cut')
-    # find optimum cut
-    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=500 , sig_BF=signal_BF, incl_ZqqBFerror = False)
-    indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
-    l_cut = lsearch[indices[0]]
-    h_cut = hsearch[indices[1]]
-
-    #cut df on optimal BDT cuts
-    cut_data = df.copy().query(f'(P_not_light>{l_cut})&(P_not_heavy>{h_cut})')
-
-    # define samples want from components input 
-    samples = flatten_list([cfg.sample_allocations[component] for component in components])
-
-    print('--> Finding number of events per bin')
-    # get number of events per bin in MC using np.2d histogram
-    N_dict_MC={}
-    
-    for decay in samples:
-        
-        if nMC_plots_path is not None:
-            plt.figure()
-            h=plt.hist2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins, cmap=plt.cm.Blues,vmin=0,density=False,range = [[h_cut, 1], [l_cut, 1]])
-            plt.ylabel('1-P(light)')
-            plt.xlabel('1-P(heavy)') 
-            plt.title(cfg.titles[decay])
-            plt.colorbar(h[3])
-            N_dict_MC[decay] =  h[0] 
-            plt.savefig(os.path.join(set_outputpath(nMC_plots_path),f'NMC_remaining_{decay}_at_BF={signal_BF}_optcut.pdf'))
-    
-        else:
-            h=np.histogram2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins,density=False,range = [[h_cut, 1], [l_cut, 1]])
-            N_dict_MC[decay] =  h[0] #take counts per bin rather than bin edges
-
-    #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
-    efficienies, efficiencies_err, N_dict_MC = eff_finder.get_eff_from_nMC_list(N_dict_MC)
-    per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err=eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
-    S, B, S_err, B_err = eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
-
-    if final_plot_path:
-        if histbins==(2,2):
-            plt.figure()
-            tot_arr=[0,0,0,0]
-            for allocation in cfg.sample_allocations:
-                i=0
-        
-                if allocation not in components:
-                    continue
-                
-                for sample in cfg.sample_allocations[allocation]:
-                    h = per_sample_n_expect_dict[sample]
-                    x = np.array([['Baseline','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']])
-                    hist_opts = histogram_settings()[allocation]
-                    plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
-                    i+=1
-                    tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
-            
-            # sorting ticks so at edges but name still at centre
-            bars = plt.gca().patches
-            # sets major ticks so that name but no visible tick mark
-            plt.tick_params(axis='x', which='major', length=0)  # hide tick marks at centres
-            # Edge ticks (visible, no labels)
-            edges = [b.get_x() for b in bars] + \
-                    [b.get_x() + b.get_width() for b in bars]
-            plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
-            plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
-    
-            #add systematic error to B - error bar
-            
-            plt.errorbar([x[1,0],x[0,0],x[0,1],x[1,1]],[B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]],label='Systematic error on B',  fmt='None', ecolor='black',lw=1.5)
-            '''
-            #add systematic error to B - lines instead of error bar
-            # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
-            for i, (x_label, b_val, b_err) in enumerate(zip([x[1,0], x[0,0], x[0,1], x[1,1]], 
-                                                           [B[1,0], B[0,0], B[0,1], B[1,1]], 
-                                                           [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]])):
-                # Convert x_label to a numerical index
-                x_val = i 
-            
-                # Top and bottom of the error bar
-                top_error = b_val + b_err
-                bottom_error = b_val - b_err
-            
-                # Draw horizontal lines at the top and bottom of the error bars
-                plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)                                       
-                if i ==3:
-                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2,label='Systematic error band on B')
-                else:
-                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)
-            '''
-            plt.title(r'Signal $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles)$=$ '+ f'{signal_BF}')
-            plt.legend()
-            plt.ylabel('Expected Counts')
-            plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}.pdf'))
-
-        else:
-            print('Warning: currently only set up to plot 2x2 binning')
-
-    return per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF
 
 
-def likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF, # these need to be binned
-                             ntoys = 250,
-                             fit_plotpath=None, spread_plotpath=None):
 
-    """ 
-    likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
 
-    """
 
-    poisson_expectation = B + S
-    max_background_error = np.max(B_err)                             
-    
-    ## define fit to toy (this is the negative log likelihood to minimize)
-    def poisson_likelihood(sc_b, sc_s): #scale S and B separately, assuming know shape perfectly
-        expectation = sc_b * B + sc_s * S # assumes know shape perfectly
-        poiss_term = -np.sum( poisson.logpmf(toy_data, expectation)) #logpmf = Log of the probability mass function
-        bkg_constraint_term = -norm.logpdf( sc_b, 1, max_background_error )
-        return poiss_term + bkg_constraint_term
-    
-    significance_arr=[]
-    av_significance_for_bf = []
-    stdev_significance_for_bf=[]
 
-    # throw and refit toys
-    for n in range(ntoys):
-        toy_data = np.random.poisson(poisson_expectation) #throw toys
-        mi = Minuit(poisson_likelihood, sc_b=1, sc_s=1 ) #fit toy
-        mi.migrad()
-        mi.hesse()
-        sc_s = mi.values['sc_s']
-        sc_b = mi.values['sc_b']
-        sc_s_err = mi.errors['sc_s']
-        sc_b_err = mi.errors['sc_b']
-
-                                
-        # refit with S=0 fixed for significance
-        mi0 = Minuit(poisson_likelihood, sc_b=1, sc_s=0 )
-        mi0.fixed['sc_s'] = True
-        mi0.migrad()
-        mi0.hesse()
-        sc_s0 = mi0.values['sc_s']
-        sc_b0 = mi0.values['sc_b']
-           
-
-        significance = np.sqrt(abs(2*(mi.fval-mi0.fval)))
-        significance_arr.append(significance)  
-
-        if fit_plotpath:
-            if n ==0:
-                x = np.array([['A','B'],['C','D']])
-                plt.figure() 
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch=r'\\\\')
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor='blue',hatch='////', facecolor='none')
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[max_background_error,max_background_error,max_background_error,max_background_error], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[max_background_error/2,max_background_error/2,max_background_error/2,max_background_error/2]), label='Gaussian constraint from maximum per-bin \n error on generator B', color='black', alpha=0.4, width=1)
-                plt.plot([x[1,0],x[0,0],x[0,1],x[1,1]], [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],'+',label='Toy Data', color='k')
-                plt.legend()
-                plt.ylabel('Counts')
-                plt.title(f'Example toy fit for signal BF = {signal_BF}')
-                plt.savefig(os.path.join(set_outputpath(fit_plotpath),'toy_fit_for_first_toy.pdf'))
-    
-    if spread_plotpath:
-        plt.figure()        
-        plt.title(f'Histogram of significance values over {ntoys} toys')
-        plt.hist(significance_arr)
-        plt.xlabel('Significance')
-        plt.ylabel('Counts')
-        plt.savefig(os.path.join(set_outputpath(fit_plotpath),'histogram_of_all_toys.pdf'))
-    
-        
-    significance_av = np.average(significance_arr)
-    significance_stdev = np.std(significance_arr)    
-    av_significance_for_bf.append(significance_av)
-    stdev_significance_for_bf.append(significance_stdev)
-        
-
-    return av_significance_for_bf, stdev_significance_for_bf
 
 
 if __name__=="__main__":

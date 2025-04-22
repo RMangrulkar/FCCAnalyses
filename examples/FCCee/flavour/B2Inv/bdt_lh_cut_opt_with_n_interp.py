@@ -863,7 +863,7 @@ def likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF, # these need
 
 
 
-def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
+def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, incl_toys_fit=False, full_df=None, ntoys=5000,plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
     
     #create dictionaries to store results
     max_FOM = np.zeros(len(sig_BFs))
@@ -877,6 +877,8 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     B_err = np.zeros(len(sig_BFs))
     full_S_err= np.zeros(len(sig_BFs))
     full_B_err= np.zeros(len(sig_BFs))
+    toys_significance = np.zeros(len(sig_BFs))
+    toys_sig_spread = np.zeros(len(sig_BFs))
 
 
     i=0
@@ -903,6 +905,16 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         if incl_ZqqBFerror == True:
             full_S_err[i] = full_S_error_arr[indices[0],indices[1]]
             full_B_err[i] = full_B_error_arr[indices[0],indices[1]]
+
+        if incl_toys_fit == True:
+            if full_df is None:
+                print('Warning: no data provided for toys fit')
+                continue
+            else:
+                toys_per_sample_n_expect_dict, toys_S, toys_B, toys_S_err, toys_B_err, signal_BF  = make_final_binning_plot(full_df, interp_N_dict, signal_BF=BF, histbins=(2,2), nMC_plots_path=None, final_plot_path = None)
+                av_significance_for_bf, stdev_significance_for_bf = likelihood_model_builder_max_err(toys_S, toys_B, toys_S_err, toys_B_err, signal_BF=signal_BF, ntoys = ntoys, fit_plotpath=None, spread_plotpath=None)
+                toys_significance[i] = av_significance_for_bf[0]
+                toys_sig_spread[i] = stdev_significance_for_bf[0]
 
         i+=1
 
@@ -945,8 +957,13 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         if incl_ZqqBFerror == True:
             significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
+            plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0)
         else:
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+            plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0)
+        if incl_toys_fit == True:
+            plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys')
+            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.55)
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'Significance')
         plt.xscale('log')
@@ -966,9 +983,16 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.legend()
         plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         if incl_ZqqBFerror == True:
-            plt.savefig(os.path.join(savepath,f'FOMvsBF_inclfullerr.pdf'))
+            if incl_toys_fit == True:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr_wtoys.pdf'))
+            else:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr.pdf'))
+
         else:
-            plt.savefig(os.path.join(savepath,f'FOMvsBF.pdf'))
+            if incl_toys_fit == True:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_wtoys.pdf'))
+            else:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF.pdf'))
 
 
     
@@ -976,7 +1000,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
 
     CL = sigma_to_percentage(max_FOM)
     CL_incl_error = sigma_to_percentage(significance_incl_error) # this dependent on if have full error or not above
-
+    CL_toys = sigma_to_percentage(toys_significance)
 
     #find 90 % and 95 % points
 
@@ -1002,10 +1026,16 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     if plot == True: 
         plt.figure()
         plt.plot(BFs,CL,label='$S/\sqrt{S+B}$' )
+        plt.fill_between(BFs, CL-max_FOM_err/max_FOM*CL, CL+max_FOM_err/max_FOM*CL,alpha=0.55)
         if incl_ZqqBFerror == True:
             plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
+            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
         else:
             plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
+        if incl_toys_fit == True:
+            plt.plot(BFs,CL_toys, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys')
+            plt.fill_between(BFs, CL_toys-toys_sig_spread/toys_significance*CL_toys, CL_toys+toys_sig_spread/toys_significance*CL_toys,alpha=0.55)
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'1-CL (1-sided test)')
         plt.xscale('log')
@@ -1022,9 +1052,16 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.legend()
         plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         if incl_ZqqBFerror == True:
-            plt.savefig(os.path.join(savepath,f'CLvsBF_inclfullerr.pdf'))
+            if incl_toys_fit == True:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr_wtoys.pdf'))
+            else:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr.pdf'))
+
         else:
-            plt.savefig(os.path.join(savepath,f'CLvsBF.pdf'))
+            if incl_toys_fit == True:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_wtoys.pdf'))
+            else:
+                plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
 
     print(f"95% BFs = {BFs[closest_index_95]}" )
     print(f"90% BFs = {BFs[closest_index_90]}" )
@@ -1034,14 +1071,6 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
 
     return max_FOM, light_cut, heavy_cut, BFs, CL
     
-
-
-
-
-
-
-
-
 
 if __name__=="__main__":
 
@@ -1084,7 +1113,9 @@ if __name__=="__main__":
     #FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BF=1e-7)
     #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
     
-    #plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,200), incl_ZqqBFerror=True, plot=True,savepath = plotpath)
-    per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF  = make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-7, histbins=(2,2), nMC_plots_path=None, final_plot_path = None)
-    likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF=signal_BF, # these need to be binned
-                             ntoys = 5000, fit_plotpath=f'{plotpath}final_binning/1e-7/', spread_plotpath=f'{plotpath}final_binning/1e-7/')
+    #per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF  = make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-6, histbins=(2,2), nMC_plots_path=None, final_plot_path = None)
+    #likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF=signal_BF, # these need to be binned
+    #                         ntoys = 5000, fit_plotpath=f'{plotpath}final_binning/1e-6/', spread_plotpath=f'{plotpath}final_binning/1e-6/')
+
+    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,250), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=5000,plot=True,savepath = plotpath)
+    

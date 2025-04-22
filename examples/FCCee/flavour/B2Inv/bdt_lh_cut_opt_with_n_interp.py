@@ -8,7 +8,8 @@ import pandas as pd
 from yaml import safe_load, YAMLError, dump
 from tabulate import tabulate
 from scipy.interpolate import RectBivariateSpline
-from scipy.stats import norm
+from scipy.stats import poisson, norm
+from iminuit import Minuit
 
 import config as cfg 
 import post_bdtlh_efficiency_finder as eff_finder
@@ -952,9 +953,85 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
         else:
             print('Warning: currently only set up to plot 2x2 binning')
 
-    return per_sample_n_expect_dict, S, B, S_err, B_err
-    
+    return per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF
 
+
+def likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF, # these need to be binned
+                             ntoys = 250,
+                             fit_plotpath=None, spread_plotpath=None):
+
+    """ 
+    likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
+
+    """
+
+    poisson_expectation = B + S
+    max_background_error = np.max(B_err)                             
+    
+    ## define fit to toy (this is the negative log likelihood to minimize)
+    def poisson_likelihood(sc_b, sc_s): #scale S and B separately, assuming know shape perfectly
+        expectation = sc_b * B + sc_s * S # assumes know shape perfectly
+        poiss_term = -np.sum( poisson.logpmf(toy_data, expectation)) #logpmf = Log of the probability mass function
+        bkg_constraint_term = -norm.logpdf( sc_b, 1, max_background_error )
+        return poiss_term + bkg_constraint_term
+    
+    significance_arr=[]
+    av_significance_for_bf = []
+    stdev_significance_for_bf=[]
+
+    # throw and refit toys
+    for n in range(ntoys):
+        toy_data = np.random.poisson(poisson_expectation) #throw toys
+        mi = Minuit(poisson_likelihood, sc_b=1, sc_s=1 ) #fit toy
+        mi.migrad()
+        mi.hesse()
+        sc_s = mi.values['sc_s']
+        sc_b = mi.values['sc_b']
+        sc_s_err = mi.errors['sc_s']
+        sc_b_err = mi.errors['sc_b']
+
+                                
+        # refit with S=0 fixed for significance
+        mi0 = Minuit(poisson_likelihood, sc_b=1, sc_s=0 )
+        mi0.fixed['sc_s'] = True
+        mi0.migrad()
+        mi0.hesse()
+        sc_s0 = mi0.values['sc_s']
+        sc_b0 = mi0.values['sc_b']
+           
+
+        significance = np.sqrt(abs(2*(mi.fval-mi0.fval)))
+        significance_arr.append(significance)  
+
+        if fit_plotpath:
+            if n ==0:
+                x = np.array([['A','B'],['C','D']])
+                plt.figure() 
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch=r'\\\\')
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor='blue',hatch='////', facecolor='none')
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[max_background_error,max_background_error,max_background_error,max_background_error], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[max_background_error/2,max_background_error/2,max_background_error/2,max_background_error/2]), label='Gaussian constraint from maximum per-bin \n error on generator B', color='black', alpha=0.4, width=1)
+                plt.plot([x[1,0],x[0,0],x[0,1],x[1,1]], [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],'+',label='Toy Data', color='k')
+                plt.legend()
+                plt.ylabel('Counts')
+                plt.title(f'Example toy fit for signal BF = {signal_BF}')
+                plt.savefig(os.path.join(set_outputpath(fit_plotpath),'toy_fit_for_first_toy.pdf'))
+    
+    if spread_plotpath:
+        plt.figure()        
+        plt.title(f'Histogram of significance values over {ntoys} toys')
+        plt.hist(significance_arr)
+        plt.xlabel('Significance')
+        plt.ylabel('Counts')
+        plt.savefig(os.path.join(set_outputpath(fit_plotpath),'histogram_of_all_toys.pdf'))
+    
+        
+    significance_av = np.average(significance_arr)
+    significance_stdev = np.std(significance_arr)    
+    av_significance_for_bf.append(significance_av)
+    stdev_significance_for_bf.append(significance_stdev)
+        
+
+    return av_significance_for_bf, stdev_significance_for_bf
 
 
 if __name__=="__main__":
@@ -999,4 +1076,6 @@ if __name__=="__main__":
     #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
     
     #plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,200), incl_ZqqBFerror=True, plot=True,savepath = plotpath)
-    make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-7, histbins=(2,2), nMC_plots_path=f'{plotpath}final_binning/1e-7/', final_plot_path = f'{plotpath}final_binning/1e-7/')
+    per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF  = make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-7, histbins=(2,2), nMC_plots_path=None, final_plot_path = None)
+    likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF=signal_BF, # these need to be binned
+                             ntoys = 5000, fit_plotpath=f'{plotpath}final_binning/1e-7/', spread_plotpath=f'{plotpath}final_binning/1e-7/')

@@ -8,8 +8,11 @@ import pandas as pd
 from yaml import safe_load, YAMLError, dump
 from tabulate import tabulate
 from scipy.interpolate import RectBivariateSpline
-from scipy.stats import poisson, norm
+from scipy.stats import poisson#, norm
+from scipy.stats import norm as snorm
 from iminuit import Minuit
+from numba_stats import norm
+import joblib
 
 import config as cfg 
 import post_bdtlh_efficiency_finder as eff_finder
@@ -33,11 +36,16 @@ def set_outputpath(outputpath):
 #function to turn #sigma to CL
 def sigma_to_percentage(sigma):
     # Calculate the percentage
-    percentage = norm.cdf(sigma) * 100
+    percentage = snorm.cdf(sigma) * 100
     return percentage
 
 def flatten_list(nested_list):
     return [item for sublist in nested_list for item in sublist]
+
+def round_sig(x, sig=1):
+    if x == 0:
+        return 0
+    return round(x, sig - int(np.floor(np.log10(abs(x)))) - 1)
 
 
 #plan: create and save map of N and N interpolated
@@ -667,7 +675,8 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
-def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], nMC_plots_path=None, final_plot_path = None):
+def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+                            plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None):
 
     def histogram_settings():
         hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
@@ -683,10 +692,11 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
                 hist_settings[allocation]['hatch'] =  [None,None,None,None] 
         return hist_settings
-    
+   
+
     print('--> Finding optimum cut')
     # find optimum cut
-    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=500 , sig_BF=signal_BF, incl_ZqqBFerror = False)
+    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=nlh , sig_BF=signal_BF, incl_ZqqBFerror = False)
     indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
     l_cut = lsearch[indices[0]]
     h_cut = hsearch[indices[1]]
@@ -723,9 +733,11 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
     S, B, S_err, B_err = eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
 
     if final_plot_path:
+        x = binned_x_axis
         if histbins==(2,2):
             plt.figure()
             tot_arr=[0,0,0,0]
+            tot_signal = [0,0,0,0]
             for allocation in cfg.sample_allocations:
                 i=0
         
@@ -733,13 +745,28 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                     continue
                 
                 for sample in cfg.sample_allocations[allocation]:
-                    h = per_sample_n_expect_dict[sample]
-                    x = np.array([['Baseline','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']])
-                    hist_opts = histogram_settings()[allocation]
-                    plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
-                    i+=1
-                    tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
-            
+
+                    if sample in cfg.sample_allocations['combined_signal']: #plot combined signal
+                        h = per_sample_n_expect_dict[sample]
+                        tot_signal = np.add(tot_signal,[h[1,0],h[0,0],h[0,1],h[1,1]])
+
+                        if plot_signal_components == True:
+                            hist_opts = histogram_settings()[allocation]
+                            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                        tot_arr = np.add(tot_arr,[h[1,0],h[0,0],h[0,1],h[1,1]])
+                        i+=1
+
+                    else:
+                        h = per_sample_n_expect_dict[sample]
+                        hist_opts = histogram_settings()[allocation]
+                        plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                        i+=1
+                        tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
+
+            if plot_signal_components == False:
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'Combined $B^0_{(s)}\rightarrow \nu\bar\nu$', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=2,edgecolor ='royalblue' , facecolor= 'none', hatch='////')
+                        
+                
             # sorting ticks so at edges but name still at centre
             bars = plt.gca().patches
             # sets major ticks so that name but no visible tick mark
@@ -751,8 +778,10 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
             plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
     
             #add systematic error to B - error bar
-            
-            plt.errorbar([x[1,0],x[0,0],x[0,1],x[1,1]],[B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]],label='Systematic error on B',  fmt='None', ecolor='black',lw=1.5)
+            #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label='Systematic error on B', color='black', alpha=0.4, width=1)
+            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label='Systematic error on B', facecolor='none',  width=1, edgecolor='black')
+
+
             '''
             #add systematic error to B - lines instead of error bar
             # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
@@ -767,11 +796,11 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 bottom_error = b_val - b_err
             
                 # Draw horizontal lines at the top and bottom of the error bars
-                plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)                                       
+                plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1)                                       
                 if i ==3:
-                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2,label='Systematic error band on B')
+                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1,label='Systematic error on B')
                 else:
-                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=2)
+                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1)
             '''
             plt.title(r'Signal $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles)$=$ '+ f'{signal_BF}')
             plt.legend()
@@ -784,23 +813,27 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
     return per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF
 
 
-def likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF, # these need to be binned
+def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
+                             lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=500,bins = (2,2),
                              ntoys = 250,
-                             fit_plotpath=None, spread_plotpath=None):
+                             fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None):
 
     """ 
     likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
 
     """
 
+    _, S, B, S_err, B_err, signal_BF = make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components =  ['hadronic_background','combined_signal'], binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None)
+    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err, _ = make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components =  ['hadronic_background','combined_signal'], binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None)
     poisson_expectation = B + S
-    max_background_error = np.max(B_err/B)  #need fractional error as it propagates through on scale factor                            
+    overall_background_error = onebin_B_err.item()/onebin_B.item()  #need fractional error as it propagates through on scale factor                            
+
     
     ## define fit to toy (this is the negative log likelihood to minimize)
     def poisson_likelihood(sc_b, sc_s): #scale S and B separately, assuming know shape perfectly
         expectation = sc_b * B + sc_s * S # assumes know shape perfectly
         poiss_term = -np.sum( poisson.logpmf(toy_data, expectation)) #logpmf = Log of the probability mass function
-        bkg_constraint_term = -norm.logpdf( sc_b, 1, max_background_error )
+        bkg_constraint_term = -snorm.logpdf( sc_b, 1, overall_background_error)
         return poiss_term + bkg_constraint_term
     
     significance_arr=[]
@@ -833,37 +866,85 @@ def likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF, # these need
 
         if fit_plotpath:
             if n ==0:
-                x = np.array([['A','B'],['C','D']])
+                print(f'fit sc_s = {sc_s}')
+                print(f'fit sc_b = {sc_b}')
+                x_strings =[x_values[1,0],x_values[0,0],x_values[0,1],x_values[1,1]] 
+                x = np.arange(len(x_strings))
                 plt.figure() 
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch=r'\\\\')
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor='blue',hatch='////', facecolor='none')
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[max_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[max_background_error*sc_b*i/2 for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label='Gaussian constraint from maximum per-bin \n error on generator B', color='black', alpha=0.4, width=1)
-                plt.plot([x[1,0],x[0,0],x[0,1],x[1,1]], [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],'+',label='Toy Data', color='k')
+                plt.bar(x,[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch=r'\\\\')
+                plt.bar(x,[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor='royalblue',hatch='////', facecolor='none')
+                plt.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label='Gaussian constraint from \n error on generator B', color='black', alpha=0.4, width=1)
+                plt.errorbar(x, [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Toy Data', color='k')
                 plt.legend()
                 plt.ylabel('Counts')
+                plt.xticks(x, x_strings)
                 plt.title(f'Example toy fit for signal BF = {signal_BF}')
-                plt.savefig(os.path.join(set_outputpath(fit_plotpath),'toy_fit_for_first_toy.pdf'))
+                plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath,'toy_fits')),f'toy_fit_for_first_toy_BF{signal_BF}.pdf'))
     
+    
+    data = np.array(significance_arr)
+
+    # Truncation limits
+    lower, upper = data.min(), data.max()
+
+    # Truncated Gaussian log-likelihood
+    def truncated_logpdf(x, mu, sigma):
+        norm_const = norm.cdf(upper, mu, sigma) - norm.cdf(lower, mu, sigma)
+        return norm.logpdf(x, mu, sigma) - np.log(norm_const)
+
+    # Negative log-likelihood
+    def nll(mu, sigma):
+        if sigma <= 0:
+            return np.inf
+        return -np.sum(truncated_logpdf(data, mu, sigma))
+
+    # Initial parameter guesses
+    mu_init = np.mean(data)
+    sigma_init = np.std(data)
+
+    # Fit using iminuit
+    m = Minuit(nll, mu=mu_init, sigma=sigma_init)
+    m.limits["sigma"] = (1e-3, None)
+    m.migrad()
+    m.hesse()
+
+    fitted_mu = m.values['mu']
+    fitted_sigma = m.values['sigma']
+
+    # Plot
     if spread_plotpath:
-        plt.figure()        
-        plt.title(f'Histogram of significance values over {ntoys} toys')
-        plt.hist(significance_arr)
-        plt.xlabel('Significance')
-        plt.ylabel('Counts')
-        plt.savefig(os.path.join(set_outputpath(fit_plotpath),'histogram_of_all_toys.pdf'))
+        fig, ax = plt.subplots()
+        counts, bins, _ = ax.hist(data, bins=30, density=True, label="Data")
+
+        # Evaluate PDF for plotting
+        x_vals = np.linspace(lower, upper, 1000)
+        norm_const = norm.cdf(upper, fitted_mu, fitted_sigma) - norm.cdf(lower, fitted_mu, fitted_sigma)
+        pdf_vals = norm.pdf(x_vals, fitted_mu, fitted_sigma) / norm_const
+
+        ax.plot(x_vals, pdf_vals, label=f'Gaussian fit\n$\mu$ = {fitted_mu:.2f}, $\sigma$ = {fitted_sigma:.2f}')
+        ax.set_xlabel("Significance")
+        ax.set_ylabel("Density")
+        plt.title(f'Histogram of significance values over {ntoys} toys with truncated Gaussian fit')
+        ax.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath,'toy_histograms')),f'histogram_of_all_toys_BF{signal_BF}.pdf'))
+
     
-        
-    significance_av = np.average(significance_arr)
-    significance_stdev = np.std(significance_arr)    
-    av_significance_for_bf.append(significance_av)
-    stdev_significance_for_bf.append(significance_stdev)
-        
+     
+    significance_mu = fitted_mu
+    significance_sigma = fitted_sigma    
+    av_significance_for_bf.append(significance_mu)
+    stdev_significance_for_bf.append(significance_sigma)
+    
+
+    print(f'BF ={signal_BF}') 
+    print(f'Mean toy significance from fit ={av_significance_for_bf}')   
 
     return av_significance_for_bf, stdev_significance_for_bf
 
 
 
-def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, incl_toys_fit=False, full_df=None, ntoys=5000,plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
+def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, incl_toys_fit=False, full_df=None, ntoys=5000,plot=True,savepath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995',toyplotpath = None):
     
     #create dictionaries to store results
     max_FOM = np.zeros(len(sig_BFs))
@@ -911,40 +992,40 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
                 print('Warning: no data provided for toys fit')
                 continue
             else:
-                toys_per_sample_n_expect_dict, toys_S, toys_B, toys_S_err, toys_B_err, signal_BF  = make_final_binning_plot(full_df, interp_N_dict, signal_BF=BF, histbins=(2,2), nMC_plots_path=None, final_plot_path = None)
-                av_significance_for_bf, stdev_significance_for_bf = likelihood_model_builder_max_err(toys_S, toys_B, toys_S_err, toys_B_err, signal_BF=signal_BF, ntoys = ntoys, fit_plotpath=None, spread_plotpath=None)
+                if i % 20 == 0:
+                    av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder(full_df, interp_N_dict, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
+                else:
+                    av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder(full_df, interp_N_dict, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
+                  
                 toys_significance[i] = av_significance_for_bf[0]
                 toys_sig_spread[i] = stdev_significance_for_bf[0]
 
         i+=1
 
-
     #find 3 sigma and 5 sigma points
+    #with interpolation 
+    five_sigma_BF = np.interp(5, max_FOM, BFs)
+    three_sigma_BF = np.interp(3, max_FOM, BFs)
+    print(f"5 sigma BFs = {five_sigma_BF}" )
+    print(f"3 sigma BFs = {three_sigma_BF}" )
 
-    closest_index_5 = np.argmin(np.abs(np.array(max_FOM) - 5))
-    highlight_x_5 = BFs[closest_index_5]
-    highlight_y_5 = max_FOM[closest_index_5]
-
-    closest_index_3 = np.argmin(np.abs(np.array(max_FOM) - 3))
-    highlight_x_3 = BFs[closest_index_3]
-    highlight_y_3 = max_FOM[closest_index_3]
-
-    print(f"5 sigma BFs = {BFs[closest_index_5]}" )
-    print(f"3 sigma BFs = {BFs[closest_index_3]}" )
 
     #calulating S/sqrt(S+B+varS+varB)
-    significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+S_err**2+B_err**2)
-    inclerr_closest_index_5 = np.argmin(np.abs(np.array(significance_incl_error) - 5))
-    inclerr_highlight_x_5 = BFs[inclerr_closest_index_5]
-    inclerr_highlight_y_5 = significance_incl_error[inclerr_closest_index_5]
+    #with interpolation 
+    if incl_ZqqBFerror == True:
+        #ie redefine to include full error
+        significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
+        five_sigma_BF_inclerr = np.interp(5, significance_incl_error, BFs)
+        three_sigma_BF_inclerr = np.interp(3, significance_incl_error, BFs)
+        print(f"5 sigma BFs incl error = {five_sigma_BF_inclerr}" )
+        print(f"3 sigma BFs incl error= {three_sigma_BF_inclerr}" )
 
-    inclerr_closest_index_3 = np.argmin(np.abs(np.array(significance_incl_error) - 3))
-    inclerr_highlight_x_3 = BFs[inclerr_closest_index_3]
-    inclerr_highlight_y_3 = significance_incl_error[inclerr_closest_index_3]
-
-    print(f"5 sigma BFs incl syst error = {BFs[inclerr_closest_index_5]}" )
-    print(f"3 sigma BFs incl syst error  = {BFs[inclerr_closest_index_3]}" )
-
+    else:
+        significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+S_err**2+B_err**2)
+        five_sigma_BF_inclerr = np.interp(5, significance_incl_error, BFs)
+        three_sigma_BF_inclerr = np.interp(3, significance_incl_error, BFs)
+        print(f"5 sigma BFs incl error = {five_sigma_BF_inclerr}" )
+        print(f"3 sigma BFs incl error= {three_sigma_BF_inclerr}" )
 
 
 
@@ -954,21 +1035,34 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.figure()
         plt.plot(BFs,max_FOM, label = r'$S/\sqrt{S+B}$')
         plt.fill_between(BFs, max_FOM-max_FOM_err, max_FOM+max_FOM_err,alpha=0.55)
+        plt.vlines(x=three_sigma_BF, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_BF,sig=2)}')
+        
         if incl_ZqqBFerror == True:
-            significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
-            plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
-            plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0)
+            #significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2) # defined in earlier if statement
+            plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
+            plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0, color='orange')
+            plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_BF_inclerr,sig=2)}', color='orange')
+        
         else:
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
             plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0)
         if incl_toys_fit == True:
-            plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys')
-            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.55)
+            five_sigma_toys = np.interp(5, toys_significance, BFs)
+            three_sigma_toys = np.interp(3, toys_significance, BFs)
+            print(f"5 sigma BFs incl error = {five_sigma_toys}" )
+            print(f"3 sigma BFs incl error= {three_sigma_toys}" )
+            plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
+            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.55, color='green')
+            plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_toys,sig=2)}', color='green')
+        
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'Significance')
         plt.xscale('log')
         plt.ylim(0,8)
 
+        
+
+        '''
         # Add vertical and horizontal lines stopping at the points
         plt.vlines(x=highlight_x_5, ymin=0, ymax=highlight_y_5, color='deeppink', linestyle='--', label=r'5$\sigma$')
         plt.vlines(x=inclerr_highlight_x_5, ymin=0, ymax=inclerr_highlight_y_5, color='deeppink', linestyle='--')
@@ -977,8 +1071,8 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.vlines(x=highlight_x_3, ymin=0, ymax=highlight_y_3, color='purple', linestyle='--', label=r'3$\sigma$')
         plt.vlines(x=inclerr_highlight_x_3, ymin=0, ymax=inclerr_highlight_y_3, color='purple', linestyle='--')
         #plt.hlines(y=highlight_y_3, xmin=min(BFs), xmax=inclerr_highlight_x_3, color='purple', linestyle='--')
-
-        #Add equivalent lines for with error
+        '''
+        
 
         plt.legend()
         plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
@@ -1003,7 +1097,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     CL_toys = sigma_to_percentage(toys_significance)
 
     #find 90 % and 95 % points
-
+    '''
     closest_index_90 = np.argmin(np.abs(np.array(CL) - 90))
     highlight_x_90 = BFs[closest_index_90]
     highlight_y_90 = CL[closest_index_90]
@@ -1021,33 +1115,58 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     inclerr_closest_index_95 = np.argmin(np.abs(np.array(CL_incl_error) - 95))
     inclerr_highlight_x_95 = BFs[inclerr_closest_index_95]
     inclerr_highlight_y_95 = CL_incl_error[inclerr_closest_index_95]
+    
+    print(f"95% BFs = {BFs[closest_index_95]}" )
+    print(f"90% BFs = {BFs[closest_index_90]}" )
 
+    print(f"95% BFs incl error = {BFs[inclerr_closest_index_95]}" )
+    print(f"90% BFs incl error = {BFs[inclerr_closest_index_90]}" )
+
+    '''
+    # instead using interpolation
+    CL95BF= np.interp(95, CL, BFs)
+    CL90BF = np.interp(90, CL, BFs)
+    print(f"95% CL BFs = {CL95BF}" )
+    print(f"90% CL BFs = {CL90BF}" )
+
+    CL95BF_inclerr= np.interp(95, CL_incl_error, BFs)
+    CL90BF_inclerr = np.interp(90, CL_incl_error, BFs)
+    print(f"95% CL BFs = {CL95BF_inclerr}" )
+    print(f"90% CL BFs = {CL90BF_inclerr}" )
 
     if plot == True: 
         plt.figure()
         plt.plot(BFs,CL,label='$S/\sqrt{S+B}$' )
-        plt.fill_between(BFs, CL-max_FOM_err/max_FOM*CL, CL+max_FOM_err/max_FOM*CL,alpha=0.55)
+        plt.fill_between(BFs, sigma_to_percentage(max_FOM-max_FOM_err),  sigma_to_percentage(max_FOM+max_FOM_err),alpha=0.55)
+        plt.vlines(x=CL90BF, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF,sig=2)}')
+        
         if incl_ZqqBFerror == True:
-            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$')
-            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
+            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
+            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0, color='orange')
+            plt.vlines(x=CL90BF_inclerr, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF_inclerr,sig=2)}', color='orange')
         else:
             plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
             plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
         if incl_toys_fit == True:
-            plt.plot(BFs,CL_toys, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys')
-            plt.fill_between(BFs, CL_toys-toys_sig_spread/toys_significance*CL_toys, CL_toys+toys_sig_spread/toys_significance*CL_toys,alpha=0.55)
+            CL95_toys = np.interp(95, CL_toys, BFs)
+            CL90_toys = np.interp(90, CL_toys, BFs)
+            print(f"95% BF from toys = {CL95_toys}" )
+            print(f"90% BF from toys= {CL90_toys}" )
+            plt.plot(BFs,CL_toys, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
+            plt.fill_between(BFs, sigma_to_percentage(toys_significance-toys_sig_spread), sigma_to_percentage(toys_significance+toys_sig_spread),alpha=0.55, color='green')
+            plt.vlines(x=CL90_toys, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90_toys,sig=2)}', color='green')
+        
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'1-CL (1-sided test)')
         plt.xscale('log')
-
+        '''
         # Add vertical and horizontal lines stopping at the points
         plt.vlines(x=highlight_x_95, ymin=52, ymax=highlight_y_95, color='deeppink', linestyle='--', label=r'95$\%$')
         plt.vlines(x=inclerr_highlight_x_95, ymin=52, ymax=inclerr_highlight_y_95, color='deeppink', linestyle='--')
         #plt.hlines(y=highlight_y_95, xmin=min(BFs), xmax=inclerr_highlight_x_95, color='deeppink', linestyle='--')
-
-        plt.vlines(x=highlight_x_90, ymin=52, ymax=highlight_y_90, color='purple', linestyle='--', label=r'90$\%$')
-        plt.vlines(x=inclerr_highlight_x_90, ymin=52, ymax=inclerr_highlight_y_90, color='purple', linestyle='--')
+        '''
         #plt.hlines(y=highlight_y_90, xmin=min(BFs), xmax=inclerr_highlight_x_90, color='purple', linestyle='--')
+        
         plt.ylim(52,102)
         plt.legend()
         plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
@@ -1063,11 +1182,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
             else:
                 plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
 
-    print(f"95% BFs = {BFs[closest_index_95]}" )
-    print(f"90% BFs = {BFs[closest_index_90]}" )
-
-    print(f"95% BFs incl error = {BFs[inclerr_closest_index_95]}" )
-    print(f"90% BFs incl error = {BFs[inclerr_closest_index_90]}" )
+    
 
     return max_FOM, light_cut, heavy_cut, BFs, CL
     
@@ -1108,14 +1223,17 @@ if __name__=="__main__":
         N_dict = dill.load(dill_file)
     
     
-    plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/'
+    plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/test/'
     #plot_interpolted_effs(interp_N_dict, N_dict ,nlh=20, slice=True, save_path=plotpath)
     #FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BF=1e-7)
     #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
     
-    #per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF  = make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-6, histbins=(2,2), nMC_plots_path=None, final_plot_path = None)
-    #likelihood_model_builder_max_err(S, B, S_err, B_err, signal_BF=signal_BF, # these need to be binned
-    #                         ntoys = 5000, fit_plotpath=f'{plotpath}final_binning/1e-6/', spread_plotpath=f'{plotpath}final_binning/1e-6/')
+    #per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF  = make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-6, histbins=(2,2), nMC_plots_path=f'{plotpath}final_binning/1e-6/', final_plot_path = f'{plotpath}final_binning/1e-6/')
+    #likelihood_model_builder(full_data, interp_N_dict, signal_BF=1e-7,
+    #                         lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=500,bins = (2,2),
+    #                         ntoys = 250,
+    #                         fit_plotpath=f'{plotpath}final_binning/1e-7/', x_values = np.array([['A','B'],['C','D']]), spread_plotpath=f'{plotpath}final_binning/1e-7/')
 
-    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,250), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=5000,plot=True,savepath = plotpath)
+
+    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,250), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=10000,plot=True,savepath = plotpath ,toyplotpath = plotpath)
     

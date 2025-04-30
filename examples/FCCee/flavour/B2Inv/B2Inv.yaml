@@ -776,6 +776,19 @@ bdtlh-vars-v1:
   #- EVT_hemisEmin_nDV #probably remove as info in some cos theta vars
   #- EVT_sum_Rec_pz
 
+flavour-tag-vars:
+  - Rec_p
+  - Rec_px
+  - Rec_py
+  - Rec_pz
+  - Rec_pt
+  - Rec_true_PDG
+  - Rec_in_hemisEmin
+  - Rec_indvtx
+  - Rec_vtx_isPV
+  #- Rec_track_absd0
+  #- Rec_track_absnormd0
+
 
 baseline-bdtl-vars:
 

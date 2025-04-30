@@ -578,7 +578,7 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
 
     # Prepare the data for the table
     table_data = [["Optimal FOM", "Optimal 1-P(l) cut", "Optimal 1-P(h) cut"],
-                  [f"{max_sigma:.4f}", f"{l:.4f}", f"{h:.4f}"]]
+                  [f"{max_sigma:.6f}", f"{l:.6f}", f"{h:.6f}"]]
     
     # Print the table
     print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
@@ -1037,6 +1037,15 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.fill_between(BFs, max_FOM-max_FOM_err, max_FOM+max_FOM_err,alpha=0.55)
         plt.vlines(x=three_sigma_BF, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_BF,sig=2)}')
         
+        if incl_toys_fit == True:
+            five_sigma_toys = np.interp(5, toys_significance, BFs)
+            three_sigma_toys = np.interp(3, toys_significance, BFs)
+            print(f"5 sigma BFs incl error = {five_sigma_toys}" )
+            print(f"3 sigma BFs incl error= {three_sigma_toys}" )
+            plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
+            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.55, color='green')
+            plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_toys,sig=2)}', color='green')
+        
         if incl_ZqqBFerror == True:
             #significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2) # defined in earlier if statement
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
@@ -1046,14 +1055,6 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         else:
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
             plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0)
-        if incl_toys_fit == True:
-            five_sigma_toys = np.interp(5, toys_significance, BFs)
-            three_sigma_toys = np.interp(3, toys_significance, BFs)
-            print(f"5 sigma BFs incl error = {five_sigma_toys}" )
-            print(f"3 sigma BFs incl error= {three_sigma_toys}" )
-            plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
-            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.55, color='green')
-            plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_toys,sig=2)}', color='green')
         
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'Significance')
@@ -1139,14 +1140,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.plot(BFs,CL,label='$S/\sqrt{S+B}$' )
         plt.fill_between(BFs, sigma_to_percentage(max_FOM-max_FOM_err),  sigma_to_percentage(max_FOM+max_FOM_err),alpha=0.55)
         plt.vlines(x=CL90BF, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF,sig=2)}')
-        
-        if incl_ZqqBFerror == True:
-            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
-            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0, color='orange')
-            plt.vlines(x=CL90BF_inclerr, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF_inclerr,sig=2)}', color='orange')
-        else:
-            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
-            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
+
         if incl_toys_fit == True:
             CL95_toys = np.interp(95, CL_toys, BFs)
             CL90_toys = np.interp(90, CL_toys, BFs)
@@ -1155,7 +1149,15 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
             plt.plot(BFs,CL_toys, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
             plt.fill_between(BFs, sigma_to_percentage(toys_significance-toys_sig_spread), sigma_to_percentage(toys_significance+toys_sig_spread),alpha=0.55, color='green')
             plt.vlines(x=CL90_toys, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90_toys,sig=2)}', color='green')
-        
+                
+        if incl_ZqqBFerror == True:
+            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
+            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0, color='orange')
+            plt.vlines(x=CL90BF_inclerr, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF_inclerr,sig=2)}', color='orange')
+        else:
+            plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+            plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
+            
         plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         plt.ylabel(r'1-CL (1-sided test)')
         plt.xscale('log')

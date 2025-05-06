@@ -56,7 +56,7 @@ def load_bdt_model(json_path):
 
 
 # very quick script to apply baseline-plus bdt_hl to  data for flavourtagging
-'''
+
 branching_fractions = cfg.branching_fractions
 samples =  cfg.sample_allocations['combined_signal']#cfg.samples
 
@@ -66,10 +66,10 @@ eff_bdtlh_cut = {}
 N_before_cut = {}
 
 cut_val = 0.5
-'''
+
 save_base_path = set_outputpath(os.path.join(cfg.fccana_opts["outputDir"]["prelim_cuts_full"],'baseline_plus_bdtlh_dataframes','flavtag_dataframes'))
 full_save_path = set_outputpath(os.path.join(save_base_path,'full_sample_medium_bdtlh_cut'))
-'''
+
 dataframe={}
 for sample in samples:
     print(sample)
@@ -119,10 +119,10 @@ with open(os.path.join(set_outputpath(save_path), "interpolated_N_remaining_dict
 
 with open(os.path.join(set_outputpath(save_path), "N_remaining_dictionary"), "rb") as dill_file:
     N_dict = dill.load(dill_file)
-'''
+
 ##Add BDT cut - for BF=1e-6
 BF=1e-6
-'''
+
 #find optimum cut
 FOM, _, _, _, _, _, lsearch, hsearch, _  = cutopt.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BF=BF, incl_ZqqBFerror=False)
 
@@ -138,11 +138,11 @@ full_data['P_not_light'] = 1-full_data['bdt_score_0']
 
 #add any extra cuts need here###########################
 cut_data = full_data.copy().query(f'(EVT_hemisEmax_n>10)&(P_not_light>{l_cut})&(P_not_heavy>{h_cut})')
-'''
+
 #keep desired branches
-flavtag_branches = ["Rec_p","Rec_px","Rec_py","Rec_pz","Rec_pt","Rec_true_PDG","Rec_in_hemisEmin","Rec_indvtx","Rec_vtx_isPV", "decay" ] # would be good to add "Rec_track_absd0","Rec_track_absnormd0"
-reco_space_branches = ["Rec_p","Rec_px","Rec_py","Rec_pz","Rec_pt","Rec_true_PDG","Rec_in_hemisEmin","Rec_indvtx"] # would be good to add "Rec_track_absd0","Rec_track_absnormd0"
-'''
+flavtag_branches = ["Rec_e","Rec_p","Rec_px","Rec_py","Rec_pz","Rec_pt","Rec_true_PDG","Rec_in_hemisEmin","Rec_indvtx","Rec_vtx_isPV", "Rec_true_M1", "Rec_true_M2","Rec_true_M1ofM1","Rec_true_M2ofM1","Rec_true_M1ofM2","Rec_true_M2ofM2","decay" ] # would be good to add "Rec_track_absd0","Rec_track_absnormd0"
+reco_space_branches = ["Rec_e","Rec_p","Rec_px","Rec_py","Rec_pz","Rec_pt","Rec_true_PDG","Rec_in_hemisEmin","Rec_indvtx","Rec_true_M1", "Rec_true_M2","Rec_true_M1ofM1","Rec_true_M2ofM1","Rec_true_M1ofM2","Rec_true_M2ofM2"] # would be good to add "Rec_track_absd0","Rec_track_absnormd0"
+
 data = cut_data.filter(items=flavtag_branches).reset_index(drop=True)
 
 
@@ -153,7 +153,7 @@ gc.collect()
 
 df_listified = data.applymap(lambda x: list(x) if type(x)!= str else x)
 
-df_listified.to_pickle(os.path.join(save_base_path,f'BF{BF}_selected_signal_flavtag_dataframe.pkl'))
+df_listified.to_pickle(os.path.join(save_base_path,f'BF{BF}_selected_signal_flavtag_dataframe_inclmotherinfo.pkl'))
 '''
 
 df_listified = pd.read_pickle('/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/prelim_cuts_full_data/baseline_plus_bdtlh_dataframes/flavtag_dataframes/BF1e-06_selected_signal_flavtag_dataframe.pkl')
@@ -187,3 +187,4 @@ filtered_df_fully['decay'] = df_listified['decay'].values()
 
 
 filtered_df_fully.to_pickle(os.path.join(save_base_path,f'BF{BF}_prompt_signal_K_flavtag_dataframe.pkl'))
+'''

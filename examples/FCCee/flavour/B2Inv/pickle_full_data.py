@@ -59,7 +59,7 @@ print(f"{30*'-'}\n")
 
 #path to data and outputs
 inputpath    = check_inputpath(cfg.fccana_opts['outputDir']['prelim_cuts_full']) 
-outputpath   = set_outputpath(os.path.join(inputpath,'dataframes'))
+outputpath   = set_outputpath(os.path.join(inputpath,'flavtag_dataframes'))
 yamlpath     = check_inputpath(cfg.fccana_opts['yamlPath'])
 
 #Getting BDT vars for training from yaml
@@ -67,7 +67,7 @@ bdtvars_list_old = cfg.baseline_bdt_lh_opts['mvaBranchList']
 bdtvars_list_optimised = cfg.optimised_bdt_lh_opts['mvaBranchList']
 responsevars = ["EVT_hemisEmin_Emiss"] # Variables not used by the bdt which you want to plot
 bdtvars      = list(set(vars_fromyaml(yamlpath, bdtvars_list_old) + vars_fromyaml(yamlpath, bdtvars_list_optimised)  + responsevars))
-
+flavtag_vars = list(vars_fromyaml(yamlpath, 'flavour-tag-vars'))
 
 # print statements to check loading things expect
 print(f"----> INFO: Loading files from")
@@ -75,7 +75,7 @@ print(f"{15*' '}{inputpath}")
 print(f"----> INFO: Output will be saved to")
 print(f"{15*' '}{outputpath}")
 
-samples = ['p8_ee_Zbb_ecm91']#cfg.samples
+samples = cfg.sample_allocations['combined_signal']#cfg.samples
 
 
 #calculating efficiencies and also saving files paths used to calculate efficiencies to ensure save same ones
@@ -132,14 +132,14 @@ for decay in samples:
     for n in range(nchunks):
         files =chunked_populated_files[n]
         Rdf = ROOT.RDataFrame("events", files)
-        Rdf_np = Rdf.AsNumpy(columns= bdtvars)
+        Rdf_np = Rdf.AsNumpy(columns= bdtvars+flavtag_vars)
         sub_df = pd.DataFrame(Rdf_np)
         sub_df["decay"] = decay
         sub_df["eff_presel"] = eff
 
         # want to make sure that integer types are actually set as integers - currenlty stored as float
         #if changed branches significantly might be worth checking the list is still right, with current branches expected integers in yaml
-        integer_branches = [s for s in bdtvars if '_n' in s and '_norm' not in s]
+        integer_branches = [s for s in bdtvars+flavtag_vars if '_n' in s and '_norm' not in s]
         for integer_branch in integer_branches:
             sub_df[integer_branch] = sub_df[integer_branch].astype(np.int32)
 

@@ -777,6 +777,7 @@ bdtlh-vars-v1:
   #- EVT_sum_Rec_pz
 
 flavour-tag-vars:
+  - Rec_e
   - Rec_p
   - Rec_px
   - Rec_py
@@ -786,6 +787,12 @@ flavour-tag-vars:
   - Rec_in_hemisEmin
   - Rec_indvtx
   - Rec_vtx_isPV
+  - Rec_true_M1
+  - Rec_true_M2
+  - Rec_true_M1ofM1
+  - Rec_true_M2ofM1
+  - Rec_true_M1ofM2
+  - Rec_true_M2ofM2
   #- Rec_track_absd0
   #- Rec_track_absnormd0
 

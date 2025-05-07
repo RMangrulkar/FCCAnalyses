@@ -13,6 +13,7 @@ from scipy.stats import norm as snorm
 from iminuit import Minuit
 from numba_stats import norm
 import joblib
+import matplotlib.gridspec as gridspec
 
 import config as cfg 
 import post_bdtlh_efficiency_finder as eff_finder
@@ -676,7 +677,13 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
 
 
 def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
-                            plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None):
+                            plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False):
+
+    #turn BF into title worthy version
+    num = f"{signal_BF:.1e}".split('e')[0]  # '1.0'
+    exponent = int(f"{signal_BF:.1e}".split('e')[1])  # -6
+    latex_BF = f"${num} \\times 10^{{{exponent}}}$"
+
 
     def histogram_settings():
         hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
@@ -738,6 +745,17 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
             plt.figure()
             tot_arr=[0,0,0,0]
             tot_signal = [0,0,0,0]
+
+            if pull_type_plot==True:
+                frac_sub=3
+                fig = plt.figure(figsize=(6, 6))
+                gs = gridspec.GridSpec(2, 1,height_ratios=[frac_sub, 1])  # 2 rows: 3:1 height ratio
+                # Main plot (top)
+                ax_main = fig.add_subplot(gs[0])
+                plt.sca(ax_main)# Set current axis so existing plotting code works unchanged
+
+
+            #return to plotting script
             for allocation in cfg.sample_allocations:
                 i=0
         
@@ -764,48 +782,83 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                         tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
 
             if plot_signal_components == False:
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'Combined $B^0_{(s)}\rightarrow \nu\bar\nu$', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=2,edgecolor ='royalblue' , facecolor= 'none', hatch='////')
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=2,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
                         
                 
             # sorting ticks so at edges but name still at centre
             bars = plt.gca().patches
-            # sets major ticks so that name but no visible tick mark
+            #hide central ticks
             plt.tick_params(axis='x', which='major', length=0)  # hide tick marks at centres
+            
             # Edge ticks (visible, no labels)
             edges = [b.get_x() for b in bars] + \
                     [b.get_x() + b.get_width() for b in bars]
             plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
             plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
-    
-            #add systematic error to B - error bar
-            #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label='Systematic error on B', color='black', alpha=0.4, width=1)
-            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label='Systematic error on B', facecolor='none',  width=1, edgecolor='black')
-
-
-            '''
-            #add systematic error to B - lines instead of error bar
-            # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
-            for i, (x_label, b_val, b_err) in enumerate(zip([x[1,0], x[0,0], x[0,1], x[1,1]], 
-                                                           [B[1,0], B[0,0], B[0,1], B[1,1]], 
-                                                           [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]])):
-                # Convert x_label to a numerical index
-                x_val = i 
-            
-                # Top and bottom of the error bar
-                top_error = b_val + b_err
-                bottom_error = b_val - b_err
-            
-                # Draw horizontal lines at the top and bottom of the error bars
-                plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1)                                       
-                if i ==3:
-                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1,label='Systematic error on B')
-                else:
-                    plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1)
-            '''
-            plt.title(r'Signal $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles)$=$ '+ f'{signal_BF}')
             plt.legend()
+            
             plt.ylabel('Expected Counts')
-            plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}.pdf'))
+
+            if pull_type_plot==True:
+                # Bottom axis 
+                ax_sub = fig.add_subplot(gs[1], sharex=ax_main)
+                
+                if plot_signal_components == False:
+                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
+                else:
+                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}')
+
+                ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =[-val for val in [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]]], color='black', alpha=0.45, width=1, label=r'$Z \to q \bar{q}$ background systematic')
+
+
+                # Clean up sub axis
+                ax_sub.set_xticks([x[1,0],x[0,0],x[0,1],x[1,1]])
+                ax_sub.tick_params(axis='x', which='major', length=0) 
+                ax_sub.set_ylabel('Expected Counts')  # or 'Residuals' or whatever is relevant
+                ax_sub.tick_params(axis='x', which='minor', length=4)  # show edge ticks
+                ax_sub.legend()
+
+                ax_main.tick_params(axis='x', which='major', bottom=False, labelbottom=False)
+
+
+                #determine axes and their limits 
+                main_height = ax_main.get_ylim()
+
+                #determine sub_height
+                sub_height = np.diff(main_height)/frac_sub
+                ax_sub.set_ylim(-1.3*B_err[1,1],sub_height -1.3*B_err[1,1])
+
+                plt.legend()
+                plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}_with_second_axis.pdf'))
+            else: 
+                
+                #add systematic error to B - error bar
+                #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', color='black', alpha=0.4, width=1)
+                #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='black')            
+                #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='none', hatch='///')            
+                
+                
+                #add systematic error to B - lines instead of error bar
+                # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
+                for i, (x_label, b_val, b_err) in enumerate(zip([x[1,0], x[0,0], x[0,1], x[1,1]], 
+                                                            [B[1,0], B[0,0], B[0,1], B[1,1]], 
+                                                            [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]])):
+                    # Convert x_label to a numerical index
+                    x_val = i 
+                
+                    # Top and bottom of the error bar
+                    top_error = b_val + b_err
+                    bottom_error = b_val - b_err
+                
+                    # Draw horizontal lines at the top and bottom of the error bars
+                    plt.hlines(top_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1.5)                                       
+                    if i ==3:
+                        plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1.5,label=r'$Z \to q \bar{q}$ background systematic')
+                    else:
+                        plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1.5)
+                
+                plt.legend()
+                plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}.pdf'))
 
         else:
             print('Warning: currently only set up to plot 2x2 binning')
@@ -1043,7 +1096,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
             print(f"5 sigma BFs incl error = {five_sigma_toys}" )
             print(f"3 sigma BFs incl error= {three_sigma_toys}" )
             plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
-            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.55, color='green')
+            plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.4, color='green')
             plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_toys,sig=2)}', color='green')
         
         if incl_ZqqBFerror == True:
@@ -1073,10 +1126,14 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         plt.vlines(x=inclerr_highlight_x_3, ymin=0, ymax=inclerr_highlight_y_3, color='purple', linestyle='--')
         #plt.hlines(y=highlight_y_3, xmin=min(BFs), xmax=inclerr_highlight_x_3, color='purple', linestyle='--')
         '''
-        
+        # reordering the labels 
+        handles, labels = plt.gca().get_legend_handles_labels() 
+        # specify order 
+        order = [0, 2, 1] 
+        # pass handle & labels lists along with order as below 
+        plt.legend([handles[i] for i in order], [labels[i] for i in order])
 
-        plt.legend()
-        plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+        #plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         if incl_ZqqBFerror == True:
             if incl_toys_fit == True:
                 plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr_wtoys.pdf'))
@@ -1147,7 +1204,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
             print(f"95% BF from toys = {CL95_toys}" )
             print(f"90% BF from toys= {CL90_toys}" )
             plt.plot(BFs,CL_toys, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
-            plt.fill_between(BFs, sigma_to_percentage(toys_significance-toys_sig_spread), sigma_to_percentage(toys_significance+toys_sig_spread),alpha=0.55, color='green')
+            plt.fill_between(BFs, sigma_to_percentage(toys_significance-toys_sig_spread), sigma_to_percentage(toys_significance+toys_sig_spread),alpha=0.4, color='green')
             plt.vlines(x=CL90_toys, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90_toys,sig=2)}', color='green')
                 
         if incl_ZqqBFerror == True:
@@ -1170,8 +1227,15 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         #plt.hlines(y=highlight_y_90, xmin=min(BFs), xmax=inclerr_highlight_x_90, color='purple', linestyle='--')
         
         plt.ylim(52,102)
-        plt.legend()
-        plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+        
+        # reordering the labels 
+        handles, labels = plt.gca().get_legend_handles_labels() 
+        # specify order 
+        order = [0, 2, 1] 
+        # pass handle & labels lists along with order as below 
+        plt.legend([handles[i] for i in order], [labels[i] for i in order])
+
+        #plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
         if incl_ZqqBFerror == True:
             if incl_toys_fit == True:
                 plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr_wtoys.pdf'))
@@ -1236,6 +1300,8 @@ if __name__=="__main__":
     #                         ntoys = 250,
     #                         fit_plotpath=f'{plotpath}final_binning/1e-7/', x_values = np.array([['A','B'],['C','D']]), spread_plotpath=f'{plotpath}final_binning/1e-7/')
 
+    #make_final_binning_plot(full_data, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+    #                        plot_signal_components=True,  nMC_plots_path=None, final_plot_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/final_binning/1e-6/', pull_type_plot=True)
 
-    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,250), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=10000,plot=True,savepath = plotpath ,toyplotpath = plotpath)
+    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,100), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=10000,plot=True,savepath = plotpath ,toyplotpath = plotpath)
     

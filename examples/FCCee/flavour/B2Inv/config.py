@@ -353,8 +353,10 @@ sample_shorthand = {
 }
 
 titles = {
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": r"$B_s^0 \to \nu \bar{\nu}$",
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": r"$B_d^0 \to \nu \bar{\nu}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_old": r"$B_s^0 \to \nu \bar{\nu}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_old": r"$B_d^0 \to \nu \bar{\nu}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": r"$B_s^0 \to$ invisibles",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": r"$B^0 \to$ invisibles",
     "p8_ee_Zbb_ecm91": r"$Z \to b \bar{b}$",
     "p8_ee_Zcc_ecm91": r"$Z \to c \bar{c}$",
     "p8_ee_Zss_ecm91": r"$Z \to s \bar{s}$",
@@ -406,6 +408,8 @@ mass_Z = 91.188  # Ecm used in the winter2023 samples
 
 N_z = 6e12 # total number of Nz expected across all experiments during tera-Z run (from https://arxiv.org/pdf/2309.11353 Matt/Aidan paper)
 
+mass_KS = 0.497611 #\pm 0.000013 GeV
+mass_pi0 = 0.1349768#\pm0.0000005 GeV
 
 prelim_cut_effs = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.876092,0.00023297524277432458), 

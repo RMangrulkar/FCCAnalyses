@@ -14,6 +14,8 @@ from iminuit import Minuit
 from numba_stats import norm
 import joblib
 import matplotlib.gridspec as gridspec
+from scipy.interpolate import interp1d
+from scipy.optimize import root_scalar
 
 import config as cfg 
 import post_bdtlh_efficiency_finder as eff_finder
@@ -43,10 +45,24 @@ def sigma_to_percentage(sigma):
 def flatten_list(nested_list):
     return [item for sublist in nested_list for item in sublist]
 
+#round to given number of sig figs
 def round_sig(x, sig=1):
     if x == 0:
         return 0
     return round(x, sig - int(np.floor(np.log10(abs(x)))) - 1)
+
+def latex_form_exp(signal_BF):
+        #turn BF into title worthy version
+    num = f"{signal_BF:.1e}".split('e')[0]  # '1.0'
+    exponent = int(f"{signal_BF:.1e}".split('e')[1])  # -6
+    latex_BF = f"${num} \\times 10^{{{exponent}}}$"
+
+    return latex_BF
+
+def find_x_for_y(y_target, f, x_bounds):
+    def g(x): return f(x) - y_target
+    sol = root_scalar(g, bracket=x_bounds)
+    return sol.root if sol.converged else None
 
 
 #plan: create and save map of N and N interpolated
@@ -680,9 +696,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                             plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False):
 
     #turn BF into title worthy version
-    num = f"{signal_BF:.1e}".split('e')[0]  # '1.0'
-    exponent = int(f"{signal_BF:.1e}".split('e')[1])  # -6
-    latex_BF = f"${num} \\times 10^{{{exponent}}}$"
+    latex_BF = latex_form_exp(signal_BF)
 
 
     def histogram_settings():
@@ -924,13 +938,23 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
                 x_strings =[x_values[1,0],x_values[0,0],x_values[0,1],x_values[1,1]] 
                 x = np.arange(len(x_strings))
                 plt.figure() 
-                plt.bar(x,[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch=r'\\\\')
-                plt.bar(x,[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor='royalblue',hatch='////', facecolor='none')
-                plt.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label='Gaussian constraint from \n error on generator B', color='black', alpha=0.4, width=1)
-                plt.errorbar(x, [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Toy Data', color='k')
+                plt.bar(x,[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch='///')
+                plt.bar(x,[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                plt.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label=r'$\sigma_B$ gaussian constraint', color='black', alpha=0.4, width=1)
+                plt.errorbar(x, [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Toy data', color='k')
                 plt.legend()
                 plt.ylabel('Counts')
                 plt.xticks(x, x_strings)
+                # sorting ticks so at edges but name still at centre
+                bars = plt.gca().patches
+                #hide central ticks
+                plt.tick_params(axis='x', which='major', length=0)  # hide tick marks at centres
+                # Edge ticks (visible, no labels)
+                edges = [b.get_x() for b in bars] + \
+                    [b.get_x() + b.get_width() for b in bars]
+                plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
+                plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
+
                 plt.title(f'Example toy fit for signal BF = {signal_BF}')
                 plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath,'toy_fits')),f'toy_fit_for_first_toy_BF{signal_BF}.pdf'))
     
@@ -1011,11 +1035,11 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     B_err = np.zeros(len(sig_BFs))
     full_S_err= np.zeros(len(sig_BFs))
     full_B_err= np.zeros(len(sig_BFs))
-    toys_significance = np.zeros(len(sig_BFs))
-    toys_sig_spread = np.zeros(len(sig_BFs))
-
 
     i=0
+    toy_BFs=[]
+    toy_significance=[]
+    toy_sig_spread = []
 
     for BF in sig_BFs:
         
@@ -1035,25 +1059,36 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         B_exp[i] = B_arr[indices[0],indices[1]]
         S_err[i] = S_error_arr[indices[0],indices[1]]
         B_err[i] = B_error_arr[indices[0],indices[1]]
+
         
         if incl_ZqqBFerror == True:
             full_S_err[i] = full_S_error_arr[indices[0],indices[1]]
             full_B_err[i] = full_B_error_arr[indices[0],indices[1]]
 
         if incl_toys_fit == True:
-            if full_df is None:
-                print('Warning: no data provided for toys fit')
-                continue
-            else:
-                if i % 20 == 0:
-                    av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder(full_df, interp_N_dict, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
+            if i%10==0:
+                if full_df is None:
+                    print('Warning: no data provided for toys fit')
+                    continue
                 else:
-                    av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder(full_df, interp_N_dict, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
-                  
-                toys_significance[i] = av_significance_for_bf[0]
-                toys_sig_spread[i] = stdev_significance_for_bf[0]
+                    if i % 20 == 0:
+                        av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder(full_df, interp_N_dict, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
+                    else:
+                        av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder(full_df, interp_N_dict, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
+                    
+                    toy_BFs.append(sig_BFs[i])
+                    toy_significance.append(av_significance_for_bf[0])
+                    toy_sig_spread.append(stdev_significance_for_bf[0])
+
+                    #toys_significance[i] = av_significance_for_bf[0]
+                    #toys_sig_spread[i] = stdev_significance_for_bf[0]
 
         i+=1
+
+    #convert toy lists to numpy
+    toys_BFs = np.array(toy_BFs)
+    toys_significance = np.array(toy_significance)
+    toys_sig_spread = np.array(toy_sig_spread)
 
     #find 3 sigma and 5 sigma points
     #with interpolation 
@@ -1087,10 +1122,30 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         #plotting S/sqrt(S+B) line
         plt.figure()
         plt.plot(BFs,max_FOM, label = r'$S/\sqrt{S+B}$')
-        plt.fill_between(BFs, max_FOM-max_FOM_err, max_FOM+max_FOM_err,alpha=0.55)
-        plt.vlines(x=three_sigma_BF, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_BF,sig=2)}')
+        plt.fill_between(BFs, max_FOM-max_FOM_err, max_FOM+max_FOM_err,alpha=0.4)
+        plt.vlines(x=three_sigma_BF, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_BF,sig=2))}')
         
         if incl_toys_fit == True:
+
+            #interpolate toy fit
+            interp_toys_significance = interp1d(toys_BFs, toys_significance, kind = 'quadratic')
+            interp_BF_for_significance = interp1d(toys_significance,toys_BFs, kind = 'quadratic')
+            interp_toys_significance_upper = interp1d(toys_BFs, np.add(toys_significance,toys_sig_spread), kind = 'quadratic')
+            interp_toys_significance_lower = interp1d(toys_BFs, np.subtract(toys_significance,toys_sig_spread), kind = 'quadratic')
+            #five_sigma_toys = interp_BF_for_significance(5)
+            #three_sigma_toys = interp_BF_for_significance(3)
+            five_sigma_toys = find_x_for_y(5, interp_toys_significance, x_bounds = (min(toys_BFs), max(toys_BFs)))
+            three_sigma_toys = find_x_for_y(3, interp_toys_significance, x_bounds = (min(toys_BFs), max(toys_BFs)))
+            print(three_sigma_toys)
+            print(f"5 sigma BFs toys = {five_sigma_toys}" )
+            print(f"3 sigma toys= {three_sigma_toys}" )
+            plot_BFs = np.logspace(np.log10(min(toys_BFs)), np.log10(max(toys_BFs)),len(sig_BFs))
+            plt.plot(plot_BFs,interp_toys_significance(plot_BFs), label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
+            plt.fill_between(plot_BFs, interp_toys_significance_lower(plot_BFs), interp_toys_significance_upper(plot_BFs),alpha=0.4, color='green')
+            plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_toys,sig=2))}', color='green')
+            plt.xlim(min(toys_BFs), max(toys_BFs))
+
+            '''
             five_sigma_toys = np.interp(5, toys_significance, BFs)
             three_sigma_toys = np.interp(3, toys_significance, BFs)
             print(f"5 sigma BFs incl error = {five_sigma_toys}" )
@@ -1098,12 +1153,13 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
             plt.plot(BFs,toys_significance, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
             plt.fill_between(BFs, toys_significance-toys_sig_spread, toys_significance+toys_sig_spread,alpha=0.4, color='green')
             plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_toys,sig=2)}', color='green')
-        
+            '''
+
         if incl_ZqqBFerror == True:
             #significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2) # defined in earlier if statement
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
             plt.fill_between(BFs, significance_incl_error, significance_incl_error,alpha=0, color='orange')
-            plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{round_sig(three_sigma_BF_inclerr,sig=2)}', color='orange')
+            plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_BF_inclerr,sig=2))}', color='orange')
         
         else:
             plt.plot(BFs,significance_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
@@ -1129,7 +1185,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         # reordering the labels 
         handles, labels = plt.gca().get_legend_handles_labels() 
         # specify order 
-        order = [0, 2, 1] 
+        order = [0,1,2,3,4,5]
         # pass handle & labels lists along with order as below 
         plt.legend([handles[i] for i in order], [labels[i] for i in order])
 
@@ -1149,39 +1205,13 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
 
     
     #convert sigma to CL - for now one sided
-
+    
     CL = sigma_to_percentage(max_FOM)
     CL_incl_error = sigma_to_percentage(significance_incl_error) # this dependent on if have full error or not above
-    CL_toys = sigma_to_percentage(toys_significance)
-
-    #find 90 % and 95 % points
-    '''
-    closest_index_90 = np.argmin(np.abs(np.array(CL) - 90))
-    highlight_x_90 = BFs[closest_index_90]
-    highlight_y_90 = CL[closest_index_90]
-
-    closest_index_95 = np.argmin(np.abs(np.array(CL) - 95))
-    highlight_x_95 = BFs[closest_index_95]
-    highlight_y_95 = CL[closest_index_95]
-
-
-    #repeat for incl error
-    inclerr_closest_index_90 = np.argmin(np.abs(np.array(CL_incl_error) - 90))
-    inclerr_highlight_x_90 = BFs[inclerr_closest_index_90]
-    inclerr_highlight_y_90 = CL_incl_error[inclerr_closest_index_90]
-
-    inclerr_closest_index_95 = np.argmin(np.abs(np.array(CL_incl_error) - 95))
-    inclerr_highlight_x_95 = BFs[inclerr_closest_index_95]
-    inclerr_highlight_y_95 = CL_incl_error[inclerr_closest_index_95]
+    #CL_toys = sigma_to_percentage(toys_significance)
     
-    print(f"95% BFs = {BFs[closest_index_95]}" )
-    print(f"90% BFs = {BFs[closest_index_90]}" )
 
-    print(f"95% BFs incl error = {BFs[inclerr_closest_index_95]}" )
-    print(f"90% BFs incl error = {BFs[inclerr_closest_index_90]}" )
-
-    '''
-    # instead using interpolation
+    # using interpolation
     CL95BF= np.interp(95, CL, BFs)
     CL90BF = np.interp(90, CL, BFs)
     print(f"95% CL BFs = {CL95BF}" )
@@ -1189,16 +1219,41 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
 
     CL95BF_inclerr= np.interp(95, CL_incl_error, BFs)
     CL90BF_inclerr = np.interp(90, CL_incl_error, BFs)
-    print(f"95% CL BFs = {CL95BF_inclerr}" )
-    print(f"90% CL BFs = {CL90BF_inclerr}" )
-
+    print(f"95% CL BFs incl error = {CL95BF_inclerr}" )
+    print(f"90% CL BFs incle error = {CL90BF_inclerr}" )
+    
     if plot == True: 
         plt.figure()
         plt.plot(BFs,CL,label='$S/\sqrt{S+B}$' )
-        plt.fill_between(BFs, sigma_to_percentage(max_FOM-max_FOM_err),  sigma_to_percentage(max_FOM+max_FOM_err),alpha=0.55)
-        plt.vlines(x=CL90BF, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF,sig=2)}')
+        plt.fill_between(BFs, sigma_to_percentage(max_FOM-max_FOM_err),  sigma_to_percentage(max_FOM+max_FOM_err),alpha=0.4)
+        plt.vlines(x=CL90BF, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF,sig=2))}')
 
         if incl_toys_fit == True:
+
+            CL_toys = sigma_to_percentage(toys_significance)
+
+            #interpolate toy fit
+            interp_CL_toys = interp1d(toys_BFs, CL_toys, kind = 'quadratic')
+
+            #interp_BF_for_CL_toys = interp1d(CL_toys, toys_BFs, kind = 'quadratic')
+            interp_CL_toys_upper = interp1d(toys_BFs, sigma_to_percentage(np.add(toys_significance,toys_sig_spread)), kind = 'quadratic')
+            interp_CL_toys_lower = interp1d(toys_BFs, sigma_to_percentage(np.subtract(toys_significance,toys_sig_spread)), kind = 'quadratic')
+
+            #CL95_toys = interp_BF_for_CL_toys(95)
+            #CL90_toys = interp_BF_for_CL_toys(90)
+            #CL95_toys = np.interp(95, CL_toys, toys_BFs) - if use this need .item() in lable
+            #CL90_toys = np.interp(90, CL_toys, toys_BFs)
+            CL95_toys = find_x_for_y(95, interp_CL_toys, x_bounds = (min(toys_BFs), max(toys_BFs)))
+            CL90_toys = find_x_for_y(90, interp_CL_toys, x_bounds = (min(toys_BFs), max(toys_BFs)))
+            print(f"95% BF from toys = {CL95_toys}" )
+            print(f"90% BF from toys= {CL90_toys}" )
+
+            plt.plot(plot_BFs,interp_CL_toys(plot_BFs), label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
+            plt.fill_between(plot_BFs, interp_CL_toys_lower(plot_BFs), interp_CL_toys_upper(plot_BFs),alpha=0.4, color='green')
+            plt.vlines(x=CL90_toys, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90_toys,sig=2))}', color='green')
+            plt.xlim(min(toys_BFs), max(toys_BFs))
+
+            '''
             CL95_toys = np.interp(95, CL_toys, BFs)
             CL90_toys = np.interp(90, CL_toys, BFs)
             print(f"95% BF from toys = {CL95_toys}" )
@@ -1206,11 +1261,11 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
             plt.plot(BFs,CL_toys, label = r'$\sqrt{2\Delta\ln{\mathcal{L}}}$ mean'+' \n over '+f'{ntoys} toys', color='green')
             plt.fill_between(BFs, sigma_to_percentage(toys_significance-toys_sig_spread), sigma_to_percentage(toys_significance+toys_sig_spread),alpha=0.4, color='green')
             plt.vlines(x=CL90_toys, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90_toys,sig=2)}', color='green')
-                
+            '''  
         if incl_ZqqBFerror == True:
             plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$', color='orange')
             plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0, color='orange')
-            plt.vlines(x=CL90BF_inclerr, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{round_sig(CL90BF_inclerr,sig=2)}', color='orange')
+            plt.vlines(x=CL90BF_inclerr, ymin=52, ymax=90, linestyle='--', label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF_inclerr,sig=2))}', color='orange')
         else:
             plt.plot(BFs,CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
             plt.fill_between(BFs, CL_incl_error, CL_incl_error,alpha=0)
@@ -1227,11 +1282,11 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         #plt.hlines(y=highlight_y_90, xmin=min(BFs), xmax=inclerr_highlight_x_90, color='purple', linestyle='--')
         
         plt.ylim(52,102)
-        
+
         # reordering the labels 
         handles, labels = plt.gca().get_legend_handles_labels() 
         # specify order 
-        order = [0, 2, 1] 
+        order = [0,1,2,3,4,5] 
         # pass handle & labels lists along with order as below 
         plt.legend([handles[i] for i in order], [labels[i] for i in order])
 
@@ -1289,7 +1344,7 @@ if __name__=="__main__":
         N_dict = dill.load(dill_file)
     
     
-    plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/test/'
+    plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/test/interpolated_toys/larger_range'
     #plot_interpolted_effs(interp_N_dict, N_dict ,nlh=20, slice=True, save_path=plotpath)
     #FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF = run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BF=1e-7)
     #plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, vmax=20,SB_plots = True, save_path=plotpath)
@@ -1303,5 +1358,5 @@ if __name__=="__main__":
     #make_final_binning_plot(full_data, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
     #                        plot_signal_components=True,  nMC_plots_path=None, final_plot_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation/final_binning/1e-6/', pull_type_plot=True)
 
-    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-5,100), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=10000,plot=True,savepath = plotpath ,toyplotpath = plotpath)
+    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-4.4,300), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=30000,plot=True,savepath = plotpath ,toyplotpath = plotpath)
     

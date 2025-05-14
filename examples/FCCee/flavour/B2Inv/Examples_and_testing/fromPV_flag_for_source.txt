@@ -1,0 +1,34 @@
+# for myUtils.cc
+//flag whether a particls is from a PV
+ROOT::VecOps::RVec<int> flag_particles_from_PV(
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+    ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex) {
+
+  ROOT::VecOps::RVec<int> flags;
+
+  for (size_t i = 0; i < recop.size(); ++i) {
+    int RP_vtxind = get_Vertex_fromRPindex(i, vertex);
+    if (RP_vtxind == -999) {
+      flags.push_back(-1);  // Vertex not found
+    } else {
+      if (vertex.at(RP_vtxind).vertex.primary) {
+        flags.push_back(1);
+      } else {
+        flags.push_back(0);
+      }
+    }
+  }
+
+  return flags;
+}
+
+#for myUtils.h
+  //flag whether a particls is from a PV
+  ROOT::VecOps::RVec<int> flag_particles_from_PV(
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop,
+    ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex);
+
+
+#For process tuples
+.Define("Rec_fromPV",    "myUtils::flag_particles_from_PV(RecoParticlesPIDAtVertex, Rec_VertexObject)")
+       

@@ -200,22 +200,26 @@ def get_efficiencies(inputtype,
                     before += int(f['eventsProcessed'])
                     after  += int(f['eventsSelected'])
                 else:
-                    if int(f['eventsSelected']) ==0: #add exception for if file is empty as no events passed preselection
-                        continue
+                    if int(f['eventsSelected']) ==0: #add exception for if file is empty as no events passed preselection doesnt try and apply cut
+                        if raw:
+                            before += int(f['eventsProcessed'])
+                        else:
+                            before += int(f['eventsSelected'])
+                        
+                    else: 
+                        if raw:
+                            before += int(f['eventsProcessed'])
+                        else:
+                            before += int(f['eventsSelected'])
 
-                    if raw:
-                        before += int(f['eventsProcessed'])
-                    else:
-                        before += int(f['eventsSelected'])
+                        # If cut is a single string
+                        if isinstance(cut, str):
+                            after += len(f['events'].arrays('Rec_n', cut = cut))  # Placeholder column
 
-                    # If cut is a single string
-                    if isinstance(cut, str):
-                        after += len(f['events'].arrays('Rec_n', cut = cut))  # Placeholder column
-
-                    # If cut is a list of strings, pass each one
-                    elif isinstance(cut, list):
-                        for i, cut_expr in enumerate(cut):
-                            after[i] += len(f['events'].arrays('Rec_n', cut=cut_expr))
+                        # If cut is a list of strings, pass each one
+                        elif isinstance(cut, list):
+                            for i, cut_expr in enumerate(cut):
+                                after[i] += len(f['events'].arrays('Rec_n', cut=cut_expr))
 
         mode, error = efficiency_calc(before, after)
 

@@ -414,36 +414,27 @@ N_z = 6e12 # total number of Nz expected across all experiments during tera-Z ru
 mass_KS = 0.497611 #\pm 0.000013 GeV
 mass_pi0 = 0.1349768#\pm0.0000005 GeV
 
-prelim_cut_effs = {
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.876092,0.00023297524277432458), 
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (0.8826863636363637,0.00021695335904454782),  
-    "p8_ee_Zbb_ecm91": (0.05767557918542743,1.1129951452027661e-05),
-    "p8_ee_Zcc_ecm91":(0.041443724884963125,8.915504990214572e-06),
-    "p8_ee_Zss_ecm91":(0.04597152896410762,9.367329309382369e-06),
-    "p8_ee_Zud_ecm91": (0.024312405153808926, 6.9020180597782595e-06),
-    "p8_ee_Ztautau_ecm91": (0.04472734,2.067046492437955e-05),
-    "p8_ee_Zmumu_ecm91": (2.29e-06,1.5165733068336503e-07),#ie. only 229 events left out of 100mn
-    "p8_ee_Zee_ecm91":(1.4e-06,  1.1874333418765638e-07) #ie. only 140 events left out of 100mn
+
+prelim_cut_effs = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu': (0.876092, 0.00023297513169984185),
+ 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu': (0.8826863636363637, 0.00021695324861459309),
+ 'p8_ee_Zbb_ecm91': (0.05767557918542743, 1.112995134404382e-05),
+ 'p8_ee_Zcc_ecm91': (0.041443724884963125, 8.915504876430558e-06), 
+ 'p8_ee_Zss_ecm91': (0.04597152896410762, 9.367329187236206e-06),  
+ 'p8_ee_Zud_ecm91': (0.024312405153808926, 6.902017868782445e-06),
+ 'p8_ee_Ztautau_ecm91': (0.04472734, 2.0670463638239323e-05), 
+ 'p8_ee_Zmumu_ecm91': (2.29e-06, 1.5140986460763067e-07), 
+ 'p8_ee_Zee_ecm91': (1.4e-06, 1.1842710888770522e-07)
 }
 
-Presel_eff_incl_tau = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_eff': 0.8591695,
- 'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_err': 0.00024596478082094744,
- 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_eff': 0.8659218181818182,
- 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_err': 0.00022972444759674417,
- 'p8_ee_Zbb_ecm91_eff': 0.05682641759221219,
- 'p8_ee_Zbb_ecm91_err': 1.1052690730233407e-05,
- 'p8_ee_Zcc_ecm91_eff': 0.039435947543960743,
- 'p8_ee_Zcc_ecm91_err': 8.705967773060812e-06,
- 'p8_ee_Zss_ecm91_eff': 0.041542190314042576,
- 'p8_ee_Zss_ecm91_err': 8.925279870387284e-06,
- 'p8_ee_Zud_ecm91_eff': 0.021884987304170968,
- 'p8_ee_Zud_ecm91_err': 6.556542046474177e-06,
- 'p8_ee_Ztautau_ecm91_eff': 3.434e-05,
- 'p8_ee_Ztautau_ecm91_err': 5.860786496716766e-07,
- 'p8_ee_Zmumu_ecm91_eff': 1.2903225806451614e-07,
- 'p8_ee_Zmumu_ecm91_err': 3.876936480150191e-08,
- 'p8_ee_Zee_ecm91_eff': 7.894736842105264e-08,
- 'p8_ee_Zee_ecm91_err': 3.481251450249334e-08}
+Presel_eff_incl_tau = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_eff': (0.8591695,0.00024596470709481455),
+ 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_eff': (0.8659218181818182,0.00022972437147417146),
+ 'p8_ee_Zbb_ecm91_eff': (0.05682641759221219,1.1052690619586802e-05),
+ 'p8_ee_Zcc_ecm91_eff': (0.039435947543960743,8.705967643483914e-06),
+ 'p8_ee_Zss_ecm91_eff': (0.041542190314042576,8.925279735547131e-06),
+ 'p8_ee_Zud_ecm91_eff': (0.021884987304170968, 6.556541853171283e-06),
+ 'p8_ee_Ztautau_ecm91_eff': (3.434e-05,5.860146762460286e-07),
+ 'p8_ee_Zmumu_ecm91_eff': (1.2e-07,3.49999975928571e-08),
+ 'p8_ee_Zee_ecm91_eff': (6e-08, 2.4999999029999996e-08)}
 
 eventsProcessed = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 2000000,
@@ -457,14 +448,26 @@ eventsProcessed = {
     "p8_ee_Zee_ecm91":100000000,
 }
 
-eventsSelected_preBDT = {
+eventsSelected_preBDT_notau_veto = { #nb excluding tau veto
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1752184,
     "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1941910,
     "p8_ee_Zbb_ecm91":25304505,
     "p8_ee_Zcc_ecm91":20713014,
     "p8_ee_Zss_ecm91":22977759,
-    "p8_ee_Zud_ecm91":12046354,
+    "p8_ee_Zud_ecm91":12106385,#12046354,IDK why this was the initial number in here, I think a typo - these also arent used anywhere I dont think so it's not super importnat
     "p8_ee_Ztautau_ecm91":4472734,
     "p8_ee_Zmumu_ecm91":229,
     "p8_ee_Zee_ecm91":140,
+}
+
+eventsSelected_preBDT_withtau_veto = { 
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1718339,
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1905028,
+    "p8_ee_Zbb_ecm91":24931945,
+    "p8_ee_Zcc_ecm91":19709554,
+    "p8_ee_Zss_ecm91":20763861,
+    "p8_ee_Zud_ecm91":10897650,
+    "p8_ee_Ztautau_ecm91":3434,
+    "p8_ee_Zmumu_ecm91":12,
+    "p8_ee_Zee_ecm91":6,
 }

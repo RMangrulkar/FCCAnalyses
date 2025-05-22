@@ -15,10 +15,6 @@
 #               - "EVT_hemisEmin_nLept == 0"    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
 #       
 #
-#BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
-#BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
-#BDTmE - BDT to look for missing energy events in events that pass BDTl
-#
 ####################################
 
 import os

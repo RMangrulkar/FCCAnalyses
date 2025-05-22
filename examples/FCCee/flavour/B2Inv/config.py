@@ -365,6 +365,9 @@ titles = {
     "p8_ee_Ztautau_ecm91":r"$Z \to \tau^{+} \tau^{-}$",
     "p8_ee_Zmumu_ecm91":r"$Z \to \mu^{+} \mu^{-}$",
     "p8_ee_Zee_ecm91":r"$Z \to e^{+} e^{-}$",
+    "heavy_background": r"$Z \to b \bar{b}+Z \to c \bar{c}$",
+    "light_background": r"$Z \to s \bar{s}+Z \to d \bar{d}+Z \to u \bar{u}$",
+    "signal": r"$B_{(s)}^0 \to \nu \bar{\nu}$",
 }
 
 ##############################

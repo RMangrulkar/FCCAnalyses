@@ -25,8 +25,11 @@ plt.style.use('fcc.mplstyle')
 #multivariate map
 labels = {'signal':2,'heavy_background':1 ,'light_background':0}
 labels_dict_inverted = {v: k for k, v in labels.items()}
-colors = {'signal':'mediumblue','heavy_background':'y' ,'light_background':'g','background':'r'}
-blobs = {'signal':'bo','heavy_background':'y+' ,'light_background':'g+','background':'r+' }
+
+#define formatting
+colors = {'signal':plt.cm.Blues(np.linspace(0, 1, 12)[-4]),'heavy_background':plt.cm.Reds( np.linspace(0, 1, 6)[-2] ) ,'light_background':plt.cm.Reds( np.linspace(0, 1, 12)[3] ) ,'background':'r'} ##plt.cm.Reds( np.linspace(0, 1, 6)[1] ) 
+blobs = {'signal':'.','heavy_background':'+' ,'light_background':'+','background':'+' }
+
 
 
 # Function to load the BDT model from a JSON file
@@ -129,22 +132,22 @@ def plot_bdt_response(df, bdt_name = "BDT_lh",output_file_name = "response" ,out
     train_w_dict={}
     test_w_dict={}
 
+    i=0
     for cat in categories:
         if cat == 'background':
             train_dict[cat] = df[ (df["sample"]==0) & (df["label"]!=labels_map['signal']) ][bdt_score].values
             test_dict[cat] = df[ (df["sample"]==1) & (df["label"]!=labels_map['signal']) ][bdt_score].values
             train_w_dict[cat] = df[ (df["sample"]==0) & (df["label"]!=labels_map['signal']) ]["total_weight"].values
             test_w_dict[cat] = df[ (df["sample"]==1) & (df["label"]!=labels_map['signal']) ]["total_weight"].values
-        
+            
         else:
             train_dict[cat] = df[ (df["sample"]==0) & (df["label"]==labels_map[cat]) ][bdt_score].values
             test_dict[cat] = df[ (df["sample"]==1) & (df["label"]==labels_map[cat]) ][bdt_score].values
             train_w_dict[cat] = df[ (df["sample"]==0) & (df["label"]==labels_map[cat]) ]["total_weight"].values
             test_w_dict[cat] = df[ (df["sample"]==1) & (df["label"]==labels_map[cat]) ]["total_weight"].values
-        
-    
+            
         # plot training sample dists
-        ax[0].hist( train_dict[cat], bins=50, range=xrange, label=f'{cat} train', alpha=0.5, ec='none', fc=colors[cat], weights=train_w_dict[cat], density=True )
+        ax[0].hist( train_dict[cat], bins=50, range=xrange, label=f'Train {cfg.titles[cat]}', alpha=0.8-3*i/20, ec='none', fc=colors[cat], weights=train_w_dict[cat], density=True )
 
         # plot test sample dists
         # if you want the error need to track squared weights (probably a better way of doing this)
@@ -156,7 +159,7 @@ def plot_bdt_response(df, bdt_name = "BDT_lh",output_file_name = "response" ,out
 
 
         cx = 0.5*(xe[1:]+xe[:-1])
-        ax[0].errorbar( cx, n, ne, fmt=pt_fmt[cat], label=f'{cat} test') 
+        ax[0].errorbar( cx, n, ne, color=colors[cat], marker =blobs[cat], label=f'Test {cfg.titles[cat]}', linestyle='') 
 
 
         # now plot the residual
@@ -172,30 +175,38 @@ def plot_bdt_response(df, bdt_name = "BDT_lh",output_file_name = "response" ,out
         p = d / de
 
         
-        ax[1].errorbar( cx, p, np.ones_like(p), fmt=pt_fmt[cat] )
-
+        ax[1].errorbar( cx, p, np.ones_like(p), color=colors[cat], marker =blobs[cat], linestyle='')
+        i+=1
     ax[1].axhline(0, c='k', ls='--' )   
-    ax[1].set_ylabel('Pull')
-    ax[0].set_xlabel(f'{bdt_name} XGBoost Signal Probability')
+    ax[1].set_ylabel('Pulls')
+    if bdt_score=='bdt_score_2':
+        ax[0].set_xlabel(f'$P(s)$')
+    elif bdt_score=='bdt_score_1':
+        ax[0].set_xlabel(f'$P(h)$')
+    elif bdt_score=='bdt_score_0':
+        ax[0].set_xlabel(f'$P(l)$')
+    else:
+        raise ValueError('bdt_score must be either bdt_score_2, bdt_score_1 or bdt_score_0 ')
     ax[0].set_ylabel('Density')
     ax[0].legend()
     ax[0].set_yscale('log')
+    ax[0].set_ylim(4e-3,60)
     fig.tight_layout()
 
     if xrange==(0,1):
         if outpath:
             #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-            fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_ncat{len(categories)}.pdf'))
+            fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_ncat{len(categories)}_{bdt_score}.pdf'))
         else:
             #fig.savefig(f"{output_file_name}.png")
-            fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}.pdf")
+            fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}_{bdt_score}.pdf")
     else:
         if outpath:
             #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-            fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed.pdf'))
+            fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed_{bdt_score}.pdf'))
         else:
             #fig.savefig(f"{output_file_name}.png")
-            fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed.pdf")
+            fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed_{bdt_score}.pdf")
 '''
 def plot_bdt_response_combinedcut(df, bdt_name = "BDT_lh",output_file_name = "response_combinedcut" ,outpath=None,categories = ['signal','background'],labels_map = labels, pt_fmt = blobs, colors = colors,xrange=(0,1)):
     
@@ -705,12 +716,15 @@ if __name__=="__main__":
                             features_list_name = "bdth-plus-vars",
                             bdt_label = '_lh')
     '''
-    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.baseline_bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"),
-                            config_bdtopts = cfg.baseline_bdt_lh_opts,
-                            training_round = "test_hpopt_small_sample/optimum_hps",
-                            hps_dict_name = "default-hps",
+    
+    model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.optimised_bdt_lh_opts['outputPath'], "bdt_lh_dataframe.pkl"),
+                            config_bdtopts = cfg.optimised_bdt_lh_opts,
+                            training_round = "baseline-plus-hps",
+                            hps_dict_name = "baseline-plus-hps",
                             features_list_name = "bdtlh-vars-v1",
                             bdt_label = '_lh')
+
+                  
     '''
     model, bdtname, dataframe = load_bdt_and_apply(pickled_df_path = os.path.join(cfg.bdt_lh_opts_nleptfail['outputPath'], "bdt_lh_dataframe_nlept_fail.pkl"), 
                         config_bdtopts = cfg.bdt_lh_opts,
@@ -719,11 +733,12 @@ if __name__=="__main__":
                         features_list_name = "bdth-plus-vars",#"bdtlh-vars-v1",
                         bdt_label = '_lh')
     '''
-    outputpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/full_prelim_cuts_500k/bdt_lh_outputs/test_hpopt_small_sample/optimum_hps'
+    outputpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'#'outputs/full_prelim_cuts_500k/bdt_lh_outputs/test_hpopt_small_sample/optimum_hps'
 
     print('Now plotting...')
 
-    plot_bdt_response(dataframe,bdt_name = 'BDT_lh',outpath=outputpath)
+    plot_bdt_response(dataframe, bdt_name = "BDT_lh" ,outpath=outputpath,bdt_score='bdt_score_0',categories = ['signal','heavy_background','light_background'],labels_map = labels, pt_fmt = blobs, colors = colors,xrange=(0,1))
+    
     #plot_bdt_response(dataframe,bdt_name = 'BDT_lh',outpath=outputpath, categories=['signal','light_background','heavy_background'])
     #plot_eff(dataframe,bdt_name = 'BDT_lh', outpath=outputpath)
     #plot_ROC_star(dataframe,bdt_name = 'BDT_lh', outpath=outputpath, comps = [("signal", "heavy_background")])
@@ -748,131 +763,3 @@ if __name__=="__main__":
     #post_bdt_variable_plot(dataframe,'EVT_unitThrust_z',bdt_cut='bdt_score_2>0.95', outpath=outputpath)
 
 
-'''
-def plot_bdt_response_combinedcut_2lph(df, bdt_name = "BDT_lh",output_file_name = "response_combinedcut_2lph" ,outpath=None,categories = ['signal','background'],labels_map = labels, pt_fmt = blobs, colors = colors,xrange=(0,1)):
-
-    #categories (bool): which catagories to plot, must be valid category in labels_map or 'background'
-    
-
-    # plot of BDT output
-    fig, ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3,1]}, figsize=(6.4,6.4))
-
-    train_dict={}
-    test_dict={}
-    train_w_dict={}
-    test_w_dict={}
-
-    for cat in categories:
-        if cat == 'background':
-
-            subdf_train = df[ (df["sample"]==0) & (df["label"]!=labels_map['signal']) ]
-            subdf_test = df[ (df["sample"]==1) & (df["label"]!=labels_map['signal']) ]
-        
-        else:
-            subdf_train = df[ (df["sample"]==0) & (df["label"]==labels_map[cat]) ]
-            subdf_test = df[ (df["sample"]==1) & (df["label"]==labels_map[cat]) ]
-
-
-        train_dict[cat] = 1-subdf_train["bdt_score_1"].values-subdf_train["bdt_score_0"].values
-        test_dict[cat] = 1-subdf_test["bdt_score_1"].values-subdf_test["bdt_score_0"].values
-        train_w_dict[cat] = subdf_train["total_weight"].values
-        test_w_dict[cat] = subdf_test["total_weight"].values
-    
-    
-        # plot training sample dists
-        ax[0].hist( train_dict[cat], bins=50, range=xrange, label=f'{cat} train', alpha=0.5, ec='none', fc=colors[cat], weights=train_w_dict[cat], density=True )
-
-        # plot test sample dists
-        # if you want the error need to track squared weights (probably a better way of doing this)
-        n, xe = np.histogram( test_dict[cat], bins=50, range=xrange, weights=test_w_dict[cat] )
-        n2, _ = np.histogram( test_dict[cat], bins=50, range=xrange, weights=test_w_dict[cat]**2 )
-        ne = n2**0.5 / n
-        n, x = np.histogram( test_dict[cat], bins=50, range=xrange, density=True, weights=test_w_dict[cat] )
-        ne = ne * n
-
-
-        cx = 0.5*(xe[1:]+xe[:-1])
-        ax[0].errorbar( cx, n, ne, fmt=pt_fmt[cat], label=f'{cat} train') 
-
-
-        # now plot the residual
-        nt, xe = np.histogram( train_dict[cat], bins=50, range=xrange, weights= train_w_dict[cat] )
-        nt2, _ = np.histogram( train_dict[cat], bins=50, range=xrange, weights= train_w_dict[cat]**2 )
-        nte = nt2**0.5 / nt
-        nt, xe = np.histogram( train_dict[cat], bins=50, range=xrange, density=True, weights=train_w_dict[cat] )
-        nte = nte * nt
-
-
-        d = n - nt
-        de = (ne**2 + nte**2)**0.5
-        p = d / de
-
-        
-        ax[1].errorbar( cx, p, np.ones_like(p), fmt=pt_fmt[cat] )
-
-    ax[1].axhline(0, c='k', ls='--' )   
-    ax[1].set_ylabel('Pull')
-    ax[0].set_xlabel(f'{bdt_name} XGBoost 1-2P(light)-P(heavy)]')
-    ax[0].set_ylabel('Density')
-    ax[0].legend()
-    ax[0].set_yscale('log')
-    fig.tight_layout()
-
-    if xrange==(0,1):
-        if outpath:
-            #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-            fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_ncat{len(categories)}.pdf'))
-        else:
-            #fig.savefig(f"{output_file_name}.png")
-            fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}.pdf")
-    else:
-        if outpath:
-            #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-            fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed.pdf'))
-        else:
-            #fig.savefig(f"{output_file_name}.png")
-            fig.savefig(f"{bdt_name}_{output_file_name}_ncat{len(categories)}_zoomed.pdf")
-
-
-# efficiency plot (on total sample)
-def plot_eff_combinedcut_2lph(df, bdt_name = "BDT_lh",output_file_name = 'efficiency_plot_combinedcut2lph',outpath=None):
-    fig, ax = plt.subplots()
-    for decay in df["decay"].unique():
-        subf = df[ df["decay"]==decay ]
-        mva_scores = 1-subf["bdt_score_1"].values -2*subf["bdt_score_0"].values
-        weights = subf["total_weight"].values
-
-        sorted_indices = np.argsort( mva_scores )
-        sorted_scores = mva_scores[sorted_indices]
-        sorted_weights = weights[sorted_indices]
-
-        total_weight = np.sum( sorted_weights ) 
-        cumalative_weights = np.cumsum( sorted_weights[::-1] )[::-1] # reverse order for efficiency above cut
-        efficiency = cumalative_weights / total_weight
-
-        ax.plot( sorted_scores, efficiency, label=decay )
-
-    ax.legend()
-    ax.set_xlabel(f'{bdt_name} XGBoost 1-2P(light)-P(heavy))]')
-    ax.set_ylabel('Efficiency')
-    ax.set_yscale('log')
-    ax.grid(visible=True, which='both', linestyle='-', color='0.7', linewidth=0.7, alpha=0.4)
-    fig.tight_layout()
-    if outpath:
-        #fig.savefig(os.path.join(outpath,output_file_name+'.png'))
-        fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}.pdf'))
-    else:
-        #fig.savefig(f"{output_file_name}.png")
-        fig.savefig(f'{bdt_name}_{output_file_name}.pdf')
-    #ax.set_xscale('log')
-    ax.minorticks_on()
-    ax.grid(visible=True, which='minor', alpha = 0.2) #need minor ticks on to see these
-    ax.set_xlim(0.95,1.002)
-    if outpath:
-        #fig.savefig(os.path.join(outpath,output_file_name+"_zoomedin.png"))
-        fig.savefig(os.path.join(outpath,f'{bdt_name}_{output_file_name}_zoomedin.pdf'))
-    else:
-        #fig.savefig(f"{output_file_name}_zoomedin.png")
-        fig.savefig(f'{bdt_name}_{output_file_name}_zoomedin.pdf')
-
-'''

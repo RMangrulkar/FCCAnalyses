@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+import efficiency_finder
+
 import config as cfg
 
 #####################################################################
@@ -23,15 +25,12 @@ def get_eff_from_nMC_list(N_dict_MC,eventsProcessed_dict = cfg.eventsProcessed):
         N_post = N_dict_MC[decay]
         
         #calc efficiency
-        total_efficiency = N_post/eventsProcessed
+        total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
+        
         efficienies[decay] = total_efficiency
-        #print(f"efficiency: {total_efficiency}")
-    
-        # calculating error using bayesian error formula See <https://indico.cern.ch/event/66256/contributions/2071577/attachments/1017176/1447814/EfficiencyErrors.pdf>
-        # Variance in an efficiency k/n is (k+1)(k+2)/(n+2)(n+3) - (k+1)^2/(n+2)^2
-        var = ((N_post+1)*(N_post+2))/((eventsProcessed+2)*(eventsProcessed+3)) - ((N_post+1)/(eventsProcessed+2))**2
-        error = np.sqrt(var)
         efficiencies_err[decay] = error
+
+        #print(f"efficiency: {total_efficiency}")
         #print(f"efficiency error: {error}")
     
     return efficienies, efficiencies_err, N_dict_MC
@@ -128,9 +127,11 @@ def get_total_eff_post_bdt(df,
         else:
             N_post = len(df_decay)
            
-        total_efficiency = N_post/eventsProcessed
+        total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
+        
         efficienies[sample] = total_efficiency
         N_remaining[sample] = N_post
+        efficiencies_err[sample] = error
         
         
         if verbose:
@@ -138,14 +139,6 @@ def get_total_eff_post_bdt(df,
             print(f"eventsProcessed: {eventsProcessed}") 
             print(f"N_post: {N_post}")
             print(f"total_efficiency: {total_efficiency}")
-
-
-        # calculating error using bayesian error formula See <https://indico.cern.ch/event/66256/contributions/2071577/attachments/1017176/1447814/EfficiencyErrors.pdf>
-        # Variance in an efficiency k/n is (k+1)(k+2)/(n+2)(n+3) - (k+1)^2/(n+2)^2
-        var = ((N_post+1)*(N_post+2))/((eventsProcessed+2)*(eventsProcessed+3)) - ((N_post+1)/(eventsProcessed+2))**2
-        error = np.sqrt(var)
-        efficiencies_err[sample] = error
-        if verbose:
             print(f"efficiency error: {error}")
 
     return efficienies, efficiencies_err, N_remaining

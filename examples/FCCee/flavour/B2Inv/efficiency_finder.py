@@ -5,6 +5,8 @@
 #     - get_efficiencies : Get efficiencies for samples with various options
 # Run `python efficiency_finder.py --help` for more information
 import os
+import ROOT
+from scipy.stats import chi2
 
 import uproot
 import numpy as np
@@ -17,8 +19,8 @@ from datetime import timedelta
 import config as cfg
 
 
-def efficiency_calc(before, after):
-    '''
+def efficiency_calc_bayesian(before, after):#THIS PAPER HAS BEEN WITHDRAWN FROM ARXIV - DO NOT USE
+    """
     Function that calculates the efficiency and error given the number of events before and after the selection
 
     Parameters
@@ -36,11 +38,39 @@ def efficiency_calc(before, after):
     error: int or ndarray
         The error in the efficiency, assuming a binomial distribution of acceptance/rejection.
         See <https://indico.cern.ch/event/66256/contributions/2071577/attachments/1017176/1447814/EfficiencyErrors.pdf>
-    '''
+    """
     mode = after/before
     # Variance in an efficiency k/n is (k+1)(k+2)/(n+2)(n+3) - (k+1)^2/(n+2)^2
     var = ((after+1)*(after+2))/((before+2)*(before+3)) - ((after+1)/(before+2))**2
     error = np.sqrt(var)
+
+    return mode, error
+
+
+def efficiency_calc(total_before, passed): #using wilson method from TEfficiency recommended by LHCb
+    '''
+    Function that calculates the efficiency and error given the number of events before and after the selection
+
+    Parameters
+    ----------
+    before: int or ndarray, required
+        The number (or an array of numbers) of events before the selection.
+    after: int or ndarray, required
+        The number (or an array of numbers) of events that pass the selection.
+        Must have the same dimensions as `before`
+
+    Returns
+    -------
+    mode: int or ndarray
+        The selection efficiency, after/before
+    error: int or ndarray
+        The error in the efficiency, in accordance with https://doi.org/10.2307/2276774 
+        see https://root.cern.ch/doc/master/classTEfficiency.html#aab172086c12300672a41ab7338c05521 for implementation
+    '''
+    mode = passed/total_before
+    up = ROOT.TEfficiency.Wilson(total_before,passed,chi2.cdf(1,1),True)
+    down = ROOT.TEfficiency.Wilson(total_before,passed,chi2.cdf(1,1),False)
+    error = (up-down)/2 #error band itself not symmetric - symmetrise for ease
 
     return mode, error
 

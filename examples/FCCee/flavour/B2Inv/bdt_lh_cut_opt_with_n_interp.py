@@ -18,7 +18,8 @@ from scipy.interpolate import interp1d
 from scipy.optimize import root_scalar
 
 import config as cfg 
-import post_bdtlh_efficiency_finder as eff_finder
+import efficiency_finder
+import post_bdtlh_efficiency_finder as post_bdt_eff_finder
 plt.style.use('fcc.mplstyle')
 
 # Return list of variables to use in the bdt as a python list
@@ -105,7 +106,7 @@ def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, 
                 h_arr.append(hsearch[h])
                 lh_cut = f"(P_not_heavy>{hsearch[h]})&(P_not_light>{lsearch[l]})"
 
-                eff_lh, err_lh, N_remaining = eff_finder.get_total_eff_post_bdt(subf, cut= lh_cut, verbose = False, eventsProcessed_dict = cfg.eventsProcessed)
+                eff_lh, err_lh, N_remaining = post_bdt_eff_finder.get_total_eff_post_bdt(subf, cut= lh_cut, verbose = False, eventsProcessed_dict = cfg.eventsProcessed)
                 N_df[l,h] = N_remaining[decay]
                 eff_df[l,h] = eff_lh[decay] 
                 err_df[l,h] = err_lh[decay]     
@@ -250,11 +251,9 @@ def interp_N_to_eff_err(interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_pl
         for l in np.arange(0,len(lsearchinterp),1):
             for h in np.arange(0,len(hsearchinterp),1):
                 N_post = interp_N_dict[sample](lsearchinterp[l],hsearchinterp[h],grid=False)
-                total_efficiency = N_post/eventsProcessed
-                # calculating error using bayesian error formula See <https://indico.cern.ch/event/66256/contributions/2071577/attachments/1017176/1447814/EfficiencyErrors.pdf>
-                # Variance in an efficiency k/n is (k+1)(k+2)/(n+2)(n+3) - (k+1)^2/(n+2)^2
-                var = ((N_post+1)*(N_post+2))/((eventsProcessed+2)*(eventsProcessed+3)) - ((N_post+1)/(eventsProcessed+2))**2
-                error = np.sqrt(var)
+                
+                #compute efficiency and wilson error
+                total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
 
                 fine_grid_splined_eff[l,h] = total_efficiency.item() 
                 fine_grid_splined_eff_err[l,h] = error.item() 
@@ -298,12 +297,9 @@ def raw_N_to_eff_err(N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,eventsPro
         for l in np.arange(0,len(lsearch),1):
             for h in np.arange(0,len(hsearch),1):
                 N_post = N_dict[sample][l,h]
-                total_efficiency = N_post/eventsProcessed
-                # calculating error using bayesian error formula See <https://indico.cern.ch/event/66256/contributions/2071577/attachments/1017176/1447814/EfficiencyErrors.pdf>
-                # Variance in an efficiency k/n is (k+1)(k+2)/(n+2)(n+3) - (k+1)^2/(n+2)^2
-                var = ((N_post+1)*(N_post+2))/((eventsProcessed+2)*(eventsProcessed+3)) - ((N_post+1)/(eventsProcessed+2))**2
-                error = np.sqrt(var)
-
+                #calculate efficiency and wilson error
+                total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
+        
                 eff[l,h] = total_efficiency.item() 
                 eff_err[l,h] = error.item() 
         
@@ -491,7 +487,7 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
             lh_interp_eff_dict = {sample: interp_eff_dict[sample][l,h] for sample in interp_eff_dict.keys()}
             lh_interp_eff_err_dict = {sample: interp_eff_err_dict[sample][l,h] for sample in interp_eff_err_dict.keys()}
  
-            lh_n_expect_dict, lh_n_err_dict, lh_BFZbb_err_dict_components = eff_finder.get_n_expected(lh_interp_eff_dict, lh_interp_eff_err_dict, signal_bf=sig_BF,  BFZbb_err=True)
+            lh_n_expect_dict, lh_n_err_dict, lh_BFZbb_err_dict_components = post_bdt_eff_finder.get_n_expected(lh_interp_eff_dict, lh_interp_eff_err_dict, signal_bf=sig_BF,  BFZbb_err=True)
 
             S = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["combined_signal"]])
             B = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["hadronic_background"]])
@@ -749,9 +745,9 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
             N_dict_MC[decay] =  h[0] #take counts per bin rather than bin edges
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
-    efficienies, efficiencies_err, N_dict_MC = eff_finder.get_eff_from_nMC_list(N_dict_MC)
-    per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err=eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
-    S, B, S_err, B_err = eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
+    efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC)
+    per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err=post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
+    S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
 
     if final_plot_path:
         x = binned_x_axis
@@ -796,8 +792,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                         tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
 
             if plot_signal_components == False:
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=2,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
-                        
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=2,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')              
                 
             # sorting ticks so at edges but name still at centre
             bars = plt.gca().patches
@@ -851,7 +846,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='black')            
                 #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='none', hatch='///')            
                 
-                
+                '''
                 #add systematic error to B - lines instead of error bar
                 # Loop over the error values and draw horizontal lines at the top and bottom of the error bars
                 for i, (x_label, b_val, b_err) in enumerate(zip([x[1,0], x[0,0], x[0,1], x[1,1]], 
@@ -870,10 +865,10 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                         plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1.5,label=r'$Z \to q \bar{q}$ background systematic')
                     else:
                         plt.hlines(bottom_error, x_val - 0.5, x_val + 0.5, color='black', linewidth=1.5)
-                
+                '''
                 plt.legend()
                 plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}.pdf'))
-
+                
         else:
             print('Warning: currently only set up to plot 2x2 binning')
 

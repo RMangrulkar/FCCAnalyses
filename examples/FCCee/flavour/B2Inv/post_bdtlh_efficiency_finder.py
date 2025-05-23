@@ -23,15 +23,21 @@ def get_eff_from_nMC_list(N_dict_MC,eventsProcessed_dict = cfg.eventsProcessed):
     for decay in N_dict_MC.keys():
         eventsProcessed = eventsProcessed_dict[decay]
         N_post = N_dict_MC[decay]
-        
-        #calc efficiency
-        total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
-        
-        efficienies[decay] = total_efficiency
-        efficiencies_err[decay] = error
+        #calc efficiency - deals with list separately to if just input a number
+        if isinstance(N_post, (int, float)):
+            total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
+        else:
+            results = [efficiency_finder.efficiency_calc(eventsProcessed, val) for val in N_post.flat]
+            total_efficiency, error = zip(*results)
 
-        #print(f"efficiency: {total_efficiency}")
-        #print(f"efficiency error: {error}")
+            total_efficiency = np.array(total_efficiency).reshape(N_post.shape)
+            error = np.array(error).reshape(N_post.shape)
+                        
+            efficienies[decay] = total_efficiency
+            efficiencies_err[decay] = error
+
+            #print(f"efficiency: {total_efficiency}")
+            #print(f"efficiency error: {error}")
     
     return efficienies, efficiencies_err, N_dict_MC
 

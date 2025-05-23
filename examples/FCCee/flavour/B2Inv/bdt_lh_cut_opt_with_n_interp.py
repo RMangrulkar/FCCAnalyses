@@ -715,8 +715,7 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
 
 
 def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
-                            plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False):
-
+                            plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False, lcut=None, hcut=None, logpath= None):
     #turn BF into title worthy version
     latex_BF = latex_form_exp(signal_BF)
 
@@ -738,11 +737,15 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
    
 
     print('--> Finding optimum cut')
-    # find optimum cut
-    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=nlh , sig_BF=signal_BF, incl_ZqqBFerror = False)
-    indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
-    l_cut = lsearch[indices[0]]
-    h_cut = hsearch[indices[1]]
+    if lcut is not None and hcut is not None:
+        l_cut = lcut
+        h_cut = hcut
+    else:
+        # find optimum cut
+        FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=nlh , sig_BF=signal_BF, incl_ZqqBFerror = False)
+        indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
+        l_cut = lsearch[indices[0]]
+        h_cut = hsearch[indices[1]]
 
     #cut df on optimal BDT cuts
     cut_data = df.copy().query(f'(P_not_light>{l_cut})&(P_not_heavy>{h_cut})')
@@ -773,14 +776,27 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
         xedges = h[1]
         yedges = h[2]
 
-        filename = os.path.join(set_outputpath(final_plot_path),'bin_edges_for_BF.txt')
-        mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
+        
+        
+        if final_plot_path is not None:
+            filename = os.path.join(set_outputpath(final_plot_path),'bin_edges_for_BF.txt')
+            mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
 
-        with open(filename, mode) as log_file:
-            log_file.write(f"BF: {signal_BF}\n")
-            log_file.write(f"1-P(h): {xedges}\n")
-            log_file.write(f"1-P(l): {yedges}\n")
-            log_file.write(f"\n")
+            with open(filename, mode) as log_file:
+                log_file.write(f"BF: {signal_BF}\n")
+                log_file.write(f"1-P(h): {xedges}\n")
+                log_file.write(f"1-P(l): {yedges}\n")
+                log_file.write(f"\n")
+
+        elif logpath is not None:
+            filename = os.path.join(set_outputpath(logpath),'bin_edges_for_BF.txt')
+            mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
+
+            with open(filename, mode) as log_file:
+                log_file.write(f"BF: {signal_BF}\n")
+                log_file.write(f"1-P(h): {xedges}\n")
+                log_file.write(f"1-P(l): {yedges}\n")
+                log_file.write(f"\n")
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC)
@@ -911,21 +927,21 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
         else:
             print('Warning: currently only set up to plot 2x2 binning')
 
-    return per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF
+    return per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF,l_cut,h_cut
 
 
 def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
                              lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=500,bins = (2,2),
                              ntoys = 250,
-                             fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None):
+                             fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None):
 
     """ 
     likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
 
     """
 
-    _, S, B, S_err, B_err, signal_BF = make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components =  ['hadronic_background','combined_signal'], binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None)
-    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err, _ = make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components =  ['hadronic_background','combined_signal'], binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None)
+    _, S, B, S_err, B_err, signal_BF,opt_l_cut,opt_h_cut = make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components =  ['hadronic_background','combined_signal'], binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=lcut, hcut=hcut)
+    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err,_,_,_ = make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components =  ['hadronic_background','combined_signal'], binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=opt_l_cut, hcut=opt_h_cut)
     poisson_expectation = B + S
     overall_background_error = onebin_B_err.item()/onebin_B.item()  #need fractional error as it propagates through on scale factor                            
 
@@ -940,6 +956,7 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
     significance_arr=[]
     av_significance_for_bf = []
     stdev_significance_for_bf=[]
+
 
     # throw and refit toys
     for n in range(ntoys):
@@ -974,9 +991,10 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
                 plt.figure() 
                 plt.bar(x,[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch='///')
                 plt.bar(x,[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
-                plt.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label=r'$\sigma_B$ gaussian constraint', color='black', alpha=0.4, width=1)
+                plt.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
                 plt.errorbar(x, [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]],yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Toy data', color='k')
                 plt.legend()
+                plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
                 plt.ylabel('Counts')
                 plt.xticks(x, x_strings)
                 # sorting ticks so at edges but name still at centre
@@ -989,7 +1007,6 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
                 plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
                 plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
 
-                plt.title(f'Example toy fit for signal BF = {signal_BF}')
                 plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath,'toy_fits')),f'toy_fit_for_first_toy_BF{signal_BF}.pdf'))
     
     

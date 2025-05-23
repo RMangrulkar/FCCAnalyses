@@ -42,5 +42,13 @@ full_data['P_not_light'] = 1-full_data['bdt_score_0']
 #add any extra cuts need here###########################
 full_data = full_data.query('EVT_hemisEmax_n>10') #veto on taus
 
+'''
 bdt_lh_cut_opt_with_n_interp.make_final_binning_plot(full_data, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                             plot_signal_components=True,  nMC_plots_path=None, final_plot_path = plotpath, pull_type_plot=True)
+'''
+
+bdt_lh_cut_opt_with_n_interp.likelihood_model_builder(full_data, interp_N_dict, signal_BF=4e-7,
+                             lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=500,bins = (2,2),
+                             ntoys = 1,
+                             fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), 
+                             spread_plotpath=None, logpath = plotpath, hcut = 0.99963928, lcut = 0.99965932)

@@ -139,7 +139,7 @@ def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, 
 
 
 
-def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slice=False, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/'):
+def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,normalised=False, separate_cbar = False,slice=False, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/'):
 
     '''
     function to plot 2d N with and without interpolation to check smoothness as well as slices
@@ -160,42 +160,68 @@ def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,slic
         #plotting raw N distribution
         plt.figure()
         plt.imshow(N_dict[decay], origin='lower')
-        plt.xlabel('BDT_lh 1-P(heavy)')
-        plt.ylabel('BDT_lh 1-P(light)')
-        plt.colorbar(label='Raw Number of surviving MC events')
+        plt.xlabel('$1-P(h)$')
+        plt.ylabel('$1-P(l)$')
+        plt.colorbar(label='MC events')
         
         # Set tick labels for every 10th bin
         ytick_indices = np.arange(0,len(lsearch), round(len(lsearch)/5))
         xtick_indices = np.arange(0, len(hsearch), round(len(hsearch)/5))
         
         # Use ytick_indices and xtick_indices to set the ticks
-        plt.yticks(ytick_indices, [round(lsearch[i],5) for i in ytick_indices])
-        plt.xticks(xtick_indices, [round(hsearch[i],5) for i in xtick_indices], rotation=90)
-        plt.title(f'{cfg.titles[decay]}')
+        plt.yticks(ytick_indices, [round(lsearch[i],4) for i in ytick_indices])
+        plt.xticks(xtick_indices, [round(hsearch[i],4) for i in xtick_indices])#, rotation=90)
+
+        plt.tight_layout()
         plt.savefig(os.path.join(set_outputpath(save_path),f'N_{decay}.pdf'))
 
         #plotting interpolated N map
 
-        
-        #plotting raw N distribution
         plt.figure()
         gridded_interp = [[interp_N_dict[decay](lsearchinterp[l], hsearchinterp[h]).item() for h in range(len(hsearchinterp))] for l in range(len(lsearchinterp))]
-        plt.imshow(gridded_interp, origin='lower')
-        plt.xlabel('BDT_lh 1-P(heavy)')
-        plt.ylabel('BDT_lh 1-P(light)')
-        plt.colorbar(label='Raw Number of surviving MC events')
+        if normalised==True:
+            im = plt.imshow([[gridded_interp[l][h]/interp_N_dict[decay](lsearchinterp[0], hsearchinterp[0]).item() for h in range(len(hsearchinterp))] for l in range(len(lsearchinterp))], origin='lower')
+            if separate_cbar == False:
+                plt.colorbar(label='Interpolated Density')
+
+        else:
+            im = plt.imshow(gridded_interp, origin='lower')
+            if separate_cbar == False:
+                plt.colorbar(label='Interpolated MC Counts')
+
+        plt.xlabel('$1-P(h)$', fontsize=16)
+        plt.ylabel('$1-P(l)$', fontsize=16)
+        
         
         # Set tick labels for every 10th bin
         ytick_indices = np.arange(0,len(lsearchinterp), round(len(lsearchinterp)/5))
         xtick_indices = np.arange(0, len(hsearchinterp), round(len(hsearchinterp)/5))
         
         # Use ytick_indices and xtick_indices to set the ticks
-        plt.yticks(ytick_indices, [round(lsearchinterp[i],5) for i in ytick_indices])
-        plt.xticks(xtick_indices, [round(hsearchinterp[i],5) for i in xtick_indices], rotation=90)
-        plt.title(f'{cfg.titles[decay]}')
-        plt.savefig(os.path.join(set_outputpath(save_path),f'N_interp_{decay}.pdf'))
+        plt.yticks(ytick_indices, [round(lsearchinterp[i],4) for i in ytick_indices], fontsize=12)
+        plt.xticks(xtick_indices, [round(hsearchinterp[i],4) for i in xtick_indices], fontsize=12)#, rotation=90)
+  
+        if normalised == True:
+            plt.tight_layout()
+            plt.savefig(os.path.join(set_outputpath(save_path),f'N_interp_{decay}_normalised.pdf'), bbox_inches='tight')
+            if separate_cbar ==True:
+                fig2, ax2 = plt.subplots()
+                plt.colorbar(im, ax=ax2, label='Interpolated Density')
+                fig2.tight_layout()
+                ax2.remove()
+                plt.savefig(os.path.join(set_outputpath(save_path),'N_interp_colorbar_density.pdf'), bbox_inches='tight')
+        else:
+            plt.tight_layout()
+            plt.savefig(os.path.join(set_outputpath(save_path),f'N_interp_{decay}.pdf'), bbox_inches='tight')
 
+            if separate_cbar ==True:
+                fig2, ax2 = plt.subplots()
+                plt.colorbar(im, ax=ax2, label='Interpolated MC Counts')
+                fig2.tight_layout()
+                ax2.remove()
+                plt.savefig(os.path.join(set_outputpath(save_path),f'N_interp_colorbar_{decay}.pdf'), bbox_inches='tight')
 
+        plt.close('all')
 
     if slice == True:
         i=6
@@ -255,8 +281,8 @@ def interp_N_to_eff_err(interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_pl
                 #compute efficiency and wilson error
                 total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
 
-                fine_grid_splined_eff[l,h] = total_efficiency.item() 
-                fine_grid_splined_eff_err[l,h] = error.item() 
+                fine_grid_splined_eff[l,h] = total_efficiency 
+                fine_grid_splined_eff_err[l,h] = error 
         
         interp_eff_dict[sample] = fine_grid_splined_eff
         interp_eff_err_dict[sample] = fine_grid_splined_eff_err
@@ -300,8 +326,8 @@ def raw_N_to_eff_err(N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,eventsPro
                 #calculate efficiency and wilson error
                 total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
         
-                eff[l,h] = total_efficiency.item() 
-                eff_err[l,h] = error.item() 
+                eff[l,h] = total_efficiency
+                eff_err[l,h] = error
         
         eff_dict[sample] = eff
         err_dict[sample] = eff_err
@@ -733,16 +759,28 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
         if nMC_plots_path is not None:
             plt.figure()
             h=plt.hist2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins, cmap=plt.cm.Blues,vmin=0,density=False,range = [[h_cut, 1], [l_cut, 1]])
-            plt.ylabel('1-P(light)')
-            plt.xlabel('1-P(heavy)') 
+            plt.ylabel('$1-P(l)$')
+            plt.xlabel('$1-P(h)$') 
             plt.title(cfg.titles[decay])
             plt.colorbar(h[3])
             N_dict_MC[decay] =  h[0] 
             plt.savefig(os.path.join(set_outputpath(nMC_plots_path),f'NMC_remaining_{decay}_at_BF={signal_BF}_optcut.pdf'))
-    
+
         else:
             h=np.histogram2d(cut_data[cut_data['decay']==decay]["P_not_heavy"], cut_data[cut_data['decay']==decay]["P_not_light"], bins=histbins,density=False,range = [[h_cut, 1], [l_cut, 1]])
             N_dict_MC[decay] =  h[0] #take counts per bin rather than bin edges
+        
+        xedges = h[1]
+        yedges = h[2]
+
+        filename = os.path.join(set_outputpath(final_plot_path),'bin_edges_for_BF.txt')
+        mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
+
+        with open(filename, mode) as log_file:
+            log_file.write(f"BF: {signal_BF}\n")
+            log_file.write(f"1-P(h): {xedges}\n")
+            log_file.write(f"1-P(l): {yedges}\n")
+            log_file.write(f"\n")
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC)
@@ -805,7 +843,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
             plt.gca().set_xticks(edges, minor=True)     # use gca just for minor ticks
             plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
             plt.legend()
-            
+            plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
             plt.ylabel('Expected Counts')
 
             if pull_type_plot==True:
@@ -815,15 +853,15 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 if plot_signal_components == False:
                     ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
                 else:
-                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}')
+                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$S$ for $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}')
 
-                ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =[-val for val in [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]]], color='black', alpha=0.45, width=1, label=r'$Z \to q \bar{q}$ background systematic')
+                ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =[-val for val in [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]]], color='black', alpha=0.45, width=1, label='$\sigma_B$')#r'$Z \to q \bar{q}$ background systematic')
 
 
                 # Clean up sub axis
                 ax_sub.set_xticks([x[1,0],x[0,0],x[0,1],x[1,1]])
                 ax_sub.tick_params(axis='x', which='major', length=0) 
-                ax_sub.set_ylabel('Expected Counts')  # or 'Residuals' or whatever is relevant
+                ax_sub.set_ylabel('Backgrond Subtracted \n Counts')  
                 ax_sub.tick_params(axis='x', which='minor', length=4)  # show edge ticks
                 ax_sub.legend()
 
@@ -838,13 +876,14 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 ax_sub.set_ylim(-1.3*B_err[1,1],sub_height -1.3*B_err[1,1])
 
                 plt.legend()
-                plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}_with_second_axis.pdf'))
+                plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+                plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}_with_second_axis.pdf'), bbox_inches='tight')
             else: 
                 
                 #add systematic error to B - error bar
                 #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', color='black', alpha=0.4, width=1)
                 #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='black')            
-                #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='none', hatch='///')            
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='none', hatch='///')            
                 
                 '''
                 #add systematic error to B - lines instead of error bar

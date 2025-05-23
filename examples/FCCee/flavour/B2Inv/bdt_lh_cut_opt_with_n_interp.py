@@ -778,25 +778,25 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
         
         
-        if final_plot_path is not None:
-            filename = os.path.join(set_outputpath(final_plot_path),'bin_edges_for_BF.txt')
-            mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
+    if final_plot_path is not None:
+        filename = os.path.join(set_outputpath(final_plot_path),'bin_edges_for_BF.txt')
+        mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
 
-            with open(filename, mode) as log_file:
-                log_file.write(f"BF: {signal_BF}\n")
-                log_file.write(f"1-P(h): {xedges}\n")
-                log_file.write(f"1-P(l): {yedges}\n")
-                log_file.write(f"\n")
+        with open(filename, mode) as log_file:
+            log_file.write(f"BF: {signal_BF}\n")
+            log_file.write(f"1-P(h): {xedges}\n")
+            log_file.write(f"1-P(l): {yedges}\n")
+            log_file.write(f"\n")
 
-        elif logpath is not None:
-            filename = os.path.join(set_outputpath(logpath),'bin_edges_for_BF.txt')
-            mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
+    elif logpath is not None:
+        filename = os.path.join(set_outputpath(logpath),'bin_edges_for_BF.txt')
+        mode = 'a' if os.path.exists(filename) else 'w'  # append if exists, else write
 
-            with open(filename, mode) as log_file:
-                log_file.write(f"BF: {signal_BF}\n")
-                log_file.write(f"1-P(h): {xedges}\n")
-                log_file.write(f"1-P(l): {yedges}\n")
-                log_file.write(f"\n")
+        with open(filename, mode) as log_file:
+            log_file.write(f"BF: {signal_BF}\n")
+            log_file.write(f"1-P(h): {xedges}\n")
+            log_file.write(f"1-P(l): {yedges}\n")
+            log_file.write(f"\n")
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC)
@@ -834,19 +834,19 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
                         if plot_signal_components == True:
                             hist_opts = histogram_settings()[allocation]
-                            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                         tot_arr = np.add(tot_arr,[h[1,0],h[0,0],h[0,1],h[1,1]])
                         i+=1
 
                     else:
                         h = per_sample_n_expect_dict[sample]
                         hist_opts = histogram_settings()[allocation]
-                        plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=2,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                        plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                         i+=1
                         tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
 
             if plot_signal_components == False:
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=2,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')              
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=1.5,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')              
                 
             # sorting ticks so at edges but name still at centre
             bars = plt.gca().patches
@@ -867,9 +867,9 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 ax_sub = fig.add_subplot(gs[1], sharex=ax_main)
                 
                 if plot_signal_components == False:
-                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
+                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=1.5,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
                 else:
-                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=2,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$S$ for $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}')
+                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=1.5,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$S$ for $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}')
 
                 ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =[-val for val in [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]]], color='black', alpha=0.45, width=1, label='$\sigma_B$')#r'$Z \to q \bar{q}$ background systematic')
 

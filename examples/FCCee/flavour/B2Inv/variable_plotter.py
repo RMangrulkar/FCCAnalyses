@@ -186,7 +186,7 @@ def plot(varname,
         The third variable to be used in the composition (must be branchname in tree). If varname='composition'. Otherwise ignored
         If not available those that are will be listed. Default=None
     composition:str
-        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad','normvect','log'. For 'normvect' var1, var2, var 3 should be the x,y,z components of the depired variable where var1 is the normlaised component desired. If varname='composition'. Otherwise ignored. Default=None
+        Operator to be used in composition. Currently must be '+','-','*','/',','sumquad','quaddiff','normvect','log'. For 'normvect' var1, var2, var 3 should be the x,y,z components of the depired variable where var1 is the normlaised component desired. If varname='composition'. Otherwise ignored. Default=None
     signal_bf : float, optional
         The assumed signal branching fraction to use with the weights. Default = 10^-6
     cut : str, optional
@@ -263,6 +263,8 @@ def plot(varname,
             values =  { sample: values1[sample] * values2[sample] for sample in flat_decays_list }
         elif composition == 'sumquad':
             values =  { sample: np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2) for sample in flat_decays_list }
+        elif composition == 'quaddiff':
+             values =  { sample: np.sqrt(values1[sample]**2- values2[sample]**2) for sample in flat_decays_list }
         elif composition == 'normvect':
             values =  { sample: values1[sample]/(np.sqrt(values1[sample]**2+ values2[sample]**2+ values3[sample]**2)) for sample in flat_decays_list }
         elif composition == 'log':
@@ -381,6 +383,11 @@ def plot(varname,
                     ax.set_xlabel(f"$\sqrt({var1}^2+{var2}^2+{var3}^2)$ (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
                 else:
                     ax.set_xlabel(f"$\sqrt({var1}^2+{var2}^2+{var3}^2)$ (cut={cut}")
+            elif composition=='quaddiff':
+                if cut is not None:
+                    ax.set_xlabel(f"$\sqrt({var1}^2-{var2}^2$ (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")
+                else:
+                    ax.set_xlabel(f"$\sqrt({var1}^2-{var2}^2)$ (cut={cut}")
             elif composition=='/':
                 if cut is not None:
                     ax.set_xlabel(f"${var1}/{var2})$ (cut={replace_all(replace_all(replace_all(cut,'>','$>$'),'<','$<$'),'&',',')})")

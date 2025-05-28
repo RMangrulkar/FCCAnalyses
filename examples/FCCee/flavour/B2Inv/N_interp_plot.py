@@ -52,8 +52,8 @@ bdt_lh_cut_opt_with_n_interp.likelihood_model_builder(full_data, interp_N_dict, 
                              lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
                              ntoys = 1,
                              fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), 
-                             spread_plotpath=None, logpath = plotpath, hcut = 0.99963928, lcut = 0.99965932)
-'''
+                             spread_plotpath=None, logpath = plotpath, hcut = None, lcut =None)
+
 opt_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'
 plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation'
    
@@ -71,7 +71,7 @@ with open(os.path.join(opt_path,'optimal_bdt_cuts_dict.pkl'), 'rb') as f:
 bdt_lh_cut_opt_with_n_interp.sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath)
 '''
 print('Full Selection Efficiencies')
-BF =  1e-6#8.952995613376855e-09 #6.974125279294959e-09
+BF =  7.2309062308486705e-09#8.952995613376855e-09 #6.974125279294959e-09
 print(f'BF = {BF}')
 full_eff, full_eff_err = bdt_lh_cut_opt_with_n_interp.return_fullselneff_for_BF(interp_N_dict,BF)
 
@@ -84,4 +84,3 @@ for key in full_eff:
 
 # Print the table
 print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
-'''

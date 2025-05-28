@@ -375,14 +375,14 @@ titles = {
 ##############################
 # from PDG -> B production fractions
 prod_frac = {
-    "Bu": 0.43,
-    "Bd": 0.43,
-    "Bs": 0.096,
-    "Lb": 0.037,
-    "Bc": 0.0004,
+    "Bu":  (0.408, 0.007),#0.43,
+    "Bd":  (0.408, 0.007),#0.43,
+    "Bs": (0.100, 0.008),#0.096,
+    #"Lb": #0.037, 
+    #"Bc": #0.0004,Not measured by LEP
     # Actually, use the sample name to make integration with Bd2NuNu easier
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.096, 0),
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (0.43, 0),
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.100, 0.008),#(0.096, 0), #
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (0.408, 0.007),#(0.43, 0), #
 }
 
 

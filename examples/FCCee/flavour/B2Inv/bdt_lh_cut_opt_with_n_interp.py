@@ -87,10 +87,7 @@ def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, 
     print('Creating efficiency map for decay:')
     
     for decay in df["decay"].unique():
-        #to remove when want to include Bd too#########################
-        #if decay =='p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu':
-        #    continue
-        ###############################################################
+
         print(decay)
 
         N_df=np.zeros((len(lsearch), len(hsearch)))
@@ -484,7 +481,7 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995
 
 
   
-def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=1000, sig_BF=1e-7,incl_ZqqBFerror = True):
+def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=1e-7,incl_other_syst = True):
     
     lsearch = np.linspace(*lrange_plot,nlh) #need to be the same lrange and hrange as efficiency map was generated with 
     hsearch = np.linspace(*hrange_plot,nlh)
@@ -499,72 +496,26 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
     B_error_arr = np.zeros((len(lsearch), len(hsearch)))
     FOM = np.zeros((len(lsearch), len(hsearch)))
     err_FOM = np.zeros((len(lsearch), len(hsearch)))
-    full_err_FOM = np.zeros((len(lsearch), len(hsearch)))
-    full_S_error_arr = np.zeros((len(lsearch), len(hsearch)))
-    full_B_error_arr = np.zeros((len(lsearch), len(hsearch)))
+
 
 
     print('Calculating S and B')
     
-    ''' 
-    # alternative method using post bdtlh efficiency finder script  probably less clear to follow but gives same reuslts :)
-    for l in np.arange(0,len(lsearch), 1):
-        for h in np.arange(0,len(hsearch), 1):
-
-            lh_interp_eff_dict = {sample: interp_eff_dict[sample][l,h] for sample in interp_eff_dict.keys()}
-            lh_interp_eff_err_dict = {sample: interp_eff_err_dict[sample][l,h] for sample in interp_eff_err_dict.keys()}
- 
-            lh_n_expect_dict, lh_n_err_dict, lh_BFZbb_err_dict_components = post_bdt_eff_finder.get_n_expected(lh_interp_eff_dict, lh_interp_eff_err_dict, signal_bf=sig_BF,  BFZbb_err=True)
-
-            S = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["combined_signal"]])
-            B = sum([lh_n_expect_dict[sample] for sample in cfg.sample_allocations["hadronic_background"]])
-            
-            S_arr[l,h]=S
-            B_arr[l,h]=B
-
-            var_S = sum([lh_n_err_dict[sample]**2 for sample in cfg.sample_allocations["combined_signal"]])
-            var_B = sum([lh_n_err_dict[sample]**2 for sample in cfg.sample_allocations["hadronic_background"]])
-            
-            S_error_arr[l,h]=np.sqrt(var_S)
-            B_error_arr[l,h]=np.sqrt(var_B)
-
-            if S+B>0:
-                FOM[l,h] = S/np.sqrt(S+B)
-                #also calculate error in FOM itself from S,B error
-                err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*var_S + S**2*var_B))
-            else:
-                FOM[l,h] = 0
-                err_FOM[l,h] = 0
-            
-            
-            if incl_ZqqBFerror == True:
-
-                var_S_BF = lh_BFZbb_err_dict_components["combined_signal"]**2
-                var_B_BF = lh_BFZbb_err_dict_components["hadronic_background"]**2
-
-                full_var_S = var_S + var_S_BF
-                full_var_B = var_B + var_B_BF
-
-                full_S_error_arr[l,h]=np.sqrt(full_var_S)
-                full_B_error_arr[l,h]=np.sqrt(full_var_B)
-
-                if S+B>0:
-                    #also calculate error in FOM itself from S,B error
-                    full_err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*full_var_S + S**2*full_var_B))
-                else:
-                    FOM[l,h] = 0
-                    full_err_FOM[l,h] = 0
-
-
-    '''#Alternative method without using eff_finder script as cross check - proabably easier to follow
-    
+    '''
     #defining constants needed
     N_z = cfg.N_z
     k = 2 * N_z * cfg.branching_fractions["p8_ee_Zbb_ecm91"][0] * sig_BF # common part of signal expectation
-    
+    '''
     for l in np.arange(0,len(lsearch), 1):
         for h in np.arange(0,len(hsearch), 1):
             
+            interp_eff_dict_lh = {decay: interp_eff_dict[decay][l, h] for decay in interp_eff_dict.keys()}
+            interp_eff_err_dict_lh = {decay: interp_eff_err_dict[decay][l, h] for decay in interp_eff_err_dict.keys()}
+            
+
+            per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict_lh, interp_eff_err_dict_lh, signal_bf=sig_BF)
+            S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=incl_other_syst)
+            '''
             S = k * sum([cfg.prod_frac[decay][0]*interp_eff_dict[decay][l,h] for decay in cfg.sample_allocations["combined_signal"]])
             B = N_z* sum([cfg.branching_fractions[decay][0]*interp_eff_dict[decay][l,h] for decay in cfg.sample_allocations["hadronic_background"]])
             S_arr[l,h]=S
@@ -579,16 +530,21 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
             
             S_error_arr[l,h]=sigma_S
             B_error_arr[l,h]=sigma_B
+            '''
+            S_arr[l,h]=S
+            B_arr[l,h]=B
+            S_error_arr[l,h]=S_err
+            B_error_arr[l,h]=B_err
 
             if S+B>0:
                 FOM[l,h] = S/np.sqrt(S+B)
                 #also calculate error in FOM itself from S,B error
-                err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*sigma_S**2 + S**2*sigma_B**2))
+                err_FOM[l,h] = np.sqrt(1/(4*(S+B)**3)*((2*B+S)**2*S_err**2 + S**2*B_err**2))
             else:
                 FOM[l,h] = 0
                 err_FOM[l,h] = 0
 
-            
+            '''
             if incl_ZqqBFerror == True:
 
                 full_var_S = var_S + ((S/cfg.branching_fractions["p8_ee_Zbb_ecm91"][0])*cfg.branching_fractions["p8_ee_Zbb_ecm91"][1])**2
@@ -607,7 +563,7 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
                 else:
                     FOM[l,h] = 0
                     full_err_FOM[l,h] = 0
-    
+                '''
 
 
     ## finding maximum so can plot slices
@@ -623,14 +579,7 @@ def run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,
     # Print the table
     print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
 
-    #print(S_error_arr)
-
-    #print(B_error_arr)
-    
-    if incl_ZqqBFerror == True:
-        return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, full_S_error_arr, full_B_error_arr, full_err_FOM    
-    else:
-        return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF
+    return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF
 
 
 def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sigBF,vmax=5,SB_plots = False, save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/'):
@@ -715,7 +664,7 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
-def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 500, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                             plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False, lcut=None, hcut=None, logpath= None):
     #turn BF into title worthy version
     latex_BF = latex_form_exp(signal_BF)
@@ -743,7 +692,8 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
         h_cut = hcut
     else:
         # find optimum cut
-        FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=nlh , sig_BF=signal_BF, incl_ZqqBFerror = False)
+        FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_interp_N_dict ,hrange_plot=hrange_interp_N_dict, nlh=nlh , sig_BF=signal_BF, incl_other_syst = False)
+        
         indices = np.unravel_index(np.argmax(FOM), np.shape(FOM))
         l_cut = lsearch[indices[0]]
         h_cut = hsearch[indices[1]]
@@ -801,8 +751,8 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC)
-    per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err=post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
-    S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
+    S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True)
 
     if final_plot_path:
         x = binned_x_axis
@@ -932,7 +882,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
 
 def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
-                             lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=500,bins = (2,2),
+                             lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
                              ntoys = 250,
                              fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None):
 
@@ -1073,7 +1023,7 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
 
 
 
-def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=500 , sig_BFs=np.logspace(-9,-4,250),incl_ZqqBFerror=True, incl_toys_fit=False, full_df=None, ntoys=5000,plot=True,saveplotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995',toyplotpath = None, dict_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
+def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),incl_other_syst=True, incl_toys_fit=False, full_df=None, ntoys=200,plot=True,saveplotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995',toyplotpath = None, dict_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'):
     
     #create dictionaries to store results
     max_FOM = np.zeros(len(sig_BFs))
@@ -1085,8 +1035,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     B_exp = np.zeros(len(sig_BFs))
     S_err = np.zeros(len(sig_BFs))
     B_err = np.zeros(len(sig_BFs))
-    full_S_err= np.zeros(len(sig_BFs))
-    full_B_err= np.zeros(len(sig_BFs))
+
 
     i=0
     toy_BFs=[]
@@ -1095,7 +1044,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
 
     for BF in sig_BFs:
         
-        FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, full_S_error_arr, full_B_error_arr, full_err_FOM   = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=BF, incl_ZqqBFerror=True)
+        FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF   = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=BF, incl_other_syst=True)
 
         ## finding maximum so can plot slices
         indices = np.unravel_index(np.argmax(FOM), np.shape(FOM)) #nb argmax returns indices of the max value
@@ -1112,10 +1061,6 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
         S_err[i] = S_error_arr[indices[0],indices[1]]
         B_err[i] = B_error_arr[indices[0],indices[1]]
 
-        
-        if incl_ZqqBFerror == True:
-            full_S_err[i] = full_S_error_arr[indices[0],indices[1]]
-            full_B_err[i] = full_B_error_arr[indices[0],indices[1]]
 
         if incl_toys_fit == True:
             if i%2==0:
@@ -1155,21 +1100,14 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
 
 
     #calulating S/sqrt(S+B+varS+varB)
-    #with interpolation 
-    if incl_ZqqBFerror == True:
-        #ie redefine to include full error
-        significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2)
-        five_sigma_BF_inclerr = np.interp(5, significance_incl_error, BFs)
-        three_sigma_BF_inclerr = np.interp(3, significance_incl_error, BFs)
-        print(f"5 sigma BFs incl error = {five_sigma_BF_inclerr}" )
-        print(f"3 sigma BFs incl error= {three_sigma_BF_inclerr}" )
+    #error includes whatever specified in 2d optimisation 
 
-    else:
-        significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+S_err**2+B_err**2)
-        five_sigma_BF_inclerr = np.interp(5, significance_incl_error, BFs)
-        three_sigma_BF_inclerr = np.interp(3, significance_incl_error, BFs)
-        print(f"5 sigma BFs incl error = {five_sigma_BF_inclerr}" )
-        print(f"3 sigma BFs incl error= {three_sigma_BF_inclerr}" )
+    significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+S_err**2+B_err**2)
+    five_sigma_BF_inclerr = np.interp(5, significance_incl_error, BFs)
+    three_sigma_BF_inclerr = np.interp(3, significance_incl_error, BFs)
+    print(f"5 sigma BFs incl error = {five_sigma_BF_inclerr}" )
+    print(f"3 sigma BFs incl error= {three_sigma_BF_inclerr}" )
+
 
     CL = sigma_to_percentage(max_FOM)
 
@@ -1185,7 +1123,7 @@ def plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.99
     
     incl_syst_dict= {'BFs': BFs,
                 'significance': significance_incl_error,
-                'incl_ZqqBFerror':incl_ZqqBFerror}
+                'incl_other_syst':incl_other_syst}
     
     BDT_cuts_dict= {'BFs':BFs,
                     'light':light_cut,
@@ -1224,6 +1162,9 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     naive_five_sigma_BF = np.interp(5, naive_dict['significance'], naive_dict['BFs'])
     naive_three_sigma_BF = np.interp(3, naive_dict['significance'], naive_dict['BFs'])
 
+    print(f'3sigma BF= {naive_three_sigma_BF}')
+    print(f'5sigma BF= {naive_five_sigma_BF}')
+
 
     #plotting S/sqrt(S+B) line
     plt.figure()
@@ -1254,14 +1195,16 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         
         plt.xlim(min(toys_dict['BFs']), 4e-6)#max(toys_dict['BFs']))
 
-    incl_ZqqBFerror = incl_syst_dict['incl_ZqqBFerror']
+    incl_other_syst = incl_syst_dict['incl_other_syst']
 
     five_sigma_BF_inclerr = np.interp(5, incl_syst_dict['significance'], incl_syst_dict['BFs'])
     three_sigma_BF_inclerr = np.interp(3, incl_syst_dict['significance'], incl_syst_dict['BFs'])
 
+    print(f'3sigma incl err BF= {three_sigma_BF_inclerr}')
+    print(f'5sigma incl err BF= {five_sigma_BF_inclerr}')
 
-    if incl_ZqqBFerror == True:
-        #significance_incl_error = S_exp/np.sqrt(S_exp+B_exp+full_S_err**2+full_B_err**2) # defined in earlier if statement
+
+    if incl_other_syst == True:
         plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'], color='orange',label='Including MC \nSample Size \nUncertainty')#,label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
         plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0, color='orange')
         plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', color='orange')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_BF_inclerr,sig=2))}')
@@ -1269,13 +1212,14 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         plt.hlines(y = 3,xmin = min(toys_dict['BFs']),xmax = three_sigma_BF_inclerr, linestyle='--',color='k',alpha = 0.3)
         plt.hlines(y = 5,xmin = min(toys_dict['BFs']),xmax = five_sigma_BF_inclerr, linestyle='--',color='k',alpha = 0.3)
     else:
-        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'],label='Including MC Sample \nSize Uncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'],label='Including only MC Sample \nSize Uncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0)
     
     plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
     plt.ylabel(r'Significance')
     plt.xscale('log')
     plt.ylim(0,8)
+    plt.xlim(2e-9,4e-6)
 
     # reordering the labels 
     handles, labels = plt.gca().get_legend_handles_labels() 
@@ -1285,7 +1229,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
 
     #plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    if incl_ZqqBFerror == True:
+    if incl_other_syst == True:
         if incl_toys_fit == True:
             plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr_wtoys.pdf'))
         else:
@@ -1307,7 +1251,6 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     CL = sigma_to_percentage(naive_dict['significance'])
     CL_incl_error = sigma_to_percentage(incl_syst_dict['significance']) # this dependent on if have full error or not above
     #CL_toys = sigma_to_percentage(toys_significance)
-    
 
     # using interpolation
     CL95BF= np.interp(95, CL, naive_dict['BFs'])
@@ -1332,11 +1275,11 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         CL_toys = sigma_to_percentage(toys_dict['significance'])
 
         #interpolate toy fit
-        interp_CL_toys = UnivariateSpline(list(toys_dict['BFs'])[::4], list(CL_toys)[::4], k = 2,s=4.6)
+        interp_CL_toys = UnivariateSpline(list(toys_dict['BFs'])[::4], list(CL_toys)[::4], k = 2,s=1.3)
 
         #interp_BF_for_CL_toys = UnivariateSpline(CL_toys, toys_BFs, k = 2)
-        interp_CL_toys_upper = UnivariateSpline(list(toys_dict['BFs'])[::4], list(sigma_to_percentage(np.add(toys_dict['significance'],toys_dict['error'])))[::4], k = 2,s=4.6)
-        interp_CL_toys_lower = UnivariateSpline(list(toys_dict['BFs'])[::4], list(sigma_to_percentage(np.subtract(toys_dict['significance'],toys_dict['error'])))[::4], k = 2,s=4.6)
+        interp_CL_toys_upper = UnivariateSpline(list(toys_dict['BFs'])[::4], list(sigma_to_percentage(np.add(toys_dict['significance'],toys_dict['error'])))[::4], k = 2,s=1.3)
+        interp_CL_toys_lower = UnivariateSpline(list(toys_dict['BFs'])[::4], list(sigma_to_percentage(np.subtract(toys_dict['significance'],toys_dict['error'])))[::4], k = 2,s=1.3)
 
         #CL95_toys = interp_BF_for_CL_toys(95)
         #CL90_toys = interp_BF_for_CL_toys(90)
@@ -1354,7 +1297,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         plt.xlim(min(toys_dict['BFs']),4e-6)# max(toys_dict['BFs']))
 
 
-    if incl_ZqqBFerror == True:
+    if incl_other_syst == True:
         plt.plot(naive_dict['BFs'],CL_incl_error, color='orange',label='Including MC \n Sample Size \nUncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
         plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0, color='orange')
         plt.vlines(x=CL90BF_inclerr, ymin=70, ymax=90, linestyle='--', color='orange')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF_inclerr,sig=2))}')
@@ -1369,7 +1312,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     plt.ylabel(r'Rejection CL')
     plt.xscale('log')
     plt.ylim(70,102)
-
+    plt.xlim(2e-9,4e-6)
     # reordering the labels 
     handles, labels = plt.gca().get_legend_handles_labels() 
     # specify order 
@@ -1378,7 +1321,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
 
     #plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
-    if incl_ZqqBFerror == True:
+    if incl_other_syst == True:
         if incl_toys_fit == True:
             plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr_wtoys.pdf'))
         else:
@@ -1393,7 +1336,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
 
 def return_fullselneff_for_BF(interp_N_dict, signal_BF,lrange_plot= (0.995,1),hrange_plot = (0.995,1), nlh=200):
     
-    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF, full_S_error_arr, full_B_error_arr, full_err_FOM   = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=signal_BF, incl_ZqqBFerror=True)
+    FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF  = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=signal_BF, incl_other_syst=True)
 
     ## finding optimum cut to then calc eff.
     indices = np.unravel_index(np.argmax(FOM), np.shape(FOM)) #nb argmax returns indices of the max value
@@ -1451,6 +1394,6 @@ if __name__=="__main__":
     #per_sample_n_expect_dict, S, B, S_err, B_err, signal_BF  = make_final_binning_plot(full_data, interp_N_dict, signal_BF=1e-6, histbins=(2,2), nMC_plots_path=f'{plotpath}final_binning/1e-6/', final_plot_path = f'{plotpath}final_binning/1e-6/')
 
     
-    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(np.log10(1e-9),np.log10(4e-6),300), incl_ZqqBFerror=True, incl_toys_fit=True, full_df=full_data, ntoys=10000,plot=True,saveplotpath = plotpath ,toyplotpath = plotpath)
+    plot_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200 , sig_BFs=np.logspace(np.log10(1e-9),np.log10(4e-6),300), incl_other_syst=True, incl_toys_fit=True, full_df=full_data, ntoys=10000,plot=True,saveplotpath = plotpath ,toyplotpath = plotpath)
     
     

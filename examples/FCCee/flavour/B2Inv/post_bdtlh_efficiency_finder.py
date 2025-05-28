@@ -47,8 +47,10 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
     
     # Dict to store output
     per_sample_n_expect_dict = {}
-    per_sample_frac_eff_err={}
+    per_sample_eff_err={}
+    per_sample_novereff = {}
     per_sample_frac_BFZbb_err={}
+    per_sample_frac_fk_err={}
     
     # COMPUTING EXPECTATION
     for sample in efficiencies.keys():
@@ -59,38 +61,48 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
         eff_val = efficiencies[sample]
         eff_err_val = efficiencies_err[sample]
         
-        frac_eff_err = np.where(eff_val != 0, eff_err_val / eff_val, 0) 
+        #frac_eff_err = np.where(eff_val != 0, eff_err_val / eff_val, 0) #cant use without setting error at n_exp = 0 to 0 - instead keep efficiency error and N/efficiency
 
         num = N_z*bfs_val*eff_val
+        num_overeff = N_z*bfs_val
 
         if sample in cfg.sample_allocations['combined_signal']:
             num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
+            num_overeff *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
 
+        
         frac_BFZbb_err = bfs_err/bfs_val #0 for signal
+        frac_fk_err = 0 #not included in background
 
         if sample in cfg.sample_allocations['combined_signal']:
             frac_BFZbb_err = cfg.branching_fractions['p8_ee_Zbb_ecm91'][1]/cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]
+            frac_fk_err = cfg.prod_frac[sample][1]/cfg.prod_frac[sample][0]
 
         per_sample_n_expect_dict[sample] = num
-        per_sample_frac_eff_err[sample] = frac_eff_err
+        per_sample_eff_err[sample] = eff_err_val
+        per_sample_novereff[sample] = num_overeff
         per_sample_frac_BFZbb_err[sample] = frac_BFZbb_err
+        per_sample_frac_fk_err[sample] = frac_fk_err
 
-    return per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err        
+    return per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err         
+
 
 #combine compoenents into S and B and corresponding eror
-def get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_frac_BFZbb_err, incl_BFZbb_err=True):
+def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True):
     B= np.sum(np.stack([per_sample_n_expect_dict[k] for k in cfg.sample_allocations['hadronic_background']]), axis=0)
     S= np.sum(np.stack([per_sample_n_expect_dict[k] for k in cfg.sample_allocations['combined_signal']]), axis=0)
 
-    B_eff_var= np.sum(np.stack([(per_sample_frac_eff_err[k]*per_sample_n_expect_dict[k])**2 for k in cfg.sample_allocations['hadronic_background']]), axis=0)
-    S_eff_var= np.sum(np.stack([(per_sample_frac_eff_err[k]*per_sample_n_expect_dict[k])**2 for k in cfg.sample_allocations['combined_signal']]), axis=0)
+    B_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in cfg.sample_allocations['hadronic_background']]), axis=0)
+    S_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in cfg.sample_allocations['combined_signal']]), axis=0)
 
     B_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k])**2 for k in cfg.sample_allocations['hadronic_background']]), axis=0)
     S_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k]) for k in cfg.sample_allocations['combined_signal']]), axis=0)**2
 
-    if incl_BFZbb_err == True:
+    S_fk_var = np.sum(np.stack([(per_sample_frac_fk_err[k]*per_sample_n_expect_dict[k])**2 for k in cfg.sample_allocations['combined_signal']]), axis=0)
+
+    if incl_other_syst == True:
         B_err = np.sqrt(B_eff_var+B_BF_var)
-        S_err = np.sqrt(S_eff_var+S_BF_var)
+        S_err = np.sqrt(S_eff_var+S_BF_var+S_fk_var)
 
     else:
         B_err = np.sqrt(B_eff_var)
@@ -102,7 +114,7 @@ def get_total_SB(per_sample_n_expect_dict, per_sample_frac_eff_err, per_sample_f
 
 
 
-
+'''
 #######################################
 ## soon to be legacy for comparison ### - To replace with above for one bin case in cut opt script!!
 #######################################
@@ -152,8 +164,8 @@ def get_total_eff_post_bdt(df,
 
 
 def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_err=False): #set up to take efficiencies which is a disctionary of floats
-    '''
-    function to return the expected number of events for each sample and the efficiency error on that number'''
+    
+    #function to return the expected number of events for each sample and the efficiency error on that number
     
     
     
@@ -208,4 +220,4 @@ def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_er
     
     else:
         return n_expect_dict, n_err_dict
-    
+    '''

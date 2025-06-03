@@ -3,6 +3,8 @@
 # This file, along with all other analysis scripts, are expected to be in the `FCCAnalysesPath` directory
 # Also contains branching fractions, cut efficiencies, etc which are manually filled in for now
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
 FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
@@ -340,6 +342,44 @@ sample_allocations = {
     "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
 }
 
+
+sample_colors = {
+    "combined_signal": plt.cm.Blues( np.linspace(0, 1, 6)[3:-1] ),
+    "hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[1:-1] ),
+    "heavy_hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[1:3] ),
+    "light_hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[3:-1] ),
+    "Bssignal": [ plt.cm.Blues( np.linspace(0, 1, 6)[3] ) ],
+    "Bdsignal": [ plt.cm.Blues( np.linspace(0, 1, 6)[-2] ) ],
+    "bb_only": [ plt.cm.Reds_r( np.linspace(0, 1, 6)[1] ) ],
+    "tau_background": [plt.cm.tab20c(12)],#[ plt.cm.tab20b((4+ np.linspace(0, 1, 5)[1])/5 ) ],
+    "leptonic_background": [plt.cm.tab20c([12,13,14])],#plt.cm.tab20b( (4+np.linspace(0, 1, 5)[1:-1]) /5 ),
+    "light_leptonic_background": [plt.cm.tab20c([13,14])]#plt.cm.tab20b((4+ np.linspace(0, 1, 5)[2:-1])/5 )
+}
+
+sample_total = {
+    "combined_signal": None,
+    "hadronic_background": 'black',
+    "heavy_hadronic_background": 'darkred',
+    "light_hadronic_background": 'indianred',
+    "leptonic_background": 'indigo',
+    "light_leptonic_background": 'mediumvioletred',
+    "bb_only": None,
+    "tau_background": None,
+}
+
+sample_hatches = {
+    "combined_signal": [r'////', r'\\\\'],
+    "hadronic_background": None,
+    "heavy_hadronic_background": None,
+    "light_hadronic_background": None,
+    "bb_only": None,
+    "tau_background": None,
+    "leptonic_background": None,
+    "light_leptonic_background": None,
+    "Bdsignal": [r'////'],
+    "Bssignal": [r'\\\\'],
+}
+
 sample_shorthand = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": "Bs2NuNu",
     "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": "Bd2NuNu",
@@ -368,6 +408,9 @@ titles = {
     "heavy_background": r"$Z \to b \bar{b}+Z \to c \bar{c}$",
     "light_background": r"$Z \to s \bar{s}+Z \to d \bar{d}+Z \to u \bar{u}$",
     "signal": r"$B_{(s)}^0 \to \nu \bar{\nu}$",
+    "hadronic_background": "Total hadronic background",
+    "heavy_hadronic_background": "Total heavy hadronic background",
+    "light_hadronic_background": "Total light hadronic background"
 }
 
 ##############################

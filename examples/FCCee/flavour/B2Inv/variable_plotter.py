@@ -3,6 +3,7 @@
 import os
 from glob import glob
 import numpy as np
+import pandas as pd
 import uproot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -42,25 +43,46 @@ def get_list_of_branches(folder,inputpath=args.inputpath):
 
 
 def as_array(folder, varname, cut, nchunks,inputpath =args.inputpath ):
-    if nchunks is not None:
-        files = glob(os.path.join(os.path.abspath(inputpath), folder, "*.root"))[:nchunks]
-        path = [ f"{f}:events" for f in files ]
+     # if root files
+    if len(glob(os.path.join(os.path.abspath(inputpath), folder, "*.root")))>0:
+        if nchunks is not None:
+            files = glob(os.path.join(os.path.abspath(inputpath), folder, "*.root"))[:nchunks]
+            path = [ f"{f}:events" for f in files ]
+        else:
+            path = os.path.join( os.path.abspath(inputpath), folder, "*.root:events" )
+
+        try: 
+            # awkward array instead of numpy -> allows variable length elements
+            #arr = uproot.concatenate( path+":events", expressions=varname, library="np")[varname]
+            arr = uproot.concatenate( path, expressions=varname, cut=cut)[varname]
+        except:
+            branches = get_list_of_branches(folder,inputpath)
+            print( f"Branches found in files at path {folder}:" )
+            for br in branches:
+                print('  ', br)
+            raise RuntimeError( f"Cannot process expression {varname} in files at path {folder}. Try combinations of branches from the list above." )
+
+        # Return awkward array as a flattened ndarray
+        return ak.to_numpy(ak.ravel(arr))
+
+    # if pkl files
+    elif len(glob(os.path.join(os.path.abspath(inputpath), folder, "*.pkl")))>0:
+        files = glob(os.path.join(os.path.abspath(inputpath), folder, "*.pkl"))
+        if nchunks is not None:
+            files = files[:nchunks]
+
+        df = pd.concat( [ pd.read_pickle(file) for file in files ], ignore_index=True )
+        if cut is not None:
+            try:
+                df = df.query(cut)
+            except:
+                print("Tried to place a cut on the dataframe by couldn't. Continuing..")
+
+        return df[varname].to_numpy()
+    
     else:
-        path = os.path.join( os.path.abspath(inputpath), folder, "*.root:events" )
+        raise RuntimeError("No suitable root or pkl files found in {inputpath}/{folder}")
 
-    try: 
-        # awkward array instead of numpy -> allows variable length elements
-        #arr = uproot.concatenate( path+":events", expressions=varname, library="np")[varname]
-        arr = uproot.concatenate( path, expressions=varname, cut=cut)[varname]
-    except:
-        branches = get_list_of_branches(folder,inputpath)
-        print( f"Branches found in files at path {folder}:" )
-        for br in branches:
-            print('  ', br)
-        raise RuntimeError( f"Cannot process expression {varname} in files at path {folder}. Try combinations of branches from the list above." )
-
-    # Return awkward array as a flattened ndarray
-    return ak.to_numpy(ak.ravel(arr))
 
 # Should work as-is after flattening awkward array `values`
 def outlier_removal(values, threshold=7):
@@ -98,12 +120,14 @@ def histogram_settings():
             hist_settings[allocation]['lw'] = 2
             hist_settings[allocation]['color'] =plt.cm.Blues( np.linspace(0, 1, len(samples)+4)[3:-1] ) #['cornflowerblue','mediumblue']#['cornflowerblue', 'dodgerblue',]#['cadetblue','teal']#['cornflowerblue','mediumblue']
             total_color[allocation] = 'midnightblue'
-            hist_settings[allocation]['hatch'] = '////'
-
+            hist_settings[allocation]['hatch'] = r'////'
+            hist_settings[allocation]['fill'] = False
+            print('Signal colors:', hist_settings[allocation]['color'])
         elif allocation=='hadronic_background':
             hist_settings[allocation]['histtype'] = 'stepfilled'
             hist_settings[allocation]['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(samples)+2)[1:-1] )
             total_color[allocation] = 'k'
+            print('Background colors:', hist_settings[allocation]['color'])
         elif allocation=='light_hadronic_background':
             hist_settings[allocation]['histtype'] = 'stepfilled'
             hist_settings[allocation]['color'] = plt.cm.Reds_r( np.linspace(0, 1, len(cfg.sample_allocations['hadronic_background'])+2)[3:-1] )

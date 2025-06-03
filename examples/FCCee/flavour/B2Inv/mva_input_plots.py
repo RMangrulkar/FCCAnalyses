@@ -10,22 +10,22 @@ samples_light = ["combined_signal", "light_hadronic_background"]
 make_the_bloody_plot( var="EVT_hemisEmax_nDV", range=(0,8), bins=8, 
                       inputpath=path, samples=samples_heavy, 
                       xtitle='Number of Displaced Vertices in the Non-Signal Hemisphere', 
-                      save="figs/EVT_hemisEmax_nDV_heavy.pdf" )
+                      save="plots/paper_plots/Using_Matts_plotter/EVT_hemisEmax_nDV_heavy.pdf" )
 
 make_the_bloody_plot( var="EVT_hemisEmax_nDV", range=(0,8), bins=8, 
                       inputpath=path, samples=samples_light, 
                       xtitle='Number of Displaced Vertices in the Non-Signal Hemisphere', 
-                      save="figs/EVT_hemisEmax_nDV_light.pdf" )
+                      save="plots/paper_plots/Using_Matts_plotter/EVT_hemisEmax_nDV_light.pdf" )
 
 make_the_bloody_plot( var="EVT_hemisEmin_nDV", range=(0,8), bins=8, 
                       inputpath=path, samples=samples_heavy, 
                       xtitle='Number of Displaced Vertices in the Signal Hemisphere', 
-                      save="figs/EVT_hemisEmin_nDV_heavy.pdf" )
+                      save="plots/paper_plots/Using_Matts_plotter/EVT_hemisEmin_nDV_heavy.pdf" )
 
 make_the_bloody_plot( var="EVT_hemisEmin_nDV", range=(0,8), bins=8, 
                       inputpath=path, samples=samples_light, 
                       xtitle='Number of Displaced Vertices in the Signal Hemisphere', 
-                      save="figs/EVT_hemisEmin_nDV_light.pdf" )
+                      save="plots/paper_plots/Using_Matts_plotter/EVT_hemisEmin_nDV_light.pdf" )
 
 plt.show()
 

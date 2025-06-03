@@ -8,13 +8,13 @@ make_the_bloody_plot( "(180/3.141592653589793)*(arccos((EVT_Thrust_x * MCq1_px +
                       range=(0,40), bins=16,
                       inputpath=path, samples=samples, 
                       xtitle=r"$\Delta\phi$ [$^\circ$]",
-                      save="figs/EVT_ThrustAngle_min.pdf")
+                      save="plots/paper_plots/Using_Matts_plotter/EVT_ThrustAngle_min.pdf")
 
 make_the_bloody_plot( "(180/3.141592653589793)*(arccos((EVT_Thrust_x * MCq1_px + EVT_Thrust_y * MCq1_py + EVT_Thrust_z * MCq1_pz) / sqrt((EVT_Thrust_x**2 + EVT_Thrust_y**2 + EVT_Thrust_z**2) * (MCq1_px**2 + MCq1_py**2 + MCq1_pz**2))))",
                       range=(140,180), bins=16,
                       inputpath=path, samples=samples, 
                       xtitle=r"$\Delta\phi$ [$^\circ$]",
-                      save="figs/EVT_ThrustAngle_max.pdf")
+                      save="plots/paper_plots/Using_Matt's_plotter/EVT_ThrustAngle_max.pdf")
 
 plt.show()
 

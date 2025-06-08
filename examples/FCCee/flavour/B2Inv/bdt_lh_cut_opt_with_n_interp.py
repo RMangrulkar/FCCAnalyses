@@ -937,8 +937,98 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
             if n ==0:
                 print(f'fit sc_s = {sc_s}')
                 print(f'fit sc_b = {sc_b}')
+
+                #define labels
                 x_strings =[x_values[1,0],x_values[0,0],x_values[0,1],x_values[1,1]] 
                 x = np.arange(len(x_strings))
+
+                #define fit quantities
+                sig_fit = np.array([sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]])
+                bkg_fit = np.array([sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]])
+                total_fit = sig_fit + bkg_fit
+                toy_data_np = np.array([toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]])
+                residuals =  (toy_data_np-total_fit)/np.sqrt(toy_data_np)
+                
+
+                fig = plt.figure(figsize=(6, 6))
+                gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
+
+                # --- Main plot (stacked bars) ---
+                ax0 = fig.add_subplot(gs[0])
+
+                ax0.bar(x,bkg_fit,label='Fitted B', width=1.0, edgecolor='red', facecolor='none',hatch='///')
+                ax0.bar(x,sig_fit,label='Fitted S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                ax0.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
+                ax0.errorbar(x, toy_data_np,yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Pseudoexperiment Data', color='k')
+
+                ax0.set_ylabel('Counts')
+                ax0.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
+                ax0.set_xticks(x)
+                ax0.set_xticklabels(x_strings)
+                ax0.tick_params(axis='x', which='major', length=0)
+                ax0.legend()
+
+                # Edge ticks
+                bars = ax0.patches
+                edges = [b.get_x() for b in bars] + [b.get_x() + b.get_width() for b in bars]
+                ax0.set_xticks(edges, minor=True)
+                ax0.tick_params(axis='x', which='minor', length=4)
+
+                # --- Residual plot ---
+                
+                #BKG SUBTRACTED SIGNAL
+                ax1 = fig.add_subplot(gs[1], sharex=ax0)
+
+                ax1.errorbar(x, toy_data_np - bkg_fit,yerr=np.sqrt(toy_data_np),xerr=0.5, fmt='.',color='k')
+                ax1.set_ylabel('Backgrond Subtracted \n Counts') 
+                ax1.bar(x,sig_fit,label='Fit S', width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                #ax1.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],bottom=[-overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
+                ax1.set_xticks(x)
+                ax1.set_xticklabels(x_strings)
+                ax1.tick_params(axis='x', which='minor', length=4)
+
+                #ensure remove middle ticks
+                ax1.tick_params(axis='x', which='major', length=0)
+
+                #determine sub_height
+                berr = [overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]
+                #ax1.set_ylim(-1.3*berr[3],max((sig_fit[3] + 0.3*berr[3]),1.3*berr[3]))
+                ax1.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+
+                # Remove x tick labels on top plot
+                plt.setp(ax0.get_xticklabels(), visible=False)
+
+                # --- Save ---
+                plt.tight_layout()
+                plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath, 'toy_fits')), f'toy_fit_for_first_toy_BF{signal_BF}_with_bkg_sub.pdf'))
+                '''
+
+                #JUST TOYS-FIT/STAT_ERR
+                ax1 = fig.add_subplot(gs[1], sharex=ax0)
+
+                ax1.axhline(0, color='black', linewidth=1, alpha=0.2)
+                ax1.errorbar(x, residuals,yerr=1,xerr=0.5, fmt='.',color='k')
+                ax1.set_ylabel(r'Residuals')
+                ax1.set_xticks(x)
+                ax1.set_xticklabels(x_strings)
+                ax1.tick_params(axis='x', which='minor', length=4)
+                ax1.set_ylim(-3, 3)
+
+                #ensure remove middle ticks
+                ax1.tick_params(axis='x', which='major', length=0)
+
+                # Remove x tick labels on top plot
+                plt.setp(ax0.get_xticklabels(), visible=False)
+
+                # --- Save ---
+                plt.tight_layout()
+                plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath, 'toy_fits')),
+                                      f"toy_fit_for_first_toy_BF{signal_BF}_with_residuals.pdf"))
+                                      '''
+                
+                
+                
+                ''' #NO PULLS
                 plt.figure() 
                 plt.bar(x,[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],label='Fit B', width=1.0, edgecolor='red', facecolor='none',hatch='///')
                 plt.bar(x,[sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]],label='Fit S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
@@ -959,7 +1049,7 @@ def likelihood_model_builder(df, interp_N_dict, signal_BF=1e-6,
                 plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
 
                 plt.savefig(os.path.join(set_outputpath(os.path.join(fit_plotpath,'toy_fits')),f'toy_fit_for_first_toy_BF{signal_BF}.pdf'))
-    
+                '''
     
     data = np.array(significance_arr)
 
@@ -1165,10 +1255,12 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     print(f'3sigma BF= {naive_three_sigma_BF}')
     print(f'5sigma BF= {naive_five_sigma_BF}')
 
+    line_names = ['Counting \nExperiment','Counting \nExperiment \nIncluding \nSystematic','Binned Fits']
+    line_namesFOM = ['Counting Experiment','Counting Experiment \nIncluding Systematic','Binned Fits']
 
     #plotting S/sqrt(S+B) line
     plt.figure()
-    plt.plot(naive_dict['BFs'],naive_dict['significance'], label = 'Naive Counting \nExperiment')#r'$S/\sqrt{S+B}$') #
+    plt.plot(naive_dict['BFs'],naive_dict['significance'], label = line_namesFOM[0])#r'$S/\sqrt{S+B}$') #
     plt.fill_between(naive_dict['BFs'], naive_dict['significance']-naive_dict['error'], naive_dict['significance']+naive_dict['error'],alpha=0.4)
     plt.vlines(x=naive_three_sigma_BF, ymin=0, ymax=3, linestyle='--')#,label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(naive_three_sigma_BF,sig=2))}')
     plt.vlines(x=naive_five_sigma_BF, ymin=0, ymax=5, linestyle='--')#,label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(naive_five_sigma_BF,sig=2))}')
@@ -1188,7 +1280,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         print(f"5 sigma BFs toys = {five_sigma_toys}" )
         print(f"3 sigma toys= {three_sigma_toys}" )
         plot_BFs = np.logspace(np.log10(min(list(toys_dict['BFs'])[::4])), np.log10(max(list(toys_dict['BFs'])[::4])),len(naive_dict['BFs']))
-        plt.plot(plot_BFs,interp_toys_significance(plot_BFs), color='green',label='Binned Fits \n to Toys')# ,label = r'Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
+        plt.plot(plot_BFs,interp_toys_significance(plot_BFs), color='green',label=line_namesFOM[2])# ,label = r'Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
         plt.fill_between(plot_BFs, interp_toys_significance_lower(plot_BFs), interp_toys_significance_upper(plot_BFs),alpha=0.4, color='green')
         plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', color='green')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_toys,sig=2))}')
         plt.vlines(x=five_sigma_toys, ymin=0, ymax=5, linestyle='--',color='green')#, label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(five_sigma_toys,sig=2))}', color='green')
@@ -1205,7 +1297,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
 
 
     if incl_other_syst == True:
-        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'], color='orange',label='Including MC \nSample Size \nUncertainty')#,label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
+        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'], color='orange',label=line_namesFOM[1])#,label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
         plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0, color='orange')
         plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', color='orange')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_BF_inclerr,sig=2))}')
         plt.vlines(x=five_sigma_BF_inclerr, ymin=0, ymax=5, linestyle='--', color='orange')#, label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(five_sigma_BF_inclerr,sig=2))}')
@@ -1224,7 +1316,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     # reordering the labels 
     handles, labels = plt.gca().get_legend_handles_labels() 
     # specify order 
-    order = [0,1,2]
+    order = [0,2,1]
     # pass handle & labels lists along with order as below 
     plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
 
@@ -1265,7 +1357,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
 
 
     plt.figure()
-    plt.plot(naive_dict['BFs'],CL,label='Naive Counting \nExperiment')#,label='$S/\sqrt{S+B}$' )
+    plt.plot(naive_dict['BFs'],CL,label=line_names[0])#,label='$S/\sqrt{S+B}$' )
     plt.fill_between(naive_dict['BFs'], sigma_to_percentage(naive_dict['significance']-naive_dict['error']),  sigma_to_percentage(naive_dict['significance']+naive_dict['error']),alpha=0.4)
     plt.vlines(x=CL90BF, ymin=70, ymax=90, linestyle='--')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF,sig=2))}')
     plt.vlines(x=CL95BF, ymin=70, ymax=95, linestyle='--')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95BF,sig=2))}')
@@ -1290,7 +1382,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         print(f"95% BF from toys = {CL95_toys}" )
         print(f"90% BF from toys= {CL90_toys}" )
 
-        plt.plot(plot_BFs,interp_CL_toys(plot_BFs), color='green',label='Binned Fits \nto Toys')#,label = r' Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
+        plt.plot(plot_BFs,interp_CL_toys(plot_BFs), color='green',label=line_names[2])#,label = r' Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
         plt.fill_between(plot_BFs, interp_CL_toys_lower(plot_BFs), interp_CL_toys_upper(plot_BFs),alpha=0.4, color='green')
         plt.vlines(x=CL90_toys, ymin=70, ymax=90, linestyle='--', color='green')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90_toys,sig=2))}')
         plt.vlines(x=CL95_toys, ymin=70, ymax=95, linestyle='--', color='green')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95_toys,sig=2))}')
@@ -1298,7 +1390,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
 
 
     if incl_other_syst == True:
-        plt.plot(naive_dict['BFs'],CL_incl_error, color='orange',label='Including MC \n Sample Size \nUncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
+        plt.plot(naive_dict['BFs'],CL_incl_error, color='orange',label=line_names[1])#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
         plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0, color='orange')
         plt.vlines(x=CL90BF_inclerr, ymin=70, ymax=90, linestyle='--', color='orange')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF_inclerr,sig=2))}')
         plt.vlines(x=CL95BF_inclerr, ymin=70, ymax=95, linestyle='--', color='orange')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95BF_inclerr,sig=2))}')
@@ -1316,7 +1408,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     # reordering the labels 
     handles, labels = plt.gca().get_legend_handles_labels() 
     # specify order 
-    order = [0,1,2] 
+    order = [0,2,1] 
     # pass handle & labels lists along with order as below 
     plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
 

@@ -48,12 +48,12 @@ bdt_lh_cut_opt_with_n_interp.make_final_binning_plot(full_data, interp_N_dict, l
                             plot_signal_components=True,  nMC_plots_path=None, final_plot_path = plotpath, pull_type_plot=True)
 
 
-bdt_lh_cut_opt_with_n_interp.likelihood_model_builder(full_data, interp_N_dict, signal_BF=4e-7,
+bdt_lh_cut_opt_with_n_interp.likelihood_model_builder(full_data, interp_N_dict, signal_BF=7.5e-8,#4e-7,#
                              lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
                              ntoys = 1,
                              fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), 
                              spread_plotpath=None, logpath = plotpath, hcut = None, lcut =None)
-
+'''
 opt_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'
 plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation'
    
@@ -84,3 +84,4 @@ for key in full_eff:
 
 # Print the table
 print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
+'''

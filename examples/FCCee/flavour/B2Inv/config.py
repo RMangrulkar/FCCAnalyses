@@ -393,10 +393,10 @@ sample_shorthand = {
 }
 
 titles = {
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_old": r"$B_s^0 \to \nu \bar{\nu}$",
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_old": r"$B_d^0 \to \nu \bar{\nu}$",
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": r"$B_s^0 \to$ invisibles",
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": r"$B^0 \to$ invisibles",
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": r"$B_s^0 \to \nu \bar{\nu}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": r"$B^0 \to \nu \bar{\nu}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_invis": r"$B_s^0 \to$ invisible",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_invis": r"$B^0 \to$ invisible",
     "p8_ee_Zbb_ecm91": r"$Z \to b \bar{b}$",
     "p8_ee_Zcc_ecm91": r"$Z \to c \bar{c}$",
     "p8_ee_Zss_ecm91": r"$Z \to s \bar{s}$",

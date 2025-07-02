@@ -55,9 +55,9 @@ bdt_lh_cut_opt_with_n_interp.likelihood_model_builder(full_data, interp_N_dict, 
                              spread_plotpath=None, logpath = plotpath, hcut = None, lcut =None)
 '''
 opt_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'
-plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation'
-   
-# load sicts for final sensitivity plot
+#plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation'
+plotpath = 'plots/paper_plots'
+# load dicts for final sensitivity plot
 with open(os.path.join(opt_path,'naive_sensitivity_dict.pkl'), 'rb') as f:
     naive_dict = pickle.load(f)
 with open(os.path.join(opt_path,'toys_sensitivity_dict.pkl'), 'rb') as f:
@@ -84,4 +84,6 @@ for key in full_eff:
 
 # Print the table
 print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
+
+bdt_lh_cut_opt_with_n_interp.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=4/10*1.4e-4,incl_other_syst = True)
 '''

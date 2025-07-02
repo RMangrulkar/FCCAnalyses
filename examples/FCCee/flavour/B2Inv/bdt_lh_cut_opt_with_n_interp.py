@@ -785,7 +785,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
                         if plot_signal_components == True:
                             hist_opts = histogram_settings()[allocation]
-                            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                            plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[sample+'_invis'], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                         tot_arr = np.add(tot_arr,[h[1,0],h[0,0],h[0,1],h[1,1]])
                         i+=1
 
@@ -797,7 +797,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                         tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
 
             if plot_signal_components == False:
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=1.5,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')              
+                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal,label=r'$\mathcal{B}(B^0_{(s)}\rightarrow{}$invisible$)=$ '+ f'{latex_BF}', bottom=np.subtract(tot_arr,tot_signal), width=1.0, lw=1.5,edgecolor = plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')              
                 
             # sorting ticks so at edges but name still at centre
             bars = plt.gca().patches
@@ -820,7 +820,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
                 if plot_signal_components == False:
                     ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=1.5,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] )  , facecolor= 'none', hatch='\\\\\\')
                 else:
-                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=1.5,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$S$ for $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisibles$)=$ '+ f'{latex_BF}')
+                    ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],tot_signal, bottom=0, width=1.0, lw=1.5,edgecolor =plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) , facecolor= 'none', hatch='\\\\\\',label=r'$S$ for $\mathcal{B}(B^0_{(s)}\rightarrow{}$invisible$)=$ '+ f'{latex_BF}')
 
                 ax_sub.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =[-val for val in [B_err[1,0], B_err[0,0], B_err[0,1], B_err[1,1]]], color='black', alpha=0.45, width=1, label='$\sigma_B$')#r'$Z \to q \bar{q}$ background systematic')
 
@@ -1307,7 +1307,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'],label='Including only MC Sample \nSize Uncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0)
     
-    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
     plt.ylabel(r'Significance')
     plt.xscale('log')
     plt.ylim(0,8)
@@ -1320,7 +1320,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     # pass handle & labels lists along with order as below 
     plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
 
-    #plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    #plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
     if incl_other_syst == True:
         if incl_toys_fit == True:
             plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr_wtoys.pdf'))
@@ -1400,7 +1400,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
         plt.plot(naive_dict['BFs'],CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
         plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0)
         
-    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    plt.xlabel(r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
     plt.ylabel(r'Rejection CL')
     plt.xscale('log')
     plt.ylim(70,102)
@@ -1412,7 +1412,7 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, savepat
     # pass handle & labels lists along with order as below 
     plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
 
-    #plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisibles$)$')
+    #plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
     if incl_other_syst == True:
         if incl_toys_fit == True:
             plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr_wtoys.pdf'))

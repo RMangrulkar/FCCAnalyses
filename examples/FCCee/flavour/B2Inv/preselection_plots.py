@@ -7,9 +7,9 @@ tau_samples = ["combined_signal", "tau_background"]
 
 make_the_bloody_plot( var="EVT_hemisEmax_n", range=(0,60), bins=60, 
                       inputpath=path, samples=tau_samples, 
-                      xtitle='Non_Signal Hemisphere Particle Multiplicity', 
+                      xtitle='Non-Signal Hemisphere Particle Multiplicity', 
                       plot_cutline=(10,"Preselection cut",">"),
-                      save="plots/paper_plots/Using_Matts_plotter/EVT_hemisEmax_n_tau.pdf" )
+                      save="plots/paper_plots/Using_Matts_plotter/EVT_hemisEmax_n_tau_updatedlabel.pdf" )
 
 make_the_bloody_plot( var="EVT_e", range=(25,95), bins=70, 
                       inputpath=path, samples=samples, 

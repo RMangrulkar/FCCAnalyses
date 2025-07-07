@@ -191,6 +191,8 @@ def plot_bdt_response(df, bdt_name = "BDT_lh",output_file_name = "response" ,out
     ax[0].legend()
     ax[0].set_yscale('log')
     ax[0].set_ylim(4e-3,60)
+    ax[0].set_xlim(xrange)
+    ax[1].set_xlim(xrange)
     fig.tight_layout()
 
     if xrange==(0,1):

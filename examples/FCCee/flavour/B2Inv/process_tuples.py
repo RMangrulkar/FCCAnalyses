@@ -51,7 +51,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['tautau']
+testFile = cfg.fccana_opts['testFile']['bb']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -754,6 +754,14 @@ class RDFanalysis():
                 .Filter("EVT_hemisEmax_n>10") #tau veto
             )
             return df5
+        
+        elif cfg.run_mode == 'process_with_MC_full_prelim':
+            df5 = (
+                df3
+                .Filter("EVT_hemisEmax_n>10") #tau veto
+            )
+            return df5
+        
 
          # If producing files for training BDTh/l then we are done
         elif cfg.run_mode == 'prelim_cuts_full':

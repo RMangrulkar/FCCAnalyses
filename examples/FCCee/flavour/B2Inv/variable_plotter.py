@@ -93,9 +93,6 @@ def outlier_removal(values, threshold=7):
 
     return values
 
-# Define a custom cycle for hatching patterns - to work on #############################################################
-hatch_cycle = cycler(hatch=['///', r'\\\\'])
-
 
 def histogram_settings():
     

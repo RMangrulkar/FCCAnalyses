@@ -424,6 +424,9 @@ N_z = 6e12 # total number of Nz expected across all experiments during tera-Z ru
 mass_KS = 0.497611 #\pm 0.000013 GeV
 mass_pi0 = 0.1349768#\pm0.0000005 GeV
 
+BELLEII_projected_limits = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu':1.1e-5, 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu':1.5e-6}
+BELLEII_projected_lumi = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu':r'5 ab$^{-1}$ $\Upsilon(5S)$', 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu':r'50 ab$^{-1}$ $\Upsilon(4S)$'}
+
 
 prelim_cut_effs = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu': (0.876092, 0.00023297513169984185),
  'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu': (0.8826863636363637, 0.00021695324861459309),

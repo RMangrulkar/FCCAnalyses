@@ -13,7 +13,7 @@ from xgboost import XGBClassifier
 
 import config as cfg 
 import efficiency_finder
-import bdt_plotter_multiclass as bp
+import plotters.bdt_plotter_multiclass as bp
 
 
 ROOT.EnableImplicitMT()

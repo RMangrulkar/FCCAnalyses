@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath(configPath))
 
 import config as cfg 
 import efficiency_finder
-import bdt_plotter_multiclass as bp
+import plotters.bdt_plotter_multiclass as bp
 
 #import bdt_plotter as bdtplt
 

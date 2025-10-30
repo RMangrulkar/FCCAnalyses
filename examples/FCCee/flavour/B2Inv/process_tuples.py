@@ -51,7 +51,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['bb']
+testFile = cfg.fccana_opts['testFile']['taunu2mu']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -784,7 +784,24 @@ class RDFanalysis():
                 .Filter("HasFormZeroOnes==1")
             )
             
-            return df4    
+            return df4 
+
+
+        elif cfg.run_mode == 'lnu_background_no_lepton_veto':  
+
+            dflnu =  (
+                    df2
+                    .Filter("EVT_e < 85")        
+                    .Filter("EVT_hemisEmin_nCharged > 0")  
+                    #.Filter("EVT_hemisEmin_nLept == 0") #Removed so now tso can look at with and without nlept cut   
+                    .Filter("PV_Rec_vtx_m<40") 
+                    .Filter("Rec_PV_ntracks>1")
+                    .Define("matching_vtx_assignment", "Rec_vtx_in_hemisEmin==Rec_vtx_in_hemisEmin_d2PV") #INTERMEDIATE
+                    .Define("HasFormZeroOnes", "matching_vtx_assignment.size() > 0 && matching_vtx_assignment.at(0) == 0 && Sum(matching_vtx_assignment) == matching_vtx_assignment.size() - 1")   #INTERMEDIATE
+                    .Filter("HasFormZeroOnes==1")
+                    .Filter("EVT_hemisEmax_n>10") #include Ztautau veto
+            )
+            return dflnu 
 
         else:
             raise ValueError('Please choose a valid RunMode')

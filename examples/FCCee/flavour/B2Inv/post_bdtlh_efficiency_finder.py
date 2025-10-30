@@ -87,8 +87,8 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
     return per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err         
 
 
-#combine compoenents into S and B and corresponding eror
-def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True):
+#combine compoenents into S and B and corresponding absolute (not fractional) error
+def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True, individual_signal_contributions=False):
     B= np.sum(np.stack([per_sample_n_expect_dict[k] for k in cfg.sample_allocations['hadronic_background']]), axis=0)
     S= np.sum(np.stack([per_sample_n_expect_dict[k] for k in cfg.sample_allocations['combined_signal']]), axis=0)
 
@@ -108,18 +108,38 @@ def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_e
         B_err = np.sqrt(B_eff_var)
         S_err = np.sqrt(S_eff_var)
 
-    return S, B, S_err, B_err
+    if individual_signal_contributions ==True:
+        S_dict = {}
+        S_eff_var_dict= {}
+        S_BF_var_dict = {}
+        S_fk_var_dict = {}
+        S_err_dict = {}
+        for sample in cfg.sample_allocations['combined_signal']:
+            S_dict[sample]= per_sample_n_expect_dict[sample]
+            S_eff_var_dict[sample]=(per_sample_eff_err[sample]*per_sample_novereff[sample])**2 
+            S_BF_var_dict[sample] = (per_sample_frac_BFZbb_err[sample]*per_sample_n_expect_dict[sample])**2
+            S_fk_var_dict[sample] = (per_sample_frac_fk_err[sample]*per_sample_n_expect_dict[sample])**2 
+
+            if incl_other_syst == True:
+                S_err_dict[sample] = np.sqrt(S_eff_var_dict[sample]+S_BF_var_dict[sample]+S_fk_var_dict[sample])
+
+            else:
+                S_err_dict[sample]  = np.sqrt(S_eff_var_dict[sample])
+        
+        return S, B, S_err, B_err, S_dict, S_err_dict
+    else: 
+        return S, B, S_err, B_err
 
 
 
 
 
-'''
+
 #######################################
 ## soon to be legacy for comparison ### - To replace with above for one bin case in cut opt script!!
 #######################################
 ################################################################
-## functions for if only have single set of cuts (ie. one bin)##
+## functions for if only have single set of cuts (ie. one bin)## - needed for post bdt variable plotter script
 ################################################################
 
 def get_total_eff_post_bdt(df, 
@@ -220,4 +240,3 @@ def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_er
     
     else:
         return n_expect_dict, n_err_dict
-    '''

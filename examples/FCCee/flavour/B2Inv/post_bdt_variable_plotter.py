@@ -152,7 +152,7 @@ def plot_variable(data,variable,
 
         if weight:
             eff, err, n_remaining = eff_finder.get_total_eff_post_bdt(df, cut=None, verbose=verbose) #already filtered df on cut earlier
-            n_exp, n_err, BFZbb_err_dict_components = eff_finder.get_n_expected(eff, err, signal_bf=signal_bf)
+            n_exp, n_err, BFZbb_err_dict_components = eff_finder.get_n_expected(eff, err, signal_bf=signal_bf, calc_BFZbb_err=True)
 
             hist_w = [ n_exp[sample]/len(df[df['decay']==sample])* np.ones_like(values[sample]) for sample in samples ] 
 

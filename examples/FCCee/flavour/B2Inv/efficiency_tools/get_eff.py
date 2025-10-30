@@ -6,7 +6,7 @@ import xgboost as xgb  # Has to be imported first to avoid conflicts with PyROOT
 from tabulate import tabulate
 import os
 
-import config as cfg
+from .. import config as cfg
 import efficiency_finder
 
 

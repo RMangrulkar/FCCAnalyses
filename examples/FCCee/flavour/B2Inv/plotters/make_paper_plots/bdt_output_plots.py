@@ -1,6 +1,6 @@
 import os
-import config as cfg
-import bdt_plotter_multiclass as bdt_plotter
+from ... import config as cfg
+from .. import bdt_plotter_multiclass as bdt_plotter
 
 #######################
 #make BDT output plots

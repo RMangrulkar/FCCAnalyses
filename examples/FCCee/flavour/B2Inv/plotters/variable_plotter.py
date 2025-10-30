@@ -8,12 +8,13 @@ import uproot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import awkward as ak  # Needed if using awkward arrays
-plt.style.use('fcc.mplstyle')
 from cycler import cycler
 
 
-import config as cfg
-import efficiency_finder
+from .. import config as cfg
+from ..efficiency_tools import efficiency_finder
+
+plt.style.use('fcc.mplstyle')
 
 
 from argparse import ArgumentParser

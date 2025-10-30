@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import config as cfg
+from .. import config as cfg
 
 def load_all_pickles_into_dataframe(runmode,folder,sample):
     all_dfs = []

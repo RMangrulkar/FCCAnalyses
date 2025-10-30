@@ -5,9 +5,11 @@ import matplotlib.pyplot as plt
 import os
 import pickle
 
-import config as cfg 
-plt.style.use('fcc.mplstyle')
-from flavtag_plotter import make_maxpK_efficiency_plot, make_nK_plot, make_maxpKS_efficiency_plot, make_nKS_plot
+from ... import config as cfg 
+from ..flavtag_plotter import make_maxpK_efficiency_plot, make_nK_plot, make_maxpKS_efficiency_plot, make_nKS_plot
+
+style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
+plt.style.use(style_path)
 
 # load Ks and Kpm data
 data_savepath = 'outputs/prelim_cuts_full_data/flavtag_dataframes/selected_kaons'

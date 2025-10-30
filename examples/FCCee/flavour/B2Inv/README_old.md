@@ -1,14 +1,33 @@
 # Workflow overview
-1. Process tuples using FCCAnalyses framework and `process_tuples.py` script - specifying runmode from config options
-
-2. Create training data tuple with `df_makers` and train BDT with `bdt_lh_training.py` 
-
-3. `pickle_full_data.py` used to turn into dataframes - ensure only run over samples have tuples on otherwise get divide by 0 error
-
-4. Apply multiclass BDT with `apply_bdt_lh.py`
-
-5. Run cut optimisation and significance calculations with `bdt_lh_cut_opt_significance.py`
-
+```mermaid
+graph
+    A[Options from config.py]-->B[small stage1 sample]
+    C[Variables from B2Inv.yaml]-->B
+    Z[Preselections]-->B
+    subgraph BDT1
+        direction LR
+        D[bdt1 training]-->F[Confirm BDT1 from plots]
+    end
+    B-->BDT1
+    BDT1-->|Loose BDT1 cut|E[full stage1 sample]
+    A-->E
+    C-->E
+    Z-->E
+    subgraph BDT2
+        direction LR
+        G[bdt2 training]-->X[Confirm BDT2 from plots]
+    end
+    E-->BDT2
+    subgraph ANA
+        direction TB
+        H[stage2]-->|BDTComb uses BDT1|I[1D efficiency map]
+        H-->|BDT2 and BDT1 separate|J[2D efficiency map]
+        I-->K[Maximise FOM]
+        J-->K
+        H-->L[Fit Emissing]
+    end
+    BDT2-->ANA
+```
 # Ideal recreation of project (do not attempt now, WIP)
 1. Clone the repo
    
@@ -93,7 +112,7 @@ This contains almost all of the configuration options, most importantly:
 
 - Maybe the efficiencies should be moved to another YAML so it can be updated separately
 
-### `B2Inv.yaml` UPDATE
+### `B2Inv.yaml`
 
 Contains the branch/feature names used in the analysis. Almost every script depends on this and `config.py` in some way or the other.
  - `bdt1-training-opts`
@@ -102,7 +121,7 @@ Contains the branch/feature names used in the analysis. Almost every script depe
  - `stage1-vars`
  - `stage0-vars` (may be out of date)
 
-### `stage0.py` OLD
+### `stage0.py`
 
 Saves ntuples from the `winter2023` samples for investigation
  - Stores every `MCParticle` and `MCVertex` along with reconstructed variables
@@ -111,7 +130,7 @@ Saves ntuples from the `winter2023` samples for investigation
  - Currently out of date, may not contain all the variables present in `stage1_training`, `stage1` etc.
  - Tuples are saved in the corresponding path defined in `config`, by default in `outputs/stage0/`.
 
-### `stage1.py` OLD
+### `stage1.py`
 
 Saves ntuples to either train BDT1 or uses a trained BDT1 to get samples
  - `MCParticle` and `MCVertex` now omitted except special cases (the MC $e^\pm$ beam is stored, as are the MC $Z$, $q$, $\bar{q}$)
@@ -125,7 +144,7 @@ Saves ntuples to either train BDT1 or uses a trained BDT1 to get samples
 
  * Would recommend using `hadd -v 1 -k -fk OUTPUT [INPUTS]` to merge these files as I/O operations on 2000+ files slow down subsequent scripts a lot. I merged groups of 250 files manually for now, should be relatively easy to automate. Would recommend using `glob` syntax, for e.g. `chunk_{0..249}.root` to select the first 250.
 
-### `bdt1.py` (currently in the subdirectory `BDT/`) OLD
+### `bdt1.py` (currently in the subdirectory `BDT/`)
 
 Uses `stage1_training` data to train and save BDT1
 ```bash
@@ -138,7 +157,7 @@ python bdt1.py --help
 - Due to the slow running of the xgboost version bundled with `key4hep`, recommended to use gridsearch over fewer chunks, save the optimum hyperparameters and then load those hyperparameters for the full fit
 - Optionally, you can plot the response, significance, etc.
 
-### Similarly `BDT/bdt2.py` and `BDT/BDTComb.py` OLD
+### Similarly `BDT/bdt2.py` and `BDT/BDTComb.py`
 
 ### `tuple_handler.py` (needs to be refactored)
  - The `TupleHandler` class is meant to provide a modular way to access `stage0` files (and in the future all
@@ -152,7 +171,7 @@ python bdt1.py --help
  - `variable_plotter.py` is a simple plotting script that reads from `config.py`
  - example usage `python -i variable_plotter.py` then can interactively make some plots
 
-### `efficiency_finder.py` OLD UPDATE WITH NEW METHOD
+### `efficiency_finder.py`
 
  - A simple script that prints (or saves) the efficiencies of a given cut
  - Justification [here](https://indico.cern.ch/event/66256/contributions/2071577/attachments/1017176/1447814/EfficiencyErrors.pdf)
@@ -172,6 +191,9 @@ python bdt1.py --help
  P(k | n) = \binom{n}{k} \epsilon_\text{true}^k (1-\epsilon_\text{true})^{n-k}
  $$
 
+ ### `efficiency_map.py`
 
+ - Using BDT1, BDT2 and BDTComb saves CSVs of the 2d/1d efficiency maps with their errors (assuming the above formula)
+ - WIP --> Adding plotting of these efficiencies in the same script
 
  

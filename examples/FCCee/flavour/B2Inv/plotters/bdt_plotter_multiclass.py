@@ -17,8 +17,8 @@ from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
 
 
-import config as cfg
-import efficiency_finder
+from .. import config as cfg
+from ..efficiency_tools import efficiency_finder
 import variable_plotter as vp
 plt.style.use('fcc.mplstyle')
 

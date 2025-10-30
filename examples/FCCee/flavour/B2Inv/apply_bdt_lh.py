@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from yaml import safe_load, YAMLError, dump
 import config as cfg
-import bdt_plotter_multiclass as bp
+import plotters.bdt_plotter_multiclass as bp
 
 
 def set_outputpath(outputpath):

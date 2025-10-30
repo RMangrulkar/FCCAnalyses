@@ -2,9 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 import pandas as pd
+import os
 
-import config as cfg
-plt.style.use('fcc.mplstyle')
+from ... import config as cfg
+
+style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
+plt.style.use(style_path)
 
 
 

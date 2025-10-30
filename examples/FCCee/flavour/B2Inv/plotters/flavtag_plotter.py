@@ -4,12 +4,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import pickle
-
-
-import config as cfg 
-import bdt_lh_cut_opt_with_n_interp as cutopt
-plt.style.use('fcc.mplstyle')
-
 import glob
 import sys
 import ROOT
@@ -23,8 +17,15 @@ from sklearn.metrics import log_loss
 from itertools import combinations
 from itertools import product
 from scipy.interpolate import interp1d
+
+from .. import config as cfg 
+from .. import bdt_lh_cut_opt_significance as cutopt
+from ..efficiency_tools import efficiency_finder
+
+plt.style.use('fcc.mplstyle')
+
  
-import efficiency_finder
+
 
 ROOT.EnableImplicitMT()
 

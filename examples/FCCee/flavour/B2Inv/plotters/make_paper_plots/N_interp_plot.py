@@ -4,22 +4,22 @@ import numpy as np
 import pandas as pd
 import pickle
 from tabulate import tabulate
-import config as cfg
-import bdt_lh_cut_opt_with_n_interp
+from ... import config as cfg
+from ... import bdt_lh_cut_opt_significance
 
 save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/'
 
 # make N interp plots
-with open(os.path.join(bdt_lh_cut_opt_with_n_interp.set_outputpath(save_path), "N_remaining_dictionary"), "rb") as dill_file:
+with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "N_remaining_dictionary"), "rb") as dill_file:
         N_dict = dill.load(dill_file)
 
-with open(os.path.join(bdt_lh_cut_opt_with_n_interp.set_outputpath(save_path), "interpolated_N_remaining_dictionary"), "rb") as dill_file:
+with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "interpolated_N_remaining_dictionary"), "rb") as dill_file:
     interp_N_dict = dill.load(dill_file)
 
 plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/paper_plots'
 
 '''
-bdt_lh_cut_opt_with_n_interp.plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,normalised = True, separate_cbar = True, slice=False, save_path=plotpath)
+bdt_lh_cut_opt_significance.plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,normalised = True, separate_cbar = True, slice=False, save_path=plotpath)
 
 
 # make final binning plot
@@ -44,11 +44,11 @@ full_data['P_not_light'] = 1-full_data['bdt_score_0']
 full_data = full_data.query('EVT_hemisEmax_n>10') #veto on taus
 
 
-bdt_lh_cut_opt_with_n_interp.make_final_binning_plot(full_data, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+bdt_lh_cut_opt_significance.make_final_binning_plot(full_data, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                             plot_signal_components=True,  nMC_plots_path=None, final_plot_path = plotpath, pull_type_plot=True)
 
 
-bdt_lh_cut_opt_with_n_interp.likelihood_model_builder(full_data, interp_N_dict, signal_BF=7.5e-8,#4e-7,#
+bdt_lh_cut_opt_significance.likelihood_model_builder(full_data, interp_N_dict, signal_BF=7.5e-8,#4e-7,#
                              lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
                              ntoys = 1,
                              fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), 
@@ -68,12 +68,12 @@ with open(os.path.join(opt_path,'optimal_bdt_cuts_dict.pkl'), 'rb') as f:
     BDT_cuts_dict = pickle.load(f)
 
 
-bdt_lh_cut_opt_with_n_interp.sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath)
+bdt_lh_cut_opt_significance.sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath)
 '''
 print('Full Selection Efficiencies')
 BF =  7.2309062308486705e-09#8.952995613376855e-09 #6.974125279294959e-09
 print(f'BF = {BF}')
-full_eff, full_eff_err = bdt_lh_cut_opt_with_n_interp.return_fullselneff_for_BF(interp_N_dict,BF)
+full_eff, full_eff_err = bdt_lh_cut_opt_significance.return_fullselneff_for_BF(interp_N_dict,BF)
 
 # Prepare the table rows
 table_data = [["Sample", "Efficiency", "Error"]]
@@ -85,5 +85,5 @@ for key in full_eff:
 # Print the table
 print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
 
-bdt_lh_cut_opt_with_n_interp.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=4/10*1.4e-4,incl_other_syst = True)
+bdt_lh_cut_opt_significance.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=4/10*1.4e-4,incl_other_syst = True)
 '''

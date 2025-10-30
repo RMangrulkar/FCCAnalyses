@@ -5,9 +5,13 @@ import matplotlib.pyplot as plt
 import os
 import dill
 
-import config as cfg 
-import bdt_lh_cut_opt_with_n_interp as cutopt
+from .. import config as cfg 
+from .. import bdt_lh_cut_opt_significance as cutopt
+from ..efficiency_tools import efficiency_finder
+from ..plotters import bdt_plotter_multiclass as bp
+
 plt.style.use('fcc.mplstyle')
+
 import gc
 import glob
 import sys
@@ -20,8 +24,7 @@ from sklearn.metrics import roc_curve, auc
 from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
  
-import efficiency_finder
-import bdt_plotter_multiclass as bp
+
 
 ROOT.EnableImplicitMT()
 

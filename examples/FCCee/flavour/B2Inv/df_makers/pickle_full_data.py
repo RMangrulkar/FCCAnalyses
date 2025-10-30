@@ -10,8 +10,8 @@ import pandas as pd
 from tabulate import tabulate
 from yaml import safe_load, YAMLError
 
-import config as cfg 
-import efficiency_finder
+from .. import config as cfg 
+from ..efficiency_tools import efficiency_finder
 
 
 ROOT.EnableImplicitMT()

@@ -1,6 +1,5 @@
 # tau study
 import os
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -15,11 +14,14 @@ from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
 
 
-import config as cfg
-import efficiency_finder
-import variable_plotter as vp
+from ... import config as cfg
+from ...efficiency_tools import efficiency_finder
+from .. import variable_plotter as vp
 import post_bdt_application as bp
-plt.style.use('fcc.mplstyle')
+
+
+style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
+plt.style.use(style_path)
 
 
 def set_outputpath(outputpath):

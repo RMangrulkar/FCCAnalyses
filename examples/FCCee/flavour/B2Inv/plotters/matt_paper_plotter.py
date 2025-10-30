@@ -8,8 +8,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 plt.style.use('fcc.mplstyle')
 
-import config as cfg
-import efficiency_finder as ef
+from .. import config as cfg
+from ..efficiency_tools import efficiency_finder as ef
 import variable_plotter as vp
 
 # path = "../ella_files/no_selection"

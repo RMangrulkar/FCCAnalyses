@@ -8,8 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import efficiency_finder
-
-import config as cfg
+from .. import config as cfg
 
 #####################################################################
 ## functions for if have multiple sets of cuts (ie. multiple bins) ##

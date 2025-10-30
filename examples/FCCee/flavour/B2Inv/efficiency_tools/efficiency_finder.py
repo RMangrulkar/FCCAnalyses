@@ -16,7 +16,7 @@ from glob import glob
 from time import time
 from datetime import timedelta
 
-import config as cfg
+from .. import config as cfg
 
 
 def efficiency_calc_bayesian(before, after):#THIS PAPER HAS BEEN WITHDRAWN FROM ARXIV - DO NOT USE

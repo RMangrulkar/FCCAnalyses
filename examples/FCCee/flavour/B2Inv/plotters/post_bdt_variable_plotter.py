@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import config as cfg
-import post_bdtlh_efficiency_finder as eff_finder
+from .. import config as cfg
+from ..efficiency_tools import post_bdtlh_efficiency_finder as eff_finder
 plt.style.use('fcc.mplstyle')
 
 def histogram_settings():

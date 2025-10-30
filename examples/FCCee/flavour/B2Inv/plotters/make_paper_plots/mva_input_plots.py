@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matt_paper_plotter import make_the_bloody_plot
+from ..matt_paper_plotter import make_the_bloody_plot
 
 path = "outputs/full_prelim_cuts_500k"
 #presel_cuts = "(EVT_e < 85) & (EVT_hemisEmin_nCharged > 0) & (EVT_hemisEmin_nLept == 0) & (PV_Rec_vtx_m < 40) & (EVT_hemisEmax_n > 10)"

@@ -11,11 +11,11 @@ from yaml import safe_load, YAMLError
 
 
 # Path to config.py and variable_plotter.py
-configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'
-sys.path.append(os.path.abspath(configPath))
+#configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/'
+#sys.path.append(os.path.abspath(configPath))
 
-import config as cfg 
-import efficiency_finder
+from .. import config as cfg 
+from ..efficiency_tools import efficiency_finder
 
 
 ROOT.EnableImplicitMT()

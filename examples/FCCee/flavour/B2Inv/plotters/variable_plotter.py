@@ -1,6 +1,7 @@
 # variable_plotter.py
 # Script to interactively plot features from a specified inputpath
 import os
+import sys
 from glob import glob
 import numpy as np
 import pandas as pd
@@ -10,10 +11,9 @@ import matplotlib.pyplot as plt
 import awkward as ak  # Needed if using awkward arrays
 from cycler import cycler
 
-
-from .. import config as cfg
-from ..efficiency_tools import efficiency_finder
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import efficiency_finder
 plt.style.use('fcc.mplstyle')
 
 

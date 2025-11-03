@@ -19,25 +19,11 @@ from scipy.interpolate import UnivariateSpline
 from scipy.optimize import root_scalar
 import textwrap
 
-import config as cfg 
-import efficiency_finder
-import post_bdtlh_efficiency_finder as post_bdt_eff_finder
+import config as cfg
+from  basic_functions import set_outputpath
+from efficiency_tools import efficiency_finder
+from efficiency_tools import post_bdtlh_efficiency_finder as post_bdt_eff_finder
 plt.style.use('fcc.mplstyle')
-
-# Return list of variables to use in the bdt as a python list
-def vars_fromyaml(path, bdtlist):
-    with open(path) as stream:
-        try:
-            file = safe_load(stream)
-            bdtvars = file[bdtlist]
-        except YAMLError as exc:
-            print(exc)
-    return bdtvars
-
-def set_outputpath(outputpath):
-    if not os.path.exists(outputpath):
-        os.makedirs(outputpath)
-    return outputpath
 
 #function to turn #sigma to CL
 def sigma_to_percentage(sigma):

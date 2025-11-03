@@ -5,6 +5,7 @@
 #     - get_efficiencies : Get efficiencies for samples with various options
 # Run `python efficiency_finder.py --help` for more information
 import os
+import sys
 import ROOT
 from scipy.stats import chi2
 
@@ -16,7 +17,8 @@ from glob import glob
 from time import time
 from datetime import timedelta
 
-from .. import config as cfg
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
 
 
 def efficiency_calc_bayesian(before, after):#THIS PAPER HAS BEEN WITHDRAWN FROM ARXIV - DO NOT USE

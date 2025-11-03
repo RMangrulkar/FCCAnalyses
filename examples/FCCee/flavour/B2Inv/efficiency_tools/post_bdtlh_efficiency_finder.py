@@ -7,8 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import efficiency_finder
-from .. import config as cfg
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from efficiency_tools import efficiency_finder
+import config as cfg
 
 #####################################################################
 ## functions for if have multiple sets of cuts (ie. multiple bins) ##

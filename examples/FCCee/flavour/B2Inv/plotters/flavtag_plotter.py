@@ -18,14 +18,12 @@ from itertools import combinations
 from itertools import product
 from scipy.interpolate import interp1d
 
-from .. import config as cfg 
-from .. import bdt_lh_cut_opt_significance as cutopt
-from ..efficiency_tools import efficiency_finder
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg 
+import bdt_lh_cut_opt_significance as cutopt
+from efficiency_tools import efficiency_finder
 
 plt.style.use('fcc.mplstyle')
-
- 
-
 
 ROOT.EnableImplicitMT()
 

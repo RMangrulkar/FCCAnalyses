@@ -16,10 +16,11 @@ from sklearn.metrics import roc_curve, auc
 from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import efficiency_finder
+from plotters import variable_plotter as vp
 
-from .. import config as cfg
-from ..efficiency_tools import efficiency_finder
-import variable_plotter as vp
 plt.style.use('fcc.mplstyle')
 
 #multivariate map

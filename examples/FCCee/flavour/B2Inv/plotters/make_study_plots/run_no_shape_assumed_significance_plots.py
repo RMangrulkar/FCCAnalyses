@@ -1,12 +1,14 @@
 import dill
 import os
+import sys
 import numpy as np
 import pandas as pd
 import pickle
 from tabulate import tabulate
 
-from ... import config as cfg
-from ... import bdt_lh_cut_opt_significance
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+import bdt_lh_cut_opt_significance
 
 output_dir = cfg.fccana_opts['outputDir']['prelim_cuts_full']
 

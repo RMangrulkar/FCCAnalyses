@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
-from ..matt_paper_plotter import make_the_bloody_plot
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from plotters.matt_paper_plotter import make_the_bloody_plot
 
 path = "/r01/lhcb/ejnw2/fcc/FCC_outputs_2025/outputs_28Jan25/no_selection_no_nlept_var/"
 samples = ["Bdsignal", "bb_only"]

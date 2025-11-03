@@ -3,10 +3,12 @@ import uproot
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import sys
 import pickle
 
-from ... import config as cfg 
-from ..flavtag_plotter import make_maxpK_efficiency_plot, make_nK_plot, make_maxpKS_efficiency_plot, make_nKS_plot
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from plotters.flavtag_plotter import make_maxpK_efficiency_plot, make_nK_plot, make_maxpKS_efficiency_plot, make_nKS_plot
 
 style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
 plt.style.use(style_path)

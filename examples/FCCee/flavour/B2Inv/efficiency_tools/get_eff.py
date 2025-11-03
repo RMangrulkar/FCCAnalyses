@@ -5,9 +5,11 @@ import pandas as pd
 import xgboost as xgb  # Has to be imported first to avoid conflicts with PyROOT
 from tabulate import tabulate
 import os
+import sys 
 
-from .. import config as cfg
-import efficiency_finder
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import efficiency_finder
 
 
 def check_inputpath(inputpath):

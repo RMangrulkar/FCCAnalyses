@@ -6,23 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from yaml import safe_load, YAMLError, dump
 import config as cfg
+import basic_functions
 import plotters.bdt_plotter_multiclass as bp
-
-
-def set_outputpath(outputpath):
-    if not os.path.exists(outputpath):
-        os.makedirs(outputpath)
-    return outputpath
-
-# Return list of variables to use in the bdt as a python list
-def vars_fromyaml(path, bdtlist):
-    with open(path) as stream:
-        try:
-            file = safe_load(stream)
-            bdtvars = file[bdtlist]
-        except YAMLError as exc:
-            print(exc)
-    return bdtvars
 
 branching_fractions = cfg.branching_fractions
 samples = cfg.sample_allocations["hadronic_background"]#cfg.samples
@@ -38,9 +23,9 @@ N_before_cut = {}
 
 cut_val = 0.9
 bdtcut_name = 'bdtlh_09cut' #'full_sample_medium_bdtlh_cut'
-save_base_path = set_outputpath(os.path.join(cfg.fccana_opts["outputDir"]["process_with_MC_full_prelim"],'baseline_plus_bdtlh_dataframes'))
+save_base_path = basic_functions.set_outputpath(os.path.join(cfg.fccana_opts["outputDir"]["process_with_MC_full_prelim"],'baseline_plus_bdtlh_dataframes'))
 raw_df_path = os.path.join(cfg.fccana_opts["outputDir"]["process_with_MC_full_prelim"],'dataframes')
-full_save_path = set_outputpath(os.path.join(save_base_path,bdtcut_name))
+full_save_path = basic_functions.set_outputpath(os.path.join(save_base_path,bdtcut_name))
 
 
 with open(os.path.join(full_save_path,f'{bdtcut_name}_efficiencies.log'), 'a') as log_file:
@@ -51,7 +36,7 @@ for sample in samples:
 
     df_folder = os.path.join(raw_df_path,sample)
     files = os.listdir(df_folder)
-    save_folder = set_outputpath(os.path.join(save_base_path,sample))
+    save_folder = basic_functions.set_outputpath(os.path.join(save_base_path,sample))
 
     N_pre=0
     N_post=0

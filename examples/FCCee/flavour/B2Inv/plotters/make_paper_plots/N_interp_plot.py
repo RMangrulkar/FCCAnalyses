@@ -1,11 +1,14 @@
 import dill
 import os
+import sys
 import numpy as np
 import pandas as pd
 import pickle
 from tabulate import tabulate
-from ... import config as cfg
-from ... import bdt_lh_cut_opt_significance
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+import bdt_lh_cut_opt_significance
 
 save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/'
 

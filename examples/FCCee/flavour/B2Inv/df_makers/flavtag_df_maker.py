@@ -4,14 +4,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import dill
-
-from .. import config as cfg 
-from .. import bdt_lh_cut_opt_significance as cutopt
-from ..efficiency_tools import efficiency_finder
-from ..plotters import bdt_plotter_multiclass as bp
-
-plt.style.use('fcc.mplstyle')
-
 import gc
 import glob
 import sys
@@ -23,6 +15,15 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import roc_curve, auc
 from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
+
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg 
+import bdt_lh_cut_opt_significance as cutopt
+from efficiency_tools import efficiency_finder
+from plotters import bdt_plotter_multiclass as bp
+
+plt.style.use('fcc.mplstyle')
  
 
 

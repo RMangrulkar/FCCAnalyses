@@ -1,16 +1,19 @@
 ## Matt's new attempt at the plotting module for the paper ##
 ## So that the hatching works ##
 import os
+import sys
 from glob import glob
 import numpy as np
 import uproot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-plt.style.use('fcc.mplstyle')
 
-from .. import config as cfg
-from ..efficiency_tools import efficiency_finder as ef
-import variable_plotter as vp
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import efficiency_finder as ef
+from plotters import variable_plotter as vp
+
+plt.style.use('fcc.mplstyle')
 
 # path = "../ella_files/no_selection"
 #

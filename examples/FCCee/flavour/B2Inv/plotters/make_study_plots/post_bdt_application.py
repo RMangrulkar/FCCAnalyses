@@ -1,8 +1,6 @@
 import os
 import glob
 import sys
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,12 +15,12 @@ from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
 
 
-from ... import config as cfg
-from ...efficiency_tools import efficiency_finder
-from .. import variable_plotter as vp
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import efficiency_finder
+from plotters import variable_plotter as vp
 
-style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
-plt.style.use(style_path)
+plt.style.use('fcc.mplstyle')
 
 #multivariate map
 labels = {'signal':2,'heavy_background':1 ,'light_background':0}

@@ -25,38 +25,13 @@ configPath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/
 sys.path.append(os.path.abspath(configPath))
 
 import config as cfg 
-import efficiency_finder
+from basic_functions import vars_fromyaml, check_inputpath, set_outputpath
+from efficiency_tools import efficiency_finder
 import plotters.bdt_plotter_multiclass as bp
 
-#import bdt_plotter as bdtplt
 
 
 ROOT.EnableImplicitMT()
-
-##########################################################
-# function to retrive lists from yaml and check file paths
-###########################################################
-# Return list of variables to use in the bdt as a python list
-def vars_fromyaml(path, bdtlist):
-    with open(path) as stream:
-        try:
-            file = safe_load(stream)
-            bdtvars = file[bdtlist]
-        except YAMLError as exc:
-            print(exc)
-    return bdtvars
-
-def check_inputpath(inputpath):
-    if not os.path.exists(inputpath):
-        raise FileNotFoundError(f"{inputpath} does not exist")
-    return inputpath
-
-
-def set_outputpath(outputpath):
-    if not os.path.exists(outputpath):
-        os.makedirs(outputpath)
-    return outputpath
-
 
 #Define function that does training
 def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
@@ -420,15 +395,15 @@ def train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl",
 
 
 
+if __name__ == '__main__':
 
-
-train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
-              config_bdtopts = cfg.optimised_bdt_lh_opts,
-              training_round = "default-plus-hps",
-              hps_dict_name = "default-plus-hps",#if not using default, name of hp config in config 
-              bdt_label = '_lh',
-              hp_opt=None,
-              opt_hp_val_path=None)
+    train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 
+                config_bdtopts = cfg.optimised_bdt_lh_opts,
+                training_round = "default-plus-hps",
+                hps_dict_name = "default-plus-hps",#if not using default, name of hp config in config 
+                bdt_label = '_lh',
+                hp_opt=None,
+                opt_hp_val_path=None)
 
 '''
 train_bdt(pickled_df_fname = "bdt_lh_dataframe.pkl", 

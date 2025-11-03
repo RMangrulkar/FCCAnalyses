@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
-from ..matt_paper_plotter import make_the_bloody_plot
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from plotters.matt_paper_plotter import make_the_bloody_plot
 
 path = "outputs/no_selection"
 samples = ["combined_signal", "hadronic_background"]

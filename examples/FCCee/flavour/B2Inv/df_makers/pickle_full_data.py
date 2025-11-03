@@ -10,41 +10,12 @@ import pandas as pd
 from tabulate import tabulate
 from yaml import safe_load, YAMLError
 
-from .. import config as cfg 
-from ..efficiency_tools import efficiency_finder
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg 
+from basic_functions import vars_fromyaml, check_inputpath, set_outputpath, chunk_list
+from efficiency_tools import efficiency_finder
 
 ROOT.EnableImplicitMT()
-
-##########################################################
-# function to retrive lists from yaml and check file paths
-###########################################################
-# Return list of variables to use in the bdts as a python list
-def vars_fromyaml(path, bdtlist):
-    with open(path) as stream:
-        try:
-            file = safe_load(stream)
-            bdtvars = file[bdtlist]
-        except YAMLError as exc:
-            print(exc)
-
-    return bdtvars
-
-def check_inputpath(inputpath):
-    if not os.path.exists(inputpath):
-        raise FileNotFoundError(f"{inputpath} does not exist")
-    return inputpath
-
-
-def set_outputpath(outputpath):
-    if not os.path.exists(outputpath):
-        os.makedirs(outputpath)
-    return outputpath
-
-def chunk_list(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    return [lst[i:i + n] for i in range(0, len(lst), n)]
-
 
 runmode = 'process_with_MC_full_prelim'
 

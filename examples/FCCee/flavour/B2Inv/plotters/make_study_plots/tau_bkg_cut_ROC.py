@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 import pandas as pd
 import os
+import sys
 
-from ... import config as cfg
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
 
-style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
-plt.style.use(style_path)
-
-
+plt.style.use('fcc.mplstyle')
 
 pickled_df_path= '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/prelim_cuts_full_data/bdttau_outputs/baseline/bdttau_training_dataframe.pkl'
 

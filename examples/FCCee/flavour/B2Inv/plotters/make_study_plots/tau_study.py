@@ -1,5 +1,6 @@
 # tau study
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,11 +14,11 @@ from sklearn.metrics import roc_curve, auc
 from xgboost import XGBClassifier
 from sklearn.metrics import log_loss
 
-
-from ... import config as cfg
-from ...efficiency_tools import efficiency_finder
-from .. import variable_plotter as vp
-import post_bdt_application as bp
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import efficiency_finder
+from plotters import variable_plotter as vp
+from plotters.make_study_plots import post_bdt_application as bp
 
 
 style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')

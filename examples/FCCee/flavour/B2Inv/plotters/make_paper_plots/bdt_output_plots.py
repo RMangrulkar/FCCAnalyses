@@ -1,6 +1,9 @@
 import os
-from ... import config as cfg
-from .. import bdt_plotter_multiclass as bdt_plotter
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from plotters import bdt_plotter_multiclass as bdt_plotter
 
 #######################
 #make BDT output plots

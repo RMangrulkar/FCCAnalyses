@@ -1,14 +1,14 @@
 import os
 import glob
 import sys
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from .. import config as cfg
-from ..efficiency_tools import post_bdtlh_efficiency_finder as eff_finder
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config as cfg
+from efficiency_tools import post_bdtlh_efficiency_finder as eff_finder
+
 plt.style.use('fcc.mplstyle')
 
 def histogram_settings():

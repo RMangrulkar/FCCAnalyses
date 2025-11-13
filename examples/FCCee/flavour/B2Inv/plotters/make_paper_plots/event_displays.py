@@ -328,10 +328,11 @@ def make_legend():
     fig.tight_layout()
     fig.savefig("figs/evt_disp_legend.pdf", bbox_inches="tight")
 
+if __name__ == "__main__":
 
-draw_event_display( os.path.join( path, samples["Bd"] ), event_choice["Bd"], elev=50, azim=90, clip=[-0.08,1.08,-0.1,1.07], save="figs/evt_disp_Bd.pdf" )
-draw_event_display( os.path.join( path, samples["Zbb"] ), event_choice["Zbb"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], hemis_stretch=0.8, save="figs/evt_disp_Zbb.pdf" )
-draw_event_display( os.path.join( path, samples["Zud"] ), event_choice["Zud"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], save="figs/evt_disp_Zud.pdf" )
-make_legend()
+    draw_event_display( os.path.join( path, samples["Bd"] ), event_choice["Bd"], elev=50, azim=90, clip=[-0.08,1.08,-0.1,1.07], save="figs/evt_disp_Bd.pdf" )
+    draw_event_display( os.path.join( path, samples["Zbb"] ), event_choice["Zbb"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], hemis_stretch=0.8, save="figs/evt_disp_Zbb.pdf" )
+    draw_event_display( os.path.join( path, samples["Zud"] ), event_choice["Zud"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], save="figs/evt_disp_Zud.pdf" )
+    make_legend()
 
-plt.show()
+    plt.show()

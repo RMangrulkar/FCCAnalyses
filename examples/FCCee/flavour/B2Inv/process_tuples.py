@@ -51,7 +51,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['taunu2mu']
+testFile = cfg.fccana_opts['testFile']['Bc2munu']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -787,7 +787,7 @@ class RDFanalysis():
             return df4 
 
 
-        elif cfg.run_mode == 'lnu_background_no_lepton_veto':  
+        elif cfg.run_mode == 'Bu2lnu_background_no_lepton_veto' or 'Bc2lnu_background_no_lepton_veto':  
 
             dflnu =  (
                     df2

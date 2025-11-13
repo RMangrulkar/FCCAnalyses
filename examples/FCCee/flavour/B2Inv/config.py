@@ -11,14 +11,14 @@ FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full', 'process_with_MC_full_prelim', 'lnu_background_no_lepton_veto'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
+run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full', 'process_with_MC_full_prelim', 'Bu2lnu_background_no_lepton_veto', 'Bc2lnu_background_no_lepton_veto'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 #BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
 #BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
 #BDTmE - BDT to look for missing energy events in events that pass BDTl
 
 
-run_mode = 'lnu_background_no_lepton_veto'
+run_mode = 'Bc2lnu_background_no_lepton_veto'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -40,6 +40,10 @@ processList = {
     # p8_ee_Zee_ecm91                == 97G  (100,000,000 events)
     # p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu == 1,000,000 events
     # p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU  ==  10,000,000 events
+    # p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu  == 10,000,000 events
+    # p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu == 5,000,000 events
+    # p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU  ==  10,900,000 events
+    # p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu  == 10,000,000 events 
 
 
     "no_selection": {  # 100,000 events per sample just to look at
@@ -113,9 +117,16 @@ processList = {
         "p8_ee_Zud_ecm91": {"fraction": 0.5, "chunks": 500},
     },
 
-    "lnu_background_no_lepton_veto":{
+    "Bu2lnu_background_no_lepton_veto":{
         "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":{"fraction":1,"chunks":10},
         "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":{"fraction":1,"chunks":100},
+        "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":{"fraction":1,"chunks":100},
+    },
+
+    "Bc2lnu_background_no_lepton_veto":{
+        "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":{"fraction":1,"chunks":50},
+        "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":{"fraction":1,"chunks":100},
+        "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":{"fraction":1,"chunks":100},
     }
 
 
@@ -133,7 +144,9 @@ fccana_opts = {
         "n_lept_cut_failed":os.path.join(FCCAnalysesPath, "outputs/n_lept_cut_failed/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
         "process_with_MC_full_prelim":os.path.join(FCCAnalysesPath, "outputs/MC_particles_full_prelim/"),
-        "lnu_background_no_lepton_veto":os.path.join(FCCAnalysesPath, "outputs/lnu_background_no_lepton_veto/"),
+        "Bu2lnu_background_no_lepton_veto":os.path.join(FCCAnalysesPath, "outputs/Bu2lnu_background_no_lepton_veto/"),
+        "Bc2lnu_background_no_lepton_veto":os.path.join(FCCAnalysesPath, "outputs/Bc2lnu_background_no_lepton_veto/"),
+     
     },
 
     "testFile": {
@@ -146,8 +159,12 @@ fccana_opts = {
         "tautau": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Ztautau_ecm91/events_000143148.root",
         "mumu": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zmumu_ecm91/events_000128808.root",
         "ee": "root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zee_ecm91/events_000132426.root",
-        "taunu2HAD":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU/events_000843366.root",
-        "taunu2mu":	"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu/events_011554472.root",
+        "Bu2taunu2HAD":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU/events_000843366.root",
+        "Bu2taunu2mu":	"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu/events_011554472.root",
+        "Bu2munu":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu/events_000407298.root",
+        "Bc2munu":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu/events_000811090.root",
+        "Bc2taunu2HAD":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU/events_001034647.root",
+        "Bc2taunu2mu":	"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu/events_004620103.root",
     
     },
     "analysisName":   "b2inv",
@@ -164,7 +181,8 @@ fccana_opts = {
         "prelim_cuts_full": "full-vars",
         "n_lept_cut_failed": "full-vars",
         "process_with_MC_full_prelim":"full-vars-plus-MCtruth",
-        "lnu_background_no_lepton_veto":"full-vars-plus-MCtruth",
+        "Bu2lnu_background_no_lepton_veto":"full-vars-plus-MCtruth",
+        "Bc2lnu_background_no_lepton_veto":"full-vars-plus-MCtruth",
 
     },
 }
@@ -305,6 +323,10 @@ samples = [
     "p8_ee_Zee_ecm91",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"
 ]
 
 sample_allocations = {
@@ -319,7 +341,8 @@ sample_allocations = {
     "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
     "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
-    "lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU"],
+    "Bu2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu"],
+    "Bc2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
 }
 
 

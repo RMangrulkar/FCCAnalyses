@@ -19,10 +19,10 @@ from df_makers import data_to_pickle_function
 ROOT.EnableImplicitMT()
 
 #path to data and outputs
-inputpath    = basic_functions.check_inputpath(cfg.fccana_opts['outputDir']['lnu_background_no_lepton_veto']) # note this data has full preselctio except hemisEmin_nlepton cut
+inputpath    = basic_functions.check_inputpath(cfg.fccana_opts['outputDir']['Bc2lnu_background_no_lepton_veto']) # note this data has full preselctio except hemisEmin_nlepton cut
 yamlpath     = basic_functions.check_inputpath(cfg.fccana_opts['yamlPath'])
-samples = cfg.sample_allocations["lnu_background"]
-runmode = "lnu_background_no_lepton_veto"
+samples = ["p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"]#cfg.sample_allocations["Bc2lnu_background"]# MUST BE A LIST 
+runmode = "Bc2lnu_background_no_lepton_veto"
 
 # print statements to check loading things expect
 print(f"----> INFO: Loading files from")
@@ -48,7 +48,7 @@ BDT_params_dict = {"config_bdtopts": cfg.optimised_bdt_lh_opts,
                    "bdt_label": "_lh"}
 
 #Apply without lepton veto
-data_to_pickle_function.root_data_to_pickle_df(runmode, samples, vars_to_save, cut = None, BDT_params = BDT_params_dict, BDT_cut_value = 0.99)
+#data_to_pickle_function.root_data_to_pickle_df(runmode, samples, vars_to_save, cut = None, BDT_params = BDT_params_dict, BDT_cut_value = 0.99)
 
 #Apply with lepton veto
 data_to_pickle_function.root_data_to_pickle_df(runmode, samples, vars_to_save, cut = "EVT_hemisEmin_nLept == 0", BDT_params = BDT_params_dict, BDT_cut_value = 0.99)

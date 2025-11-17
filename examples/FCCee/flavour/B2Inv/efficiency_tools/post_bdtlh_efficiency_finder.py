@@ -66,16 +66,21 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
         num = N_z*bfs_val*eff_val
         num_overeff = N_z*bfs_val
 
-        if sample in cfg.sample_allocations['combined_signal']:
-            num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
-            num_overeff *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
-
-        
         frac_BFZbb_err = bfs_err/bfs_val #0 for signal
         frac_fk_err = 0 #not included in background
 
         if sample in cfg.sample_allocations['combined_signal']:
+            num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
+            num_overeff *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
+            
             frac_BFZbb_err = cfg.branching_fractions['p8_ee_Zbb_ecm91'][1]/cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]
+            frac_fk_err = cfg.prod_frac[sample][1]/cfg.prod_frac[sample][0]
+
+        elif sample in cfg.exclusive_backgrounds:
+            num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]
+            num_overeff *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]
+
+            frac_BFZbb_err *= cfg.branching_fractions['p8_ee_Zbb_ecm91'][1]/cfg.branching_fractions['p8_ee_Zbb_ecm91'][0] #need *= here as want error from both Zbb and B decay BFs
             frac_fk_err = cfg.prod_frac[sample][1]/cfg.prod_frac[sample][0]
 
         per_sample_n_expect_dict[sample] = num
@@ -88,20 +93,42 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
 
 
 #combine compoenents into S and B and corresponding absolute (not fractional) error
-def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True, individual_signal_contributions=False):
-    B= np.sum(np.stack([per_sample_n_expect_dict[k] for k in cfg.sample_allocations['hadronic_background']]), axis=0)
-    S= np.sum(np.stack([per_sample_n_expect_dict[k] for k in cfg.sample_allocations['combined_signal']]), axis=0)
+def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True, exclusive_background_samples = None,individual_signal_contributions=False):
+    '''
+    Turns number from each decay into total S and B expectations with errors (per bin)
+    "exclusive_background_samples": must be a LIST of exclusive additional background samples to incluives in hadronic_background
+    '''
+    backgrounds = [i for i in per_sample_n_expect_dict.keys() if i in cfg.background_samples]
+    signals = [i for i in per_sample_n_expect_dict.keys() if i in cfg.signal_samples]
+    
+    S= np.sum(np.stack([per_sample_n_expect_dict[k] for k in signals]), axis=0)
+    B= np.sum(np.stack([per_sample_n_expect_dict[k] for k in backgrounds]), axis=0)
 
-    B_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in cfg.sample_allocations['hadronic_background']]), axis=0)
-    S_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in cfg.sample_allocations['combined_signal']]), axis=0)
+    S_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in signals]), axis=0)
+    B_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in backgrounds]), axis=0)
+   
+    S_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k]) for k in signals]), axis=0)**2
+    B_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k])**2 for k in backgrounds]), axis=0)
 
-    B_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k])**2 for k in cfg.sample_allocations['hadronic_background']]), axis=0)
-    S_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k]) for k in cfg.sample_allocations['combined_signal']]), axis=0)**2
+    S_fk_var = np.sum(np.stack([(per_sample_frac_fk_err[k]*per_sample_n_expect_dict[k])**2 for k in signals]), axis=0)
+    B_fk_var = np.zeros_like(S_fk_var)
+         
 
-    S_fk_var = np.sum(np.stack([(per_sample_frac_fk_err[k]*per_sample_n_expect_dict[k])**2 for k in cfg.sample_allocations['combined_signal']]), axis=0)
+    if exclusive_background_samples is not None:#for exclusive backgrounds need to include error from hadronisation fractiosn
+        #check samples used are exclusive backgrounds consistent with list in config
+        if not set(exclusive_background_samples).issubset(cfg.exclusive_backgrounds):
+            raise ValueError("'exclusive_background_samples' given are not consistent with list in config - Ensure only exclusive bkg samples are input here and update config.excluisve_backgrounds list")
+        else: 
+            additionalB_fk_var = np.sum(np.stack([(per_sample_frac_fk_err[k]*per_sample_n_expect_dict[k])**2 for k in exclusive_background_samples]), axis=0)
+            B_fk_var= additionalB_fk_var
+
 
     if incl_other_syst == True:
-        B_err = np.sqrt(B_eff_var+B_BF_var)
+        if exclusive_background_samples is not None:
+            B_err = np.sqrt(B_eff_var+B_BF_var+B_fk_var)
+        else:
+            B_err = np.sqrt(B_eff_var+B_BF_var)
+
         S_err = np.sqrt(S_eff_var+S_BF_var+S_fk_var)
 
     else:

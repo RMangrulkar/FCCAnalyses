@@ -311,9 +311,7 @@ BSC_opts = {
 ##############################
 ## SAMPLE OPTIONS
 ##############################
-samples = [
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu",
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu",
+background_samples = [
     "p8_ee_Zbb_ecm91",
     "p8_ee_Zcc_ecm91",
     "p8_ee_Zss_ecm91",
@@ -326,24 +324,32 @@ samples = [
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU",
-    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"
-]
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"]
+
+signal_samples = ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"]
+
+samples = signal_samples + background_samples
 
 sample_allocations = {
     "hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
-    "bb_only":    ["p8_ee_Zbb_ecm91"],
     "heavy_hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
     "light_hadronic_background": ["p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"], 
-    "ud_only": ["p8_ee_Zud_ecm91"], 
     "leptonic_background": ["p8_ee_Ztautau_ecm91","p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
     "tau_background":  ["p8_ee_Ztautau_ecm91"],
     "light_leptonic_background": ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
-    "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
-    "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
-    "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "Bu2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu"],
     "Bc2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "bb_only":    ["p8_ee_Zbb_ecm91"],
+    "ud_only": ["p8_ee_Zud_ecm91"], 
+    "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
+    "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
+    "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],#want the signal last here so that it's plotted on top in binning plots
 }
+
+
+
+exclusive_backgrounds = sample_allocations["Bu2lnu_background"] + sample_allocations["Bc2lnu_background"]
 
 
 sample_colors = {
@@ -351,12 +357,14 @@ sample_colors = {
     "hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[1:-1] ),
     "heavy_hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[1:3] ),
     "light_hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[3:-1] ),
-    "Bssignal": [ plt.cm.Blues( np.linspace(0, 1, 6)[3] ) ],
-    "Bdsignal": [ plt.cm.Blues( np.linspace(0, 1, 6)[-2] ) ],
-    "bb_only": [ plt.cm.Reds_r( np.linspace(0, 1, 6)[1] ) ],
-    "tau_background": [plt.cm.tab20c(12)],#[ plt.cm.tab20b((4+ np.linspace(0, 1, 5)[1])/5 ) ],
-    "leptonic_background": [plt.cm.tab20c([12,13,14])],#plt.cm.tab20b( (4+np.linspace(0, 1, 5)[1:-1]) /5 ),
-    "light_leptonic_background": [plt.cm.tab20c([13,14])]#plt.cm.tab20b((4+ np.linspace(0, 1, 5)[2:-1])/5 )
+    "Bssignal":  plt.cm.Blues( np.linspace(0, 1, 6)[3] ) ,
+    "Bdsignal":  plt.cm.Blues( np.linspace(0, 1, 6)[-2] ) ,
+    "bb_only":  plt.cm.Reds_r( np.linspace(0, 1, 6)[1] ) ,
+    "tau_background": plt.cm.tab20c(12),#[ plt.cm.tab20b((4+ np.linspace(0, 1, 5)[1])/5 ) ],
+    "leptonic_background": plt.cm.tab20c([12,13,14]),#plt.cm.tab20b( (4+np.linspace(0, 1, 5)[1:-1]) /5 ),
+    "light_leptonic_background": plt.cm.tab20c([13,14]),#plt.cm.tab20b((4+ np.linspace(0, 1, 5)[2:-1])/5 )
+    "Bu2lnu_background":plt.cm.tab20b([4,5,6]),
+    "Bc2lnu_background": plt.cm.tab20b([8,9,10]),
 }
 
 sample_total = {
@@ -381,6 +389,8 @@ sample_hatches = {
     "light_leptonic_background": None,
     "Bdsignal": [r'////'],
     "Bssignal": [r'\\\\'],
+    "Bu2lnu_background": None,
+    "Bc2lnu_background": None,
 }
 
 sample_shorthand = {
@@ -413,22 +423,37 @@ titles = {
     "signal": r"$B_{(s)}^0 \to \nu \bar{\nu}$",
     "hadronic_background": "Total hadronic background",
     "heavy_hadronic_background": "Total heavy hadronic background",
-    "light_hadronic_background": "Total light hadronic background"
+    "light_hadronic_background": "Total light hadronic background",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":r"$B^+ \to [\mu^+ \nu_{\mu}\bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":r"$B^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":r"$B^+ \to \mu^+ \nu_{\mu} $",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":r"$B_c^+ \to [\mu^+ \nu_{\mu}\bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":r"$B_c^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":r"$B_c^+ \to \nu_{\mu} \mu^+$",
 }
 
 ##############################
 ## NUMERICAL DATA
 ##############################
 # from PDG -> B production fractions
-prod_frac = {
-    "Bu":  (0.408, 0.007),#0.43,
+LEP_prod_fracs = { # taken from https://hflav-eos.web.cern.ch/hflav-eos/osc/PDG_2021/#FRAC 
+    "Bu":  (0.408, 0.007),# 0.43 - old #s from https://indico.in2p3.fr/event/23012/contributions/89940/attachments/61988/84706/Hill-fcc-france.pdf
     "Bd":  (0.408, 0.007),#0.43,
     "Bs": (0.100, 0.008),#0.096,
+    "Bc": (0.0004,0.0004),#Not measured by LEP or at Z pole to date therefore add 100% error, https://arxiv.org/pdf/hep-ph/9707248
     #"Lb": #0.037, 
-    #"Bc": #0.0004,Not measured by LEP
+    }
+
+prod_frac = {
     # Actually, use the sample name to make integration with Bd2NuNu easier
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": (0.100, 0.008),#(0.096, 0), #
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": (0.408, 0.007),#(0.43, 0), #
+    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": LEP_prod_fracs["Bs"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": LEP_prod_fracs["Bd"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":LEP_prod_fracs["Bu"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":LEP_prod_fracs["Bu"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":LEP_prod_fracs["Bu"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":LEP_prod_fracs["Bc"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":LEP_prod_fracs["Bc"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":LEP_prod_fracs["Bc"],
 }
 
 
@@ -451,6 +476,13 @@ branching_fractions = {
     "p8_ee_Ztautau_ecm91":(0.033696,0.000083),
     "p8_ee_Zmumu_ecm91":(0.033662,0.000066),
     "p8_ee_Zee_ecm91":(0.033632,0.000042),
+    #Below are all BF from Bu (ie. doesnt include Z2bb or hadronation etc)
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":(1.89551e-5,0.41738e-5), 
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":(1.6568e-5,0.3649e-5),# hhh final state
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":(4.7e-7,0.7e-7), #Theory pred. from https://arxiv.org/pdf/hep-ex/0611045
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":(3.98231e-3,0.15678e-3), # Thry pred https://arxiv.org/pdf/2305.02998
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":(3.4808e-3,0.1375e-3), # Thry pred https://arxiv.org/pdf/2305.02998
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":(1e-4,1e-4), # I cant find a theory prediction so assume scaling of Bc2taunu same as between bu2taunu and bu2munu
 }
 
 mass_Z = 91.188  # Ecm used in the winter2023 samples
@@ -495,6 +527,12 @@ eventsProcessed = {
     "p8_ee_Ztautau_ecm91":100000000,
     "p8_ee_Zmumu_ecm91":100000000,
     "p8_ee_Zee_ecm91":100000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu": 1000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU": 10000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu": 10000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu": 5000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU": 10900000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu": 10000000,
 }
 
 eventsSelected_preBDT_notau_veto = { #nb excluding tau veto

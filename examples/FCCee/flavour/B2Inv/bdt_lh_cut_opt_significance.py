@@ -23,6 +23,7 @@ import config as cfg
 from  basic_functions import set_outputpath
 from efficiency_tools import efficiency_finder
 from efficiency_tools import post_bdtlh_efficiency_finder as post_bdt_eff_finder
+from basic_functions import flatten_list
 plt.style.use('fcc.mplstyle')
 
 #function to turn #sigma to CL
@@ -30,9 +31,6 @@ def sigma_to_percentage(sigma):
     # Calculate the percentage
     percentage = snorm.cdf(sigma) * 100
     return percentage
-
-def flatten_list(nested_list):
-    return [item for sublist in nested_list for item in sublist]
 
 #round to given number of sig figs
 def round_sig(x, sig=1):
@@ -734,18 +732,21 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
 
     def histogram_settings():
-        hist_settings = { allocation: {} for allocation in cfg.sample_allocations }
-        total_color = { allocation: {} for allocation in cfg.sample_allocations }
+        hist_settings = { allocation: {} for allocation in cfg.sample_allocations}
         for allocation in cfg.sample_allocations:
             samples = cfg.sample_allocations[allocation]
             if allocation=='combined_signal':
-                hist_settings[allocation]['edgecolor'] =plt.cm.Blues( np.linspace(0, 1, 6)[3:-1] ) 
+                hist_settings[allocation]['edgecolor'] =cfg.sample_colors[allocation]
                 hist_settings[allocation]['facecolor'] = ['none','none']
-                hist_settings[allocation]['hatch'] = ['////',r'\\\\']
-            elif allocation=='hadronic_background':
-                hist_settings[allocation]['facecolor'] = plt.cm.Reds_r( np.linspace(0, 1, 6)[1:-1] )
+                hist_settings[allocation]['hatch'] = cfg.sample_hatches[allocation]
+            elif allocation == 'hadronic_background':
+                hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
                 hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
                 hist_settings[allocation]['hatch'] =  [None,None,None,None] 
+            elif allocation in ['Bu2lnu_background' , 'Bc2lnu_background']:
+                hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
+                hist_settings[allocation]['edgecolor'] = ['none','none','none'] 
+                hist_settings[allocation]['hatch'] =  [None,None,None] 
         return hist_settings
    
 
@@ -815,7 +816,14 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC)
     per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
-    S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True)
+
+    #check if have additional backgrounds to inclusive ones (ie. compare samples to inclusive backgrounds list in config)
+    if len(list(set(samples).intersection(cfg.exclusive_backgrounds)))>0:
+        excl_bkgs = list(set(samples).intersection(cfg.exclusive_backgrounds))
+    else:
+        excl_bkgs = None
+
+    S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True, exclusive_background_samples = excl_bkgs) # just used in final return efficiencies therefore want to include any other backgrounds here
 
     if final_plot_path:
         x = binned_x_axis
@@ -907,7 +915,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
                 plt.legend()
                 plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
-                plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}_with_second_axis.pdf'), bbox_inches='tight')
+                plt.savefig(os.path.join(set_outputpath(final_plot_path),f'final_binning_plot_BF={signal_BF}_with_second_axis_comp{len(components)}_{components[-1]}.pdf'), bbox_inches='tight')
             else: 
                 
                 #add systematic error to B - error bar

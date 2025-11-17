@@ -19,6 +19,63 @@ from datetime import timedelta
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config as cfg
+import basic_functions
+
+def get_eventsProcessed(runmode, 
+                     samples=None,
+                     custompath=None,#if runmode is custom
+                     save=None, # ie. whether to save log file back to runmode folder
+                     ):
+
+    # Set inputpath
+    if (runmode == 'custom') and (custompath is None):
+        raise ValueError(f"{custompath} custompath incompatible with `inputtype` == {runmode}")
+    elif (runmode == 'custom') and not os.path.exists(custompath):
+        raise ValueError(f"{custompath} invalid or does not exist")
+    elif runmode not in cfg.run_mode_choices:
+        raise ValueError(f"`runmode` must be a valid run mode from {cfg.fccana_opts['outputDir'][runmode]} or 'custom'")
+
+    folderpath = basic_functions.check_inputpath(cfg.fccana_opts['outputDir'][runmode]) if runmode != 'custom' else basic_functions.check_inputpath(custompath)
+
+    # Define the samples from inputpath for which eventsProcessed is calculated
+    try:
+        sample_folders = {sample: os.path.join(folderpath, sample) for sample in samples}
+        print(f"----> INFO: Finding efficiency for {samples}")
+
+    except:
+        sample_folders = {sample: os.path.join(folderpath, sample) for sample in cfg.samples}
+        samples = cfg.samples
+        print(f"----> INFO: `samples` either 'all' or invalid, using all config.samples")
+
+    if save is not None:
+        data = {}
+
+    for sample in samples:
+        total_eventsProcessed =0
+
+        for file in glob(os.path.join(sample_folders[sample], "*.root")):
+           
+            rf = ROOT.TFile.Open(file)
+            if not rf or rf.IsZombie():
+                print(f"Could not open file {file}")
+                continue
+
+            param = rf.Get("eventsProcessed")
+            if not param:
+                print(f"eventsProcessed not found in file {file}")
+                continue
+
+            total_eventsProcessed += param.GetVal()
+            rf.Close()
+
+        print(f"Total eventsProcessed for sample {sample} = {total_eventsProcessed}")
+
+        if (save is not None):
+            data[sample+'_eventsProcessed'] = total_eventsProcessed
+            #write to log
+            with open(os.path.join(folderpath,f'eventsProcessed.log'), 'a') as log_file:
+                log_file.write(f'{sample}: {total_eventsProcessed}\n')
+
 
 
 def efficiency_calc_bayesian(before, after):#THIS PAPER HAS BEEN WITHDRAWN FROM ARXIV - DO NOT USE

@@ -119,12 +119,12 @@ hist_settings={'Bssignal': {}, 'Bdsignal':{} }
 
 hist_settings['Bssignal']['histtype'] = 'step'
 hist_settings['Bssignal']['lw'] = 2
-hist_settings['Bssignal']['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[3]) #'cornflowerblue'
+hist_settings['Bssignal']['color'] = cfg.sample_colors['Bssignal']#plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[3]) #'cornflowerblue'
 hist_settings['Bssignal']['hatch'] = '////'
 
 hist_settings['Bdsignal']['histtype'] = 'step'
 hist_settings['Bdsignal']['lw'] = 2
-hist_settings['Bdsignal']['color'] = plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-1]) #-2#'mediumblue'#'royalblue'
+hist_settings['Bdsignal']['color'] = cfg.sample_colors['Bdsignal']#plt.cm.Blues( np.linspace(0, 1, len(cfg.sample_allocations['combined_signal'])+4)[-1]) #-2#'mediumblue'#'royalblue'
 hist_settings['Bdsignal']['hatch'] = r'\\\\'
 
 """

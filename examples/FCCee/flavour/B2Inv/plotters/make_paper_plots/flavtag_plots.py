@@ -6,12 +6,12 @@ import os
 import sys
 import pickle
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import config as cfg
 from plotters.flavtag_plotter import make_maxpK_efficiency_plot, make_nK_plot, make_maxpKS_efficiency_plot, make_nKS_plot
 
-style_path = os.path.join(os.path.dirname(__file__), '..', 'fcc.mplstyle')
-plt.style.use(style_path)
+
+plt.style.use('fcc.mplstyle')
 
 # load Ks and Kpm data
 data_savepath = 'outputs/prelim_cuts_full_data/flavtag_dataframes/selected_kaons'
@@ -25,7 +25,7 @@ with open(os.path.join(data_savepath,'flavtag_KS.pkl'), 'rb') as f:
 
 
 #prompt charge K plots
-savepath = 'plots/paper_plots'
+savepath = 'plots/paper_plots/JHEP_review'
 
 #savepath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/flavour_tagging/'
 make_maxpK_efficiency_plot(charged_fsK_dict_fromPV,K_type = ' Signal Side Final State $K^\pm$ from PV', savepath=savepath,plottype='chargedK')

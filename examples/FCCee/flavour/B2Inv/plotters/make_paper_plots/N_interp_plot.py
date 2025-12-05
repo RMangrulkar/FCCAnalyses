@@ -6,11 +6,15 @@ import pandas as pd
 import pickle
 from tabulate import tabulate
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import config as cfg
 import bdt_lh_cut_opt_significance
+import bdt_lh_cut_opt_significance_exclusive_backgrounds
 
-save_path='/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/'
+save_path='outputs/B2lnu_backgrounds_included/BDTlh_baseline_plus_cut_optimisation/no_smoothing/0999/8x8xmidstats_4x4lowstats'
+plotpath = 'plots/paper_plots/JHEP_review'
+
+samples_for_cut_opt = cfg.sample_allocations['hadronic_background'] + cfg.sample_allocations['combined_signal']
 
 # make N interp plots
 with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "N_remaining_dictionary"), "rb") as dill_file:
@@ -19,47 +23,10 @@ with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "N
 with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "interpolated_N_remaining_dictionary"), "rb") as dill_file:
     interp_N_dict = dill.load(dill_file)
 
-plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/paper_plots'
 
-'''
-bdt_lh_cut_opt_significance.plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,normalised = True, separate_cbar = True, slice=False, save_path=plotpath)
+#bdt_lh_cut_opt_significance.plot_N(N_dict, interp_N_dict, lrange=(0.999,1) ,hrange=(0.999,1),nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4,normalised=True, separate_cbar = True,slice=False, save_path=plotpath)
 
-
-# make final binning plot
-
-#Load dataframe with bdtlh version applied
-data={}
-dir = cfg.fccana_opts["outputDir"]["prelim_cuts_full"]
-folder = 'baseline_plus_bdtlh_dataframes/full_sample_medium_bdtlh_cut' 
-for sample in cfg.samples:
-    data[sample] = pd.read_pickle(os.path.join(dir,folder,f'{sample}.pkl'))
-
-# Concatenate all DataFrames
-full_data = pd.concat(data.values(), ignore_index=True)
-
-
-#add extra rows so can work in range0.9-1
-full_data['P_signal'] = full_data['bdt_score_2']
-full_data['P_not_heavy'] = 1-full_data['bdt_score_1'] 
-full_data['P_not_light'] = 1-full_data['bdt_score_0'] 
-
-#add any extra cuts need here###########################
-full_data = full_data.query('EVT_hemisEmax_n>10') #veto on taus
-
-
-bdt_lh_cut_opt_significance.make_final_binning_plot(full_data, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
-                            plot_signal_components=True,  nMC_plots_path=None, final_plot_path = plotpath, pull_type_plot=True)
-
-
-bdt_lh_cut_opt_significance.likelihood_model_builder(full_data, interp_N_dict, signal_BF=7.5e-8,#4e-7,#
-                             lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
-                             ntoys = 1,
-                             fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), 
-                             spread_plotpath=None, logpath = plotpath, hcut = None, lcut =None)
-'''
-opt_path = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0995'
-#plotpath = '/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/0995/optimisation'
-plotpath = 'plots/paper_plots'
+opt_path = 'outputs/B2lnu_backgrounds_included/BDTlh_baseline_plus_cut_optimisation/no_smoothing/0999/8x8xmidstats_4x4lowstats/incl_B2lnu/all_oneprong_tau'
 # load dicts for final sensitivity plot
 with open(os.path.join(opt_path,'naive_sensitivity_dict.pkl'), 'rb') as f:
     naive_dict = pickle.load(f)
@@ -70,11 +37,9 @@ with open(os.path.join(opt_path,'incl_syst_sensitivity_dict.pkl'), 'rb') as f:
 with open(os.path.join(opt_path,'optimal_bdt_cuts_dict.pkl'), 'rb') as f:
     BDT_cuts_dict = pickle.load(f)
 
-
-bdt_lh_cut_opt_significance.sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath)
 '''
 print('Full Selection Efficiencies')
-BF =  7.2309062308486705e-09#8.952995613376855e-09 #6.974125279294959e-09
+BF =  7.806964487492601e-09#7.2309062308486705e-09#8.952995613376855e-09 #6.974125279294959e-09
 print(f'BF = {BF}')
 full_eff, full_eff_err = bdt_lh_cut_opt_significance.return_fullselneff_for_BF(interp_N_dict,BF)
 
@@ -88,5 +53,43 @@ for key in full_eff:
 # Print the table
 print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
 
-bdt_lh_cut_opt_significance.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=4/10*1.4e-4,incl_other_syst = True)
+
+bdt_lh_cut_opt_significance_exclusive_backgrounds.make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
+                                       cut_opt_samples=samples_for_cut_opt,  
+                                       lrange_interp_N_dict=(0.999,1),
+                                       hrange_interp_N_dict=(0.999,1),
+                                       nlh = 200, signal_BF=1e-6, #7.5e-8,
+                                       eventsProcessed_dict = cfg.eventsProcessed, 
+                                       histbins=(2,2), 
+                                       components_to_plot =  ['hadronic_background','combined_signal', 'B2lnu_background_combined'], 
+                                       model_all_1prong_tau = True,
+                                       binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+                                       plot_signal_components=True,  
+                                       final_plot_path = plotpath, 
+                                       pull_type_plot=True,  
+        )
+
+bdt_lh_cut_opt_significance_exclusive_backgrounds.likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=samples_for_cut_opt, componenets_in_FOM=['hadronic_background','combined_signal', 'B2lnu_background_combined'], model_all_1prong_tau = True, signal_BF=6.9e-8,
+                             lrange_interp_N_dict=(0.999,1) ,hrange_interp_N_dict=(0.999,1),nlh=200,bins = (2,2),
+                             ntoys = 1,
+                             fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None)
+
+    
+bdt_lh_cut_opt_significance.sensitivity_CL_plotter_v2(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath, spine_sampling=21)
 '''
+dict_path = os.path.join(save_path,"incl_B2lnu","all_oneprong_tau")
+#only need this is dont have SB_dict saved in pickle format with correct components etc.
+#bdt_lh_cut_opt_significance_exclusive_backgrounds.calc_BF_sig_stderrs_nodata(interp_N_dict, cut_opt_samples=samples_for_cut_opt, componenets_in_FOM=['hadronic_background','combined_signal', 'B2lnu_background_combined'], model_all_1prong_tau=True, lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),plot=True,saveplotpath = plotpath ,dict_path = dict_path, plot_dotted_line_list =  ["noBsyst","2percent_Bsyst" ,"10percent_Bsyst"])
+
+#otherwise load this file and plot directly
+with open(os.path.join(dict_path,'SB_dict.pkl'), 'rb') as f:
+    SB_dict = pickle.load(f)
+
+
+bdt_lh_cut_opt_significance_exclusive_backgrounds.plot_BF_sig_stderrs(SB_dict["S"],SB_dict["B"],SB_dict["BFs"],plotpath,plot_dotted_line_list= ["noBsyst","2percent_Bsyst" ,"10percent_Bsyst"])
+
+
+
+
+#bdt_lh_cut_opt_significance.sensitivity_CL_plotter_monotonic_interp(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath, spine_sampling=26)
+#bdt_lh_cut_opt_significance.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=4/10*1.4e-4,incl_other_syst = True)

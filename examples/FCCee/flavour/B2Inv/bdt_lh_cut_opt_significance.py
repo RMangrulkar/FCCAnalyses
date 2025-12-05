@@ -18,6 +18,7 @@ import matplotlib.gridspec as gridspec
 from scipy.interpolate import UnivariateSpline
 from scipy.optimize import root_scalar
 import textwrap
+from scipy.interpolate import PchipInterpolator
 
 import config as cfg
 from  basic_functions import set_outputpath
@@ -51,16 +52,36 @@ def find_x_for_y(y_target, f, x_bounds):
     sol = root_scalar(g, bracket=x_bounds)
     return sol.root if sol.converged else None
 
+def histogram_settings():
+    hist_settings = { allocation: {} for allocation in cfg.sample_allocations}
+    for allocation in cfg.sample_allocations:
+        samples = cfg.sample_allocations[allocation]
+        if allocation=='combined_signal':
+            hist_settings[allocation]['edgecolor'] =cfg.sample_colors[allocation]
+            hist_settings[allocation]['facecolor'] = ['none','none']
+            hist_settings[allocation]['hatch'] = cfg.sample_hatches[allocation]
+        elif allocation == 'hadronic_background':
+            hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
+            hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
+            hist_settings[allocation]['hatch'] =  [None,None,None,None] 
+        elif allocation in ['Bu2lnu_background' , 'Bc2lnu_background']:
+            hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
+            hist_settings[allocation]['edgecolor'] = ['none','none','none'] 
+            hist_settings[allocation]['hatch'] =  [None,None,None] 
+        elif allocation == "B2lnu_background_combined":
+            hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
+            hist_settings[allocation]['edgecolor'] = 'none'
+            hist_settings[allocation]['hatch'] =  None
+    return hist_settings
+   
 
 #plan: create and save map of N and N interpolated
 #can then use to calculate efficiency and error properly!
 
-def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, kx=2,ky=2, save_path='outputs/BDTlh_baseline_plus_cut_optimisation/'): #df should be full data for final result
+def create_N_map(df,lrange=(0.999,1) ,hrange=(0.999,1),nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4, smoothing=False, kx=2,ky=2, save_path='outputs/BDTlh_baseline_plus_cut_optimisation/'): #df should be full data for final result
     '''
     function to extract N remaining for various 2D BDT cuts and interpolate it to create a smooth map
     '''
-    lsearch = np.linspace(*lrange,nlh) 
-    hsearch = np.linspace(*hrange,nlh)
     
     #define lists need etc
     s_values_dict={}
@@ -72,6 +93,21 @@ def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, 
     print('Creating efficiency map for decay:')
     
     for decay in df["decay"].unique():
+
+        if decay in cfg.sample_allocations["high_stats_sample"]:
+            nlh = nlh_highstats
+        
+        elif decay in cfg.sample_allocations["mid_stats_sample"]:
+            nlh = nlh_midstats
+
+        elif decay in cfg.sample_allocations["low_stats_sample"]:
+            nlh = nlh_lowstats
+
+        else:
+            raise ValueError("Decay must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
+
+        lsearch = np.linspace(*lrange,nlh) 
+        hsearch = np.linspace(*hrange,nlh)
 
         print(decay)
 
@@ -95,8 +131,8 @@ def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, 
                 err_df[l,h] = err_lh[decay]     
     
         N_dict[decay] = N_df
-        eff_dict[decay] = N_df
-        err_dict[decay] = N_df
+        eff_dict[decay] = eff_df
+        err_dict[decay] = err_df
 
         if smoothing == True:
             s_value = np.sum(N_df) #sum of variances
@@ -122,19 +158,36 @@ def create_N_map(df,lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, smoothing=False, 
 
 
 
-def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,normalised=False, separate_cbar = False,slice=False, save_path='plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/'):
+def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4,normalised=False, separate_cbar = False,slice=False, save_path='plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/'):
 
     '''
     function to plot 2d N with and without interpolation to check smoothness as well as slices
     '''
     #define arrays want to calculate efficiency over
-    lsearch = np.linspace(*lrange,nlh) 
-    hsearch = np.linspace(*hrange,nlh)
-
-    lsearchinterp = np.linspace(*lrange,nlh*10) 
-    hsearchinterp = np.linspace(*hrange,nlh*10)
+    
 
     for decay in N_dict.keys():
+    
+
+        if decay in cfg.sample_allocations["high_stats_sample"]:
+            nlh = nlh_highstats
+
+        elif decay in cfg.sample_allocations["mid_stats_sample"]:
+            nlh = nlh_midstats
+
+
+        elif decay in cfg.sample_allocations["low_stats_sample"]:
+            nlh = nlh_lowstats
+
+        else:
+            raise ValueError("Decay must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
+
+
+        lsearch = np.linspace(*lrange,nlh) 
+        hsearch = np.linspace(*hrange,nlh)
+
+        lsearchinterp = np.linspace(*lrange,nlh_highstats*10) 
+        hsearchinterp = np.linspace(*hrange,nlh_highstats*10)
 
         #to remove ee sa literally one MC event remaining
         if decay =='p8_ee_Zee_ecm91':
@@ -154,7 +207,7 @@ def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,norm
         # Use ytick_indices and xtick_indices to set the ticks
         plt.yticks(ytick_indices, [round(lsearch[i],4) for i in ytick_indices])
         plt.xticks(xtick_indices, [round(hsearch[i],4) for i in xtick_indices])#, rotation=90)
-
+        #plt.title(decay)
         plt.tight_layout()
         plt.savefig(os.path.join(set_outputpath(save_path),f'N_{decay}.pdf'))
 
@@ -174,7 +227,7 @@ def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,norm
 
         plt.xlabel('$1-P(h)$', fontsize=16)
         plt.ylabel('$1-P(l)$', fontsize=16)
-        
+        #plt.title(decay)
         
         # Set tick labels for every 10th bin
         ytick_indices = np.arange(0,len(lsearchinterp), round(len(lsearchinterp)/5))
@@ -206,49 +259,60 @@ def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,norm
 
         plt.close('all')
 
-    if slice == True:
-        i=6
-        for decay in N_dict.keys():
+        if slice == True:
+            i=8
 
-            #to remove ee
-            if decay =='p8_ee_Zee_ecm91':
-                continue
-
-        
             plt.figure()
-            plt.plot(hsearch,N_dict[decay][round(nlh*i/10),:], label=r'N slice at 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10)],5)}')
-            N_interp_slice = [interp_N_dict[decay](lsearch[round(nlh*i/10)] , hsearchinterp[h]).item() for h in range(len(hsearchinterp))]
-            plt.plot(hsearchinterp,N_interp_slice, label=r'Interpolated N slice at 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10)],5)}')
+            plt.plot(hsearch,N_dict[decay][round(nlh*i/10-1),:], label=r'N slice at 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10-1)],5)}')
+            N_interp_slice = [interp_N_dict[decay](lsearch[round(nlh*i/10-1)] , hsearchinterp[h]).item() for h in range(len(hsearchinterp))]
+            plt.plot(hsearchinterp,N_interp_slice, label=r'Interpolated N slice at 1-P(light) $>$'+f'{round(lsearch[round(nlh*i/10-1)],5)}')
             plt.xlabel('BDT_lh 1-P(heavy)')
             plt.ylabel(r'Number of MC events remaining')
+            plt.title(decay)
             plt.legend()
             plt.savefig(os.path.join(set_outputpath(save_path),f'N_MC_events_remaining_{decay}_heavy.pdf'))
 
 
             plt.figure()
-            plt.plot(lsearch,N_dict[decay][:,round(nlh*i/10)], label=r'N slice at 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10)],5)}')
-            N_interp_slice = [interp_N_dict[decay](lsearchinterp[l], hsearch[round(nlh*i/10)]).item()  for l in range(len(lsearchinterp))]
-            plt.plot(lsearchinterp,N_interp_slice, label=r'Interpolated N slice at 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10)],5)}')
+            plt.plot(lsearch,N_dict[decay][:,round(nlh*i/10-1)], label=r'N slice at 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10-1)],5)}')
+            N_interp_slice = [interp_N_dict[decay](lsearchinterp[l], hsearch[round(nlh*i/10-1)]).item()  for l in range(len(lsearchinterp))]
+            plt.plot(lsearchinterp,N_interp_slice, label=r'Interpolated N slice at 1-P(heavy) $>$'+f'{round(hsearch[round(nlh*i/10-1)],5)}')
             plt.xlabel('BDT_lh 1-P(light)')
             plt.ylabel(r'Number of MC events remaining')
             plt.legend()
+            plt.title(decay)
             plt.savefig(os.path.join(set_outputpath(save_path),f'N_MC_events_remaining_{decay}_light.pdf'))
 
 
 
-def interp_N_to_eff_err(interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_plot=200,eventsProcessed_dict = cfg.eventsProcessed,savepath=None): #need lhranges to be within region of interp_N_dict
+def interp_N_to_eff_err(interp_N_dict, lrange=(0.999,1) ,hrange=(0.999,1),nlh_plot_highstats=200,nlh_plot_midstats=80,nlh_plot_lowstats=40 ,eventsProcessed_dict = cfg.eventsProcessed,savepath=None): #need lhranges to be within region of interp_N_dict
     '''
     function to extract eff and error from saved interpolated N remaining with given 2D BDT cuts
     '''
 
     #define arrays want to calculate interpolated efficiency over
-    lsearchinterp = np.linspace(*lrange,nlh_plot) 
-    hsearchinterp = np.linspace(*hrange,nlh_plot)
+
 
     interp_eff_dict = {}
     interp_eff_err_dict = {}
     
     for sample in interp_N_dict.keys():
+        
+        if sample in cfg.sample_allocations["high_stats_sample"]:
+            nlh_plot = nlh_plot_highstats
+
+        elif sample in cfg.sample_allocations["mid_stats_sample"]:
+            nlh_plot = nlh_plot_midstats
+
+        elif sample in cfg.sample_allocations["low_stats_sample"]:
+            nlh_plot = nlh_plot_lowstats
+
+        else:
+            raise ValueError("Decay must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
+
+
+        lsearchinterp = np.linspace(*lrange,nlh_plot) 
+        hsearchinterp = np.linspace(*hrange,nlh_plot)
 
         fine_grid_splined_eff =np.zeros((len(lsearchinterp), len(hsearchinterp)))
         fine_grid_splined_eff_err =np.zeros((len(lsearchinterp), len(hsearchinterp)))
@@ -259,7 +323,7 @@ def interp_N_to_eff_err(interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_pl
         # evaluate efficiency and error at each point on array
         for l in np.arange(0,len(lsearchinterp),1):
             for h in np.arange(0,len(hsearchinterp),1):
-                N_post = interp_N_dict[sample](lsearchinterp[l],hsearchinterp[h],grid=False)
+                N_post = interp_N_dict[sample](lsearchinterp[l],hsearchinterp[h],grid=False) # grid=False allows us to get interpolated values at arbitrary points without creating a new mesh grid 
                 
                 #compute efficiency and wilson error
                 total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
@@ -283,18 +347,33 @@ def interp_N_to_eff_err(interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_pl
     return interp_eff_dict, interp_eff_err_dict
 
 
-def raw_N_to_eff_err(N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,eventsProcessed_dict = cfg.eventsProcessed): #need lhranges to be within region of interp_N_dict
+def raw_N_to_eff_err(N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4, eventsProcessed_dict = cfg.eventsProcessed): #need lhranges to be within region of interp_N_dict
     '''
     function to extract eff and error from saved interpolated N remaining with given 2D BDT cuts
     '''
-    #define arrays want to calculate efficiency over
-    lsearch = np.linspace(*lrange,nlh) 
-    hsearch = np.linspace(*hrange,nlh)
 
     eff_dict = {}
     err_dict = {}
     
     for sample in N_dict.keys():
+
+
+        if sample in cfg.sample_allocations["high_stats_sample"]:
+            nlh = nlh_highstats
+
+        elif sample in cfg.sample_allocations["mid_stats_sample"]:
+            nlh = nlh_midstats
+
+        elif sample in cfg.sample_allocations["low_stats_sample"]:
+            nlh = nlh_lowstats
+
+        else:
+            raise ValueError("Decay must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
+
+
+        #define arrays want to calculate efficiency over
+        lsearch = np.linspace(*lrange,nlh) 
+        hsearch = np.linspace(*hrange,nlh)
 
         eff =np.zeros((len(lsearch), len(hsearch)))
         eff_err =np.zeros((len(lsearch), len(hsearch)))
@@ -319,22 +398,38 @@ def raw_N_to_eff_err(N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20,eventsPro
     return  eff_dict, err_dict
 
 
-def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh=20, slice=False,save_path='plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto'):
-
-    lsearch = np.linspace(*lrange,nlh) 
-    hsearch = np.linspace(*hrange,nlh)
-
-
-    lsearchinterp = np.linspace(*lrange,(nlh-1)*10+1) 
-    hsearchinterp = np.linspace(*hrange,(nlh-1)*10+1)
+def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.999,1) ,hrange=(0.999,1), nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4, slice=False,save_path='plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto'):
 
 
     # generate eff from N amp
-    eff_dict, err_dict = raw_N_to_eff_err(N_dict, lrange=lrange ,hrange=hrange,nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed)
-    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(interp_N_dict, lrange=lrange ,hrange=hrange,nlh_plot=(nlh-1)*10+1,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
+    eff_dict, err_dict = raw_N_to_eff_err(N_dict, lrange=lrange ,hrange=hrange,nlh_highstats=nlh_highstats, nlh_midstats=nlh_midstats, nlh_lowstats=nlh_lowstats,eventsProcessed_dict = cfg.eventsProcessed)
+    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(interp_N_dict, lrange=lrange ,hrange=hrange,nlh_plot_highstats=(nlh_highstats-1)*10+1,nlh_plot_midstats=(nlh_midstats-1)*10+1, nlh_plot_lowstats=(nlh_lowstats-1)*10+1, eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
 
     
     for decay in interp_eff_dict.keys():
+
+        if decay in cfg.sample_allocations["high_stats_sample"]:
+            nlh = nlh_highstats
+
+        elif decay in cfg.sample_allocations["mid_stats_sample"]:
+            nlh = nlh_midstats
+
+
+        elif decay in cfg.sample_allocations["low_stats_sample"]:
+            nlh = nlh_lowstats
+
+        else:
+            raise ValueError("Decay must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
+
+
+
+        lsearch = np.linspace(*lrange,nlh) 
+        hsearch = np.linspace(*hrange,nlh)
+
+
+        lsearchinterp = np.linspace(*lrange,(nlh-1)*10+1) 
+        hsearchinterp = np.linspace(*hrange,(nlh-1)*10+1)
+
         
         #to remove ee
         if decay =='p8_ee_Zee_ecm91':
@@ -466,7 +561,7 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.995,1) ,hrange=(0.995
 
 
   
-def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=1e-7,incl_other_syst = True):
+def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200, sig_BF=1e-7,incl_other_syst = True):
 
     # check input value for samples want to optimise cut over
     if cut_opt_samples==None:
@@ -486,7 +581,7 @@ def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.995,1
     hsearch = np.linspace(*hrange_plot,nlh)
 
     #create efficiency deictionary from interpolated N
-    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(Interp_N_dict_samples, lrange=lrange_plot ,hrange=hrange_plot,nlh_plot=nlh,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
+    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(Interp_N_dict_samples, lrange=lrange_plot ,hrange=hrange_plot,nlh_plot_highstats=nlh,nlh_plot_midstats=nlh,nlh_plot_lowstats=nlh, eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
 
 
     S_arr = np.zeros((len(lsearch), len(hsearch)))
@@ -506,7 +601,7 @@ def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.995,1
             interp_eff_dict_lh = {decay: interp_eff_dict[decay][l, h] for decay in interp_eff_dict.keys()}
             interp_eff_err_dict_lh = {decay: interp_eff_err_dict[decay][l, h] for decay in interp_eff_err_dict.keys()}
             
-            per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict_lh, interp_eff_err_dict_lh, signal_bf=sig_BF)
+            per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict_lh, interp_eff_err_dict_lh, signal_bf=sig_BF,model_all_1prong_tau=False)
             S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=incl_other_syst)
 
             S_arr[l,h]=S
@@ -539,7 +634,7 @@ def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.995,1
     return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF
 
 
-def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_samples=None,incl_other_syst = True):
+def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_samples=None,incl_other_syst = True, model_all_1prong_tau=False):
 
     # check input value for samples want to optimise cut over
     if SB_samples==None:
@@ -571,7 +666,7 @@ def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_sample
 
 
     #create efficiency deictionary from interpolated N
-    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(Interp_N_dict_samples, lrange=lrange_plot ,hrange=hrange_plot,nlh_plot=nlh,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
+    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(Interp_N_dict_samples, lrange=lrange_plot ,hrange=hrange_plot,nlh_plot_highstats=nlh,nlh_plot_midstats=nlh,nlh_plot_lowstats=nlh,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
 
     #find optimum cut
      ## finding maximum so can plot slices
@@ -594,7 +689,7 @@ def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_sample
     
     interp_eff_dict = {decay: interp_eff_dict[decay][l, h] for decay in samples}
     interp_eff_err_dict = {decay: interp_eff_err_dict[decay][l, h] for decay in samples}
-    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict, interp_eff_err_dict, signal_bf=sig_BF)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict, interp_eff_err_dict, signal_bf=sig_BF, model_all_1prong_tau=model_all_1prong_tau)
     
     S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=incl_other_syst)
 
@@ -692,30 +787,11 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
-def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'], binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'],model_all_1prong_tau = False, binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                             plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False, lcut=None, hcut=None, logpath= None):
     #turn BF into title worthy version
     latex_BF = latex_form_exp(signal_BF)
 
-
-    def histogram_settings():
-        hist_settings = { allocation: {} for allocation in cfg.sample_allocations}
-        for allocation in cfg.sample_allocations:
-            samples = cfg.sample_allocations[allocation]
-            if allocation=='combined_signal':
-                hist_settings[allocation]['edgecolor'] =cfg.sample_colors[allocation]
-                hist_settings[allocation]['facecolor'] = ['none','none']
-                hist_settings[allocation]['hatch'] = cfg.sample_hatches[allocation]
-            elif allocation == 'hadronic_background':
-                hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
-                hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
-                hist_settings[allocation]['hatch'] =  [None,None,None,None] 
-            elif allocation in ['Bu2lnu_background' , 'Bc2lnu_background']:
-                hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
-                hist_settings[allocation]['edgecolor'] = ['none','none','none'] 
-                hist_settings[allocation]['hatch'] =  [None,None,None] 
-        return hist_settings
-   
 
     print('--> Finding optimum cut')
     if lcut is not None and hcut is not None:
@@ -782,7 +858,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC, eventsProcessed_dict = eventsProcessed_dict)
-    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_tau=model_all_1prong_tau)
 
     #check if have additional backgrounds to inclusive ones (ie. compare samples to inclusive backgrounds list in config)
     if len(list(set(samples).intersection(cfg.exclusive_backgrounds)))>0:
@@ -925,6 +1001,7 @@ def likelihood_model_builder(df, interp_N_dict,  signal_BF=1e-6,
                              lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
                              ntoys = 250,
                              fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None):
+    #note no model_all_1prong_tau = model_all_1prong_tau, as not set up for extra B2lnu backgrounds
 
     """ 
     likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
@@ -1288,7 +1365,7 @@ def calculate_BF_sensitivities(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=
     return max_FOM, light_cut, heavy_cut, BFs, CL
 
 
-def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, x_label = r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$',BF_plot_min=2e-9,BF_plot_max=4e-6,comparison_line_sig = None,comparison_line_CL = None,savepath=None):
+def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, x_label = r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$',BF_plot_min=2e-9,BF_plot_max=4e-6,comparison_line_sig = None,comparison_line_CL = None,savepath=None,spine_sampling=4):
 
     '''
     comparison_line_sig: Dictionary where key gives the label for the vertical line and the value is the limit to plot. Enables comparison to current results to be plotted on significance plot (note if using for combined plot make sure to scale current result accordingly). Default:None.
@@ -1322,19 +1399,21 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, x_label
     
     if incl_toys_fit == True:
 
+        s=0.2
+
         #interpolate toy fit
-        interp_toys_significance = UnivariateSpline(list(toys_dict['BFs'])[::4], list(toys_dict['significance'])[::4], k = 2,s=0.1)
+        interp_toys_significance = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(toys_dict['significance'])[::spine_sampling], k = 2,s=s)
         #interp_BF_for_significance = UnivariateSpline(list(toys_dict['significance'])[::4],list(toys_dict['BFs'])[::4], k = 2,s=0.1)
-        interp_toys_significance_upper = UnivariateSpline(list(toys_dict['BFs'])[::4], list(np.add(toys_dict['significance'],toys_dict['error']))[::4], k = 2,s=0.1)
-        interp_toys_significance_lower = UnivariateSpline(list(toys_dict['BFs'])[::4], list(np.subtract(toys_dict['significance'],toys_dict['error']))[::4], k = 2,s=0.1)
+        interp_toys_significance_upper = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(np.add(toys_dict['significance'],abs(toys_dict['error'])))[::spine_sampling], k = 2,s=s)
+        interp_toys_significance_lower = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(np.subtract(toys_dict['significance'],abs(toys_dict['error'])))[::spine_sampling], k = 2,s=s)
         #five_sigma_toys = interp_BF_for_significance(5)
         #three_sigma_toys = interp_BF_for_significance(3)
-        five_sigma_toys = find_x_for_y(5, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::4]), max(list(toys_dict['BFs'])[::4])))
-        three_sigma_toys = find_x_for_y(3, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::4]), max(list(toys_dict['BFs'])[::4])))
+        five_sigma_toys = find_x_for_y(5, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        three_sigma_toys = find_x_for_y(3, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
         print(three_sigma_toys)
         print(f"5 sigma BFs toys = {five_sigma_toys}" )
         print(f"3 sigma toys= {three_sigma_toys}" )
-        plot_BFs = np.logspace(np.log10(min(list(toys_dict['BFs'])[::4])), np.log10(max(list(toys_dict['BFs'])[::4])),len(naive_dict['BFs']))
+        plot_BFs = np.logspace(np.log10(min(list(toys_dict['BFs'])[::spine_sampling])), np.log10(max(list(toys_dict['BFs'])[::spine_sampling])),len(naive_dict['BFs']))
         plt.plot(plot_BFs,interp_toys_significance(plot_BFs), color='green',label=line_namesFOM[2])# ,label = r'Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
         plt.fill_between(plot_BFs, interp_toys_significance_lower(plot_BFs), interp_toys_significance_upper(plot_BFs),alpha=0.4, color='green')
         plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', color='green')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_toys,sig=2))}')
@@ -1438,22 +1517,22 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, x_label
     
 
     if incl_toys_fit == True:
-
+        s=0.5#1.3
         CL_toys = sigma_to_percentage(toys_dict['significance'])
 
         #interpolate toy fit
-        interp_CL_toys = UnivariateSpline(list(toys_dict['BFs'])[::4], list(CL_toys)[::4], k = 2,s=1.3)
+        interp_CL_toys = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(CL_toys)[::spine_sampling], k = 2,s=s)
 
         #interp_BF_for_CL_toys = UnivariateSpline(CL_toys, toys_BFs, k = 2)
-        interp_CL_toys_upper = UnivariateSpline(list(toys_dict['BFs'])[::4], list(sigma_to_percentage(np.add(toys_dict['significance'],toys_dict['error'])))[::4], k = 2,s=1.3)
-        interp_CL_toys_lower = UnivariateSpline(list(toys_dict['BFs'])[::4], list(sigma_to_percentage(np.subtract(toys_dict['significance'],toys_dict['error'])))[::4], k = 2,s=1.3)
+        interp_CL_toys_upper = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(sigma_to_percentage(np.add(toys_dict['significance'],abs(toys_dict['error']))))[::spine_sampling], k = 2,s=s)
+        interp_CL_toys_lower = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(sigma_to_percentage(np.subtract(toys_dict['significance'],abs(toys_dict['error']))))[::spine_sampling], k = 2,s=s)
 
         #CL95_toys = interp_BF_for_CL_toys(95)
         #CL90_toys = interp_BF_for_CL_toys(90)
         #CL95_toys = np.interp(95, CL_toys, toys_BFs) - if use this need .item() in lable
         #CL90_toys = np.interp(90, CL_toys, toys_BFs)
-        CL95_toys = find_x_for_y(95, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::4]), max(list(toys_dict['BFs'])[::4])))
-        CL90_toys = find_x_for_y(90, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::4]), max(list(toys_dict['BFs'])[::4])))
+        CL95_toys = find_x_for_y(95, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        CL90_toys = find_x_for_y(90, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
         print(f"95% BF from toys = {CL95_toys}" )
         print(f"90% BF from toys= {CL90_toys}" )
 
@@ -1520,6 +1599,476 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, x_label
             plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
 
 
+def sensitivity_CL_plotter_v2(naive_dict, incl_syst_dict, toys_dict = None, x_label = r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$',BF_plot_min=2e-9,BF_plot_max=4e-6,comparison_line_sig = None,comparison_line_CL = None,savepath=None,spine_sampling=4):
+
+    '''
+    comparison_line_sig: Dictionary where key gives the label for the vertical line and the value is the limit to plot. Enables comparison to current results to be plotted on significance plot (note if using for combined plot make sure to scale current result accordingly). Default:None.
+    comparison_line_CL: Dictionary where key gives the label for the vertical line and the value is the limit to plot. Enables comparison to current results to be plotted on CL plot (note if using for combined plot make sure to scale current result accordingly). Default:None.
+    '''
+
+    if toys_dict is None:
+        incl_toys_fit=False
+    else:
+        incl_toys_fit=True
+
+    #calculate 3 and 5 sigma for naive
+    
+    naive_five_sigma_BF = np.interp(5, naive_dict['significance'], naive_dict['BFs'])
+    naive_three_sigma_BF = np.interp(3, naive_dict['significance'], naive_dict['BFs'])
+
+    print(f'3sigma BF= {naive_three_sigma_BF}')
+    print(f'5sigma BF= {naive_five_sigma_BF}')
+
+    line_names = ['Counting \nExperiment','Counting \nExperiment \nIncluding \nSystematic','Binned Fits']
+    line_namesFOM = ['Counting Experiment','Counting Experiment \nIncluding Systematic','Binned Fits']
+
+    
+
+    #plotting S/sqrt(S+B) line
+    plt.figure()
+    plt.plot(naive_dict['BFs'],naive_dict['significance'], label = line_namesFOM[0])#r'$S/\sqrt{S+B}$') #
+    plt.fill_between(naive_dict['BFs'], naive_dict['significance']-naive_dict['error'], naive_dict['significance']+naive_dict['error'],alpha=0.4)
+    plt.vlines(x=naive_three_sigma_BF, ymin=0, ymax=3, linestyle='--')#,label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(naive_three_sigma_BF,sig=2))}')
+    plt.vlines(x=naive_five_sigma_BF, ymin=0, ymax=5, linestyle='--')#,label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(naive_five_sigma_BF,sig=2))}')
+    
+    if incl_toys_fit == True:
+
+        s=0.2
+
+        #interpolate toy fit
+        interp_toys_significance = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(toys_dict['significance'])[::spine_sampling], k = 2,s=s)
+        #interp_BF_for_significance = UnivariateSpline(list(toys_dict['significance'])[::4],list(toys_dict['BFs'])[::4], k = 2,s=0.1)
+        interp_toys_significance_upper = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(np.add(toys_dict['significance'],abs(toys_dict['error'])))[::spine_sampling], k = 2,s=s)
+        interp_toys_significance_lower = UnivariateSpline(list(toys_dict['BFs'])[::spine_sampling], list(np.subtract(toys_dict['significance'],abs(toys_dict['error'])))[::spine_sampling], k = 2,s=s)
+        #five_sigma_toys = interp_BF_for_significance(5)
+        #three_sigma_toys = interp_BF_for_significance(3)
+        five_sigma_toys = find_x_for_y(5, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        three_sigma_toys = find_x_for_y(3, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        print(three_sigma_toys)
+        print(f"5 sigma BFs toys = {five_sigma_toys}" )
+        print(f"3 sigma toys= {three_sigma_toys}" )
+        plot_BFs = np.logspace(np.log10(min(list(toys_dict['BFs'])[::spine_sampling])), np.log10(max(list(toys_dict['BFs'])[::spine_sampling])),len(naive_dict['BFs']))
+        plt.plot(plot_BFs,interp_toys_significance(plot_BFs), color='green',label=line_namesFOM[2])# ,label = r'Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
+        plt.fill_between(plot_BFs, interp_toys_significance_lower(plot_BFs), interp_toys_significance_upper(plot_BFs),alpha=0.4, color='green')
+        plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', color='green')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_toys,sig=2))}')
+        plt.vlines(x=five_sigma_toys, ymin=0, ymax=5, linestyle='--',color='green')#, label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(five_sigma_toys,sig=2))}', color='green')
+        
+        if BF_plot_max:
+            plt.xlim(min(toys_dict['BFs']), BF_plot_max)#max(toys_dict['BFs']))
+        else:
+            plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+    incl_other_syst = incl_syst_dict['incl_other_syst']
+
+    five_sigma_BF_inclerr = np.interp(5, incl_syst_dict['significance'], incl_syst_dict['BFs'])
+    three_sigma_BF_inclerr = np.interp(3, incl_syst_dict['significance'], incl_syst_dict['BFs'])
+
+    print(f'3sigma incl err BF= {three_sigma_BF_inclerr}')
+    print(f'5sigma incl err BF= {five_sigma_BF_inclerr}')
+
+
+    if incl_other_syst == True:
+        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'], color='orange',label=line_namesFOM[1])#,label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
+        plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0, color='orange')
+        plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', color='orange')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_BF_inclerr,sig=2))}')
+        plt.vlines(x=five_sigma_BF_inclerr, ymin=0, ymax=5, linestyle='--', color='orange')#, label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(five_sigma_BF_inclerr,sig=2))}')
+        if incl_toys_fit == True:
+            plt.hlines(y = 3,xmin = min(toys_dict['BFs']),xmax = three_sigma_BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+            plt.hlines(y = 5,xmin = min(toys_dict['BFs']),xmax = five_sigma_BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+    else:
+        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'],label='Including only MC Sample \nSize Uncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0)
+    
+
+    if comparison_line_sig:
+        if not isinstance(comparison_line_sig, dict):
+            print('NO LINE PLOTTED : "comparion_line_sig must be a dictionary with value being the limit and key being the label.')
+        else:
+            for key in comparison_line_sig.keys():
+                plt.axvline(x=comparison_line_sig[key],linestyle='-.',label="\n".join(textwrap.wrap(key, width=15)),color='hotpink')
+
+
+    plt.xlabel(x_label)
+    plt.ylabel(r'Significance')
+    plt.xscale('log')
+    plt.ylim(0,7)
+    if BF_plot_max:
+        plt.xlim(BF_plot_min,BF_plot_max)
+    else:
+        plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+    # reordering the labels 
+    handles, labels = plt.gca().get_legend_handles_labels() 
+    # specify order 
+    order = [0,2,1]
+    # pass handle & labels lists along with order as below 
+    if incl_toys_fit == True:
+        plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
+    else:
+        plt.legend(handles, labels, fontsize = 11)
+
+    #plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
+    if incl_other_syst == True:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr.pdf'))
+
+    else:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF.pdf'))
+
+
+
+    ##################################
+    # Now plotting CL 
+    ##################################
+        #convert sigma to CL - for now one sided
+    
+    CL = sigma_to_percentage(naive_dict['significance'])
+    CL_incl_error = sigma_to_percentage(incl_syst_dict['significance']) # this dependent on if have full error or not above
+    #CL_toys = sigma_to_percentage(toys_significance)
+
+    # using interpolation
+    CL95BF= np.interp(95, CL, naive_dict['BFs'])
+    CL90BF = np.interp(90, CL, naive_dict['BFs'])
+    print(f"95% CL BFs = {CL95BF}" )
+    print(f"90% CL BFs = {CL90BF}" )
+
+    CL95BF_inclerr= np.interp(95, CL_incl_error, naive_dict['BFs'])
+    CL90BF_inclerr = np.interp(90, CL_incl_error, naive_dict['BFs'])
+    print(f"95% CL BFs incl error = {CL95BF_inclerr}" )
+    print(f"90% CL BFs incle error = {CL90BF_inclerr}" )
+
+
+    plt.figure()
+    plt.plot(naive_dict['BFs'],CL,label=line_names[0])#,label='$S/\sqrt{S+B}$' )
+    plt.fill_between(naive_dict['BFs'], sigma_to_percentage(naive_dict['significance']-naive_dict['error']),  sigma_to_percentage(naive_dict['significance']+naive_dict['error']),alpha=0.4)
+    plt.vlines(x=CL90BF, ymin=70, ymax=90, linestyle='--')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF,sig=2))}')
+    plt.vlines(x=CL95BF, ymin=70, ymax=95, linestyle='--')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95BF,sig=2))}')
+    
+
+    if incl_toys_fit == True:
+ 
+        CL_toys = sigma_to_percentage(interp_toys_significance(plot_BFs))
+        CL_toys_upper = sigma_to_percentage(interp_toys_significance_upper(plot_BFs))
+        CL_toys_lower = sigma_to_percentage(interp_toys_significance_lower(plot_BFs))
+        
+        #interpolate toy fit
+        interp_CL_toys = UnivariateSpline(plot_BFs, CL_toys, k = 2,s=0)
+        interp_CL_toys_upper = UnivariateSpline(plot_BFs, CL_toys_upper, k = 2,s=0)
+        interp_CL_toys_lower = UnivariateSpline(plot_BFs, CL_toys_lower, k = 2,s=0)
+
+      
+        CL95_toys = find_x_for_y(95, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        CL90_toys = find_x_for_y(90, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        print(f"95% BF from toys = {CL95_toys}" )
+        print(f"90% BF from toys= {CL90_toys}" )
+
+        plt.plot(plot_BFs,interp_CL_toys(plot_BFs), color='green',label=line_names[2])#,label = r' Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
+        plt.fill_between(plot_BFs, interp_CL_toys_lower(plot_BFs), interp_CL_toys_upper(plot_BFs),alpha=0.4, color='green')
+        plt.vlines(x=CL90_toys, ymin=70, ymax=90, linestyle='--', color='green')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90_toys,sig=2))}')
+        plt.vlines(x=CL95_toys, ymin=70, ymax=95, linestyle='--', color='green')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95_toys,sig=2))}')
+        
+        if BF_plot_max:
+            plt.xlim(min(toys_dict['BFs']), BF_plot_max)#max(toys_dict['BFs']))
+        else:
+            plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+
+    if incl_other_syst == True:
+        plt.plot(naive_dict['BFs'],CL_incl_error, color='orange',label=line_names[1])#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
+        plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0, color='orange')
+        plt.vlines(x=CL90BF_inclerr, ymin=70, ymax=90, linestyle='--', color='orange')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF_inclerr,sig=2))}')
+        plt.vlines(x=CL95BF_inclerr, ymin=70, ymax=95, linestyle='--', color='orange')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95BF_inclerr,sig=2))}')
+        if incl_toys_fit == True:
+            plt.hlines(y = 90,xmin = min(toys_dict['BFs']),xmax = CL90BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+            plt.hlines(y = 95,xmin = min(toys_dict['BFs']),xmax = CL95BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+    else:
+        plt.plot(naive_dict['BFs'],CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0)
+
+    if comparison_line_CL:
+        if not isinstance(comparison_line_CL, dict):
+            print('NO LINE PLOTTED : "comparion_line_CL must be a dictionary with value being the limit and key being the label.')
+        else:
+            for key in comparison_line_CL.keys():
+                plt.axvline(x=comparison_line_CL[key],linestyle='-.', label="\n".join(textwrap.wrap(key, width=15)), color='hotpink')
+
+    plt.xlabel(x_label)
+    plt.ylabel(r'Rejection CL')
+    plt.xscale('log')
+    plt.ylim(70,102)
+
+    if BF_plot_max:
+        plt.xlim(BF_plot_min,BF_plot_max)
+    else:
+        plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+    # reordering the labels 
+    handles, labels = plt.gca().get_legend_handles_labels() 
+    # specify order 
+    order = [0,2,1] 
+    # pass handle & labels lists along with order as below 
+    if incl_toys_fit == True:
+        plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
+    else:
+        plt.legend(handles, labels, fontsize = 11)
+    #plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
+    if incl_other_syst == True:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr.pdf'))
+
+    else:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
+
+
+
+def sensitivity_CL_plotter_monotonic_interp(naive_dict, incl_syst_dict, toys_dict = None, x_label = r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$',BF_plot_min=2e-9,BF_plot_max=4e-6,comparison_line_sig = None,comparison_line_CL = None,savepath=None,spine_sampling=4):
+
+    '''
+    comparison_line_sig: Dictionary where key gives the label for the vertical line and the value is the limit to plot. Enables comparison to current results to be plotted on significance plot (note if using for combined plot make sure to scale current result accordingly). Default:None.
+    comparison_line_CL: Dictionary where key gives the label for the vertical line and the value is the limit to plot. Enables comparison to current results to be plotted on CL plot (note if using for combined plot make sure to scale current result accordingly). Default:None.
+    '''
+
+    if toys_dict is None:
+        incl_toys_fit=False
+    else:
+        incl_toys_fit=True
+
+    #calculate 3 and 5 sigma for naive
+    
+    naive_five_sigma_BF = np.interp(5, naive_dict['significance'], naive_dict['BFs'])
+    naive_three_sigma_BF = np.interp(3, naive_dict['significance'], naive_dict['BFs'])
+
+    print(f'3sigma BF= {naive_three_sigma_BF}')
+    print(f'5sigma BF= {naive_five_sigma_BF}')
+
+    line_names = ['Counting \nExperiment','Counting \nExperiment \nIncluding \nSystematic','Binned Fits']
+    line_namesFOM = ['Counting Experiment','Counting Experiment \nIncluding Systematic','Binned Fits']
+
+    
+
+    #plotting S/sqrt(S+B) line
+    plt.figure()
+    plt.plot(naive_dict['BFs'],naive_dict['significance'], label = line_namesFOM[0])#r'$S/\sqrt{S+B}$') #
+    plt.fill_between(naive_dict['BFs'], naive_dict['significance']-naive_dict['error'], naive_dict['significance']+naive_dict['error'],alpha=0.4)
+    plt.vlines(x=naive_three_sigma_BF, ymin=0, ymax=3, linestyle='--')#,label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(naive_three_sigma_BF,sig=2))}')
+    plt.vlines(x=naive_five_sigma_BF, ymin=0, ymax=5, linestyle='--')#,label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(naive_five_sigma_BF,sig=2))}')
+    
+    if incl_toys_fit == True:
+
+        s=0.2
+
+        #interpolate toy fit
+        interp_toys_significance = PchipInterpolator(list(toys_dict['BFs'])[::spine_sampling], list(toys_dict['significance'])[::spine_sampling])
+        #interp_BF_for_significance = UnivariateSpline(list(toys_dict['significance'])[::4],list(toys_dict['BFs'])[::4], k = 2,s=0.1)
+        interp_toys_significance_upper = PchipInterpolator(list(toys_dict['BFs'])[::spine_sampling], list(np.add(toys_dict['significance'],abs(toys_dict['error'])))[::spine_sampling])
+        interp_toys_significance_lower = PchipInterpolator(list(toys_dict['BFs'])[::spine_sampling], list(np.subtract(toys_dict['significance'],abs(toys_dict['error'])))[::spine_sampling])
+        #five_sigma_toys = interp_BF_for_significance(5)
+        #three_sigma_toys = interp_BF_for_significance(3)
+        five_sigma_toys = find_x_for_y(5, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        three_sigma_toys = find_x_for_y(3, interp_toys_significance, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        print(three_sigma_toys)
+        print(f"5 sigma BFs toys = {five_sigma_toys}" )
+        print(f"3 sigma toys= {three_sigma_toys}" )
+        plot_BFs = np.logspace(np.log10(min(list(toys_dict['BFs'])[::spine_sampling])), np.log10(max(list(toys_dict['BFs'])[::spine_sampling])),len(naive_dict['BFs']))
+        plt.plot(plot_BFs,interp_toys_significance(plot_BFs), color='green',label=line_namesFOM[2])# ,label = r'Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
+        plt.fill_between(plot_BFs, interp_toys_significance_lower(plot_BFs), interp_toys_significance_upper(plot_BFs),alpha=0.4, color='green')
+        plt.vlines(x=three_sigma_toys, ymin=0, ymax=3, linestyle='--', color='green')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_toys,sig=2))}')
+        plt.vlines(x=five_sigma_toys, ymin=0, ymax=5, linestyle='--',color='green')#, label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(five_sigma_toys,sig=2))}', color='green')
+        
+        if BF_plot_max:
+            plt.xlim(min(toys_dict['BFs']), BF_plot_max)#max(toys_dict['BFs']))
+        else:
+            plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+    incl_other_syst = incl_syst_dict['incl_other_syst']
+
+    five_sigma_BF_inclerr = np.interp(5, incl_syst_dict['significance'], incl_syst_dict['BFs'])
+    three_sigma_BF_inclerr = np.interp(3, incl_syst_dict['significance'], incl_syst_dict['BFs'])
+
+    print(f'3sigma incl err BF= {three_sigma_BF_inclerr}')
+    print(f'5sigma incl err BF= {five_sigma_BF_inclerr}')
+
+
+    if incl_other_syst == True:
+        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'], color='orange',label=line_namesFOM[1])#,label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
+        plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0, color='orange')
+        plt.vlines(x=three_sigma_BF_inclerr, ymin=0, ymax=3, linestyle='--', color='orange')#, label=r'3$\sigma$ BF = '+f'{latex_form_exp(round_sig(three_sigma_BF_inclerr,sig=2))}')
+        plt.vlines(x=five_sigma_BF_inclerr, ymin=0, ymax=5, linestyle='--', color='orange')#, label=r'5$\sigma$ BF = '+f'{latex_form_exp(round_sig(five_sigma_BF_inclerr,sig=2))}')
+        if incl_toys_fit == True:
+            plt.hlines(y = 3,xmin = min(toys_dict['BFs']),xmax = three_sigma_BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+            plt.hlines(y = 5,xmin = min(toys_dict['BFs']),xmax = five_sigma_BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+    else:
+        plt.plot(incl_syst_dict['BFs'],incl_syst_dict['significance'],label='Including only MC Sample \nSize Uncertainty')#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        plt.fill_between(incl_syst_dict['BFs'], incl_syst_dict['significance'], incl_syst_dict['significance'],alpha=0)
+    
+
+    if comparison_line_sig:
+        if not isinstance(comparison_line_sig, dict):
+            print('NO LINE PLOTTED : "comparion_line_sig must be a dictionary with value being the limit and key being the label.')
+        else:
+            for key in comparison_line_sig.keys():
+                plt.axvline(x=comparison_line_sig[key],linestyle='-.',label="\n".join(textwrap.wrap(key, width=15)),color='hotpink')
+
+
+    plt.xlabel(x_label)
+    plt.ylabel(r'Significance')
+    plt.xscale('log')
+    plt.ylim(0,8)
+    if BF_plot_max:
+        plt.xlim(BF_plot_min,BF_plot_max)
+    else:
+        plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+    # reordering the labels 
+    handles, labels = plt.gca().get_legend_handles_labels() 
+    # specify order 
+    order = [0,2,1]
+    # pass handle & labels lists along with order as below 
+    if incl_toys_fit == True:
+        plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
+    else:
+        plt.legend(handles, labels, fontsize = 11)
+
+    #plt.title(r'Optimum FOM as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
+    if incl_other_syst == True:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_inclfullerr.pdf'))
+
+    else:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF.pdf'))
+
+
+
+    ##################################
+    # Now plotting CL 
+    ##################################
+        #convert sigma to CL - for now one sided
+    
+    CL = sigma_to_percentage(naive_dict['significance'])
+    CL_incl_error = sigma_to_percentage(incl_syst_dict['significance']) # this dependent on if have full error or not above
+    #CL_toys = sigma_to_percentage(toys_significance)
+
+    # using interpolation
+    CL95BF= np.interp(95, CL, naive_dict['BFs'])
+    CL90BF = np.interp(90, CL, naive_dict['BFs'])
+    print(f"95% CL BFs = {CL95BF}" )
+    print(f"90% CL BFs = {CL90BF}" )
+
+    CL95BF_inclerr= np.interp(95, CL_incl_error, naive_dict['BFs'])
+    CL90BF_inclerr = np.interp(90, CL_incl_error, naive_dict['BFs'])
+    print(f"95% CL BFs incl error = {CL95BF_inclerr}" )
+    print(f"90% CL BFs incle error = {CL90BF_inclerr}" )
+
+
+    plt.figure()
+    plt.plot(naive_dict['BFs'],CL,label=line_names[0])#,label='$S/\sqrt{S+B}$' )
+    plt.fill_between(naive_dict['BFs'], sigma_to_percentage(naive_dict['significance']-naive_dict['error']),  sigma_to_percentage(naive_dict['significance']+naive_dict['error']),alpha=0.4)
+    plt.vlines(x=CL90BF, ymin=70, ymax=90, linestyle='--')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF,sig=2))}')
+    plt.vlines(x=CL95BF, ymin=70, ymax=95, linestyle='--')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95BF,sig=2))}')
+    
+
+    if incl_toys_fit == True:
+        s=1#1.3
+        CL_toys = sigma_to_percentage(toys_dict['significance'])
+
+        #interpolate toy fit
+        interp_CL_toys = PchipInterpolator(list(toys_dict['BFs'])[::spine_sampling], list(CL_toys)[::spine_sampling])
+
+        #interp_BF_for_CL_toys = UnivariateSpline(CL_toys, toys_BFs, k = 2)
+        interp_CL_toys_upper = PchipInterpolator(list(toys_dict['BFs'])[::spine_sampling], list(sigma_to_percentage(np.add(toys_dict['significance'],abs(toys_dict['error']))))[::spine_sampling])
+        interp_CL_toys_lower = PchipInterpolator(list(toys_dict['BFs'])[::spine_sampling], list(sigma_to_percentage(np.subtract(toys_dict['significance'],abs(toys_dict['error']))))[::spine_sampling])
+
+        #CL95_toys = interp_BF_for_CL_toys(95)
+        #CL90_toys = interp_BF_for_CL_toys(90)
+        #CL95_toys = np.interp(95, CL_toys, toys_BFs) - if use this need .item() in lable
+        #CL90_toys = np.interp(90, CL_toys, toys_BFs)
+        CL95_toys = find_x_for_y(95, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        CL90_toys = find_x_for_y(90, interp_CL_toys, x_bounds = (min(list(toys_dict['BFs'])[::spine_sampling]), max(list(toys_dict['BFs'])[::spine_sampling])))
+        print(f"95% BF from toys = {CL95_toys}" )
+        print(f"90% BF from toys= {CL90_toys}" )
+
+        plt.plot(plot_BFs,interp_CL_toys(plot_BFs), color='green',label=line_names[2])#,label = r' Mean Toy $\sqrt{-2\Delta\ln{\mathcal{L}}}$')#
+        plt.fill_between(plot_BFs, interp_CL_toys_lower(plot_BFs), interp_CL_toys_upper(plot_BFs),alpha=0.4, color='green')
+        plt.vlines(x=CL90_toys, ymin=70, ymax=90, linestyle='--', color='green')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90_toys,sig=2))}')
+        plt.vlines(x=CL95_toys, ymin=70, ymax=95, linestyle='--', color='green')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95_toys,sig=2))}')
+        
+        if BF_plot_max:
+            plt.xlim(min(toys_dict['BFs']), BF_plot_max)#max(toys_dict['BFs']))
+        else:
+            plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+
+    if incl_other_syst == True:
+        plt.plot(naive_dict['BFs'],CL_incl_error, color='orange',label=line_names[1])#, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$')##+ '\n including '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})}$, $\sigma_{\varepsilon_i}$
+        plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0, color='orange')
+        plt.vlines(x=CL90BF_inclerr, ymin=70, ymax=90, linestyle='--', color='orange')#, label=r'90$\%$ BF = '+f'{latex_form_exp(round_sig(CL90BF_inclerr,sig=2))}')
+        plt.vlines(x=CL95BF_inclerr, ymin=70, ymax=95, linestyle='--', color='orange')#, label=r'95$\%$ BF = '+f'{latex_form_exp(round_sig(CL95BF_inclerr,sig=2))}')
+        if incl_toys_fit == True:
+            plt.hlines(y = 90,xmin = min(toys_dict['BFs']),xmax = CL90BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+            plt.hlines(y = 95,xmin = min(toys_dict['BFs']),xmax = CL95BF_inclerr, linestyle='--',color='k',alpha = 0.3)
+    else:
+        plt.plot(naive_dict['BFs'],CL_incl_error, label = r'$S/\sqrt{S+B+\sigma_S^2+\sigma_B^2}$'+ '\n neglecting '+r'$\sigma_{\mathcal{B}(Z \rightarrow q\bar{q})} $')
+        plt.fill_between(naive_dict['BFs'], CL_incl_error, CL_incl_error,alpha=0)
+
+    if comparison_line_CL:
+        if not isinstance(comparison_line_CL, dict):
+            print('NO LINE PLOTTED : "comparion_line_CL must be a dictionary with value being the limit and key being the label.')
+        else:
+            for key in comparison_line_CL.keys():
+                plt.axvline(x=comparison_line_CL[key],linestyle='-.', label="\n".join(textwrap.wrap(key, width=15)), color='hotpink')
+
+    plt.xlabel(x_label)
+    plt.ylabel(r'Rejection CL')
+    plt.xscale('log')
+    plt.ylim(70,102)
+
+    if BF_plot_max:
+        plt.xlim(BF_plot_min,BF_plot_max)
+    else:
+        plt.xlim(min(toys_dict['BFs']), max(toys_dict['BFs']))
+
+    # reordering the labels 
+    handles, labels = plt.gca().get_legend_handles_labels() 
+    # specify order 
+    order = [0,2,1] 
+    # pass handle & labels lists along with order as below 
+    if incl_toys_fit == True:
+        plt.legend([handles[i] for i in order], [labels[i] for i in order], fontsize = 11)
+    else:
+        plt.legend(handles, labels, fontsize = 11)
+    #plt.title(r'1-CL as a function of $\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$')
+    if incl_other_syst == True:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_inclfullerr.pdf'))
+
+    else:
+        if incl_toys_fit == True:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF_wtoys.pdf'))
+        else:
+            plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
+
+
+
+
+
+
 def return_fullselneff_for_BF(interp_N_dict, signal_BF,lrange_plot= (0.995,1),hrange_plot = (0.995,1), nlh=200):
     
     FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF  = run_2d_optimisation(interp_N_dict,lrange_plot=lrange_plot ,hrange_plot=hrange_plot, nlh=nlh , sig_BF=signal_BF, incl_other_syst=True)
@@ -1530,7 +2079,7 @@ def return_fullselneff_for_BF(interp_N_dict, signal_BF,lrange_plot= (0.995,1),hr
     h = hsearch[indices[1]]
 
     #create efficiency dictionary from interpolated N which can then print!
-    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(interp_N_dict, lrange=(l,l) ,hrange=(h,h),nlh_plot=1,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
+    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(interp_N_dict, lrange=(l,l) ,hrange=(h,h),nlh_plot_highstats=1,nlh_plot_midstats=1,nlh_plot_lowstats=1,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
 
     return interp_eff_dict,interp_eff_err_dict
 
@@ -1549,7 +2098,7 @@ def run_2d_optimisation_single_signal(interp_N_dict,lrange_plot=(0.995,1) ,hrang
     hsearch = np.linspace(*hrange_plot,nlh)
 
     #create efficiency deictionary from interpolated N
-    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(interp_N_dict, lrange=lrange_plot ,hrange=hrange_plot,nlh_plot=nlh,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
+    interp_eff_dict, interp_eff_err_dict = interp_N_to_eff_err(interp_N_dict, lrange=lrange_plot ,hrange=hrange_plot,nlh_plot_highstats=nlh,nlh_plot_midstats=nlh,nlh_plot_lowstats=nlh,eventsProcessed_dict = cfg.eventsProcessed,savepath=None)
 
 
     S_arr = {}

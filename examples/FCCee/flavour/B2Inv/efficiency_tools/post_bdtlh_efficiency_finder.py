@@ -43,7 +43,7 @@ def get_eff_from_nMC_list(N_dict_MC,eventsProcessed_dict = cfg.eventsProcessed):
 
 
 
-def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #set up to take efficiencies which is a disctionary of arrays or dict of floats
+def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6, model_all_1prong_tau=False): #set up to take efficiencies which is a disctionary of arrays or dict of floats
     
     # Dict to store output
     per_sample_n_expect_dict = {}
@@ -55,8 +55,18 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
     # COMPUTING EXPECTATION
     for sample in efficiencies.keys():
         N_z = cfg.N_z
-        bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
-        bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
+
+        if model_all_1prong_tau==True:
+            if sample in ("p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu"):
+                bfs_val = cfg.branching_fractions[f"{sample}_modelling_oneprong"][0] #value=1 for signal
+                bfs_err = cfg.branching_fractions[f"{sample}_modelling_oneprong"][1]
+
+            else:
+                bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
+                bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
+        else:
+            bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
+            bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
         
         eff_val = efficiencies[sample]
         eff_err_val = efficiencies_err[sample]
@@ -94,6 +104,7 @@ def get_n_expected_components(efficiencies, efficiencies_err, signal_bf=1e-6): #
 
 #combine compoenents into S and B and corresponding absolute (not fractional) error
 def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=True, exclusive_background_samples = None,individual_signal_contributions=False):
+    
     '''
     Turns number from each decay into total S and B expectations with errors (per bin)
     "exclusive_background_samples": must be a LIST of exclusive additional background samples to incluives in hadronic_background
@@ -106,7 +117,7 @@ def get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_e
 
     S_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in signals]), axis=0)
     B_eff_var= np.sum(np.stack([(per_sample_eff_err[k]*per_sample_novereff[k])**2 for k in backgrounds]), axis=0)
-   
+
     S_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k]) for k in signals]), axis=0)**2
     B_BF_var = np.sum(np.stack([(per_sample_frac_BFZbb_err[k]*per_sample_n_expect_dict[k])**2 for k in backgrounds]), axis=0)
 
@@ -210,7 +221,7 @@ def get_total_eff_post_bdt(df,
 
 
 
-def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_err=False): #set up to take efficiencies which is a disctionary of floats
+def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_err=False, model_all_1prong_tau = False): #set up to take efficiencies which is a disctionary of floats
     
     #function to return the expected number of events for each sample and the efficiency error on that number
     
@@ -227,8 +238,17 @@ def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_er
     
     # COMPUTING EXPECTATION
     for sample in efficiencies.keys():
-        bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
-        bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
+        if model_all_1prong_tau==True:
+            if sample in ("p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu"):
+                bfs_val = cfg.branching_fractions[f"{sample}_modelling_oneprong"][0] #value=1 for signal
+                bfs_err = cfg.branching_fractions[f"{sample}_modelling_oneprong"][1]
+
+            else:
+                bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
+                bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
+        else:
+            bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
+            bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
         eff_val = efficiencies[sample]
         eff_err_val = efficiencies_err[sample]
         N_z = cfg.N_z

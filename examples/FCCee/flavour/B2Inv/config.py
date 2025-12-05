@@ -331,6 +331,7 @@ signal_samples = ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu",
 
 samples = signal_samples + background_samples
 
+
 sample_allocations = {
     "hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zud_ecm91"],
     "heavy_hadronic_background": ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
@@ -340,11 +341,16 @@ sample_allocations = {
     "light_leptonic_background": ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
     "Bu2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu"],
     "Bc2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "B2lnu_background_combined":["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
     "bb_only":    ["p8_ee_Zbb_ecm91"],
     "ud_only": ["p8_ee_Zud_ecm91"], 
     "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
     "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],#want the signal last here so that it's plotted on top in binning plots
+    "high_stats_sample": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "mid_stats_sample":["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU"],    
+    "low_stats_sample":["p8_ee_Zud_ecm91", ]
+    
 }
 
 
@@ -365,6 +371,7 @@ sample_colors = {
     "light_leptonic_background": plt.cm.tab20c([13,14]),#plt.cm.tab20b((4+ np.linspace(0, 1, 5)[2:-1])/5 )
     "Bu2lnu_background":plt.cm.tab20b([4,5,6]),
     "Bc2lnu_background": plt.cm.tab20b([8,9,10]),
+    "B2lnu_background_combined":"thistle", #"mistyrose",#, #"lightgrey",#
 }
 
 sample_total = {
@@ -376,6 +383,9 @@ sample_total = {
     "light_leptonic_background": 'mediumvioletred',
     "bb_only": None,
     "tau_background": None,
+    "Bu2lnu_background": None,
+    "Bc2lnu_background": None,
+    "B2lnu_background_combined":None,
 }
 
 sample_hatches = {
@@ -391,6 +401,7 @@ sample_hatches = {
     "Bssignal": [r'\\\\'],
     "Bu2lnu_background": None,
     "Bc2lnu_background": None,
+    "B2lnu_background_combined":None,
 }
 
 sample_shorthand = {
@@ -425,11 +436,14 @@ titles = {
     "heavy_hadronic_background": "Total heavy hadronic background",
     "light_hadronic_background": "Total light hadronic background",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":r"$B^+ \to [\mu^+ \nu_{\mu}\bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu_oneprong_tau":r"$B^+ \to [one-prong]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":r"$B^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":r"$B^+ \to \mu^+ \nu_{\mu} $",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":r"$B_c^+ \to [\mu^+ \nu_{\mu}\bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu_oneprong_tau":r"$B_c^+ \to [one-prong]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":r"$B_c^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":r"$B_c^+ \to \nu_{\mu} \mu^+$",
+    "B2lnu_background_combined":r"$B_{(c)}^+ \to l^+ \nu_l $",
 }
 
 ##############################
@@ -478,9 +492,11 @@ branching_fractions = {
     "p8_ee_Zee_ecm91":(0.033632,0.000042),
     #Below are all BF from Bu (ie. doesnt include Z2bb or hadronation etc)
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":(1.89551e-5,0.41738e-5), 
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu_modelling_oneprong":(5.09248e-5,1.12131e-5), # ie. tau 2 nu (h+mu+e)
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":(1.6568e-5,0.3649e-5),# hhh final state
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":(4.7e-7,0.7e-7), #Theory pred. from https://arxiv.org/pdf/hep-ex/0611045
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":(3.98231e-3,0.15678e-3), # Thry pred https://arxiv.org/pdf/2305.02998
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu_modelling_oneprong":(1.06989e-2,0.04208e-2), # Thry pred https://arxiv.org/pdf/2305.02998
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":(3.4808e-3,0.1375e-3), # Thry pred https://arxiv.org/pdf/2305.02998
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":(1e-4,1e-4), # I cant find a theory prediction so assume scaling of Bc2taunu same as between bu2taunu and bu2munu
 }

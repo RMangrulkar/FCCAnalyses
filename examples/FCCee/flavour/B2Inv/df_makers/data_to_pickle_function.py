@@ -15,7 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config as cfg 
 from basic_functions import vars_fromyaml, check_inputpath, set_outputpath, chunk_list
 from efficiency_tools import efficiency_finder
-from apply_bdt_and_pickle_df import load_bdt_and_apply
+from df_makers.apply_bdt_and_pickle_df import load_bdt_and_apply
 
 #ROOT.EnableImplicitMT()
 ROOT.DisableImplicitMT()    # disable ROOT parallel threads

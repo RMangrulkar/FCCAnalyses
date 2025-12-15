@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from yaml import safe_load, YAMLError, dump
+
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config as cfg
 import basic_functions
 import plotters.bdt_plotter_multiclass as bp

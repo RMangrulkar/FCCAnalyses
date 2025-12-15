@@ -11,6 +11,8 @@ from tabulate import tabulate
 from yaml import safe_load, YAMLError
 from xgboost import XGBClassifier
 
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config as cfg 
 from  efficiency_tools import efficiency_finder
 import basic_functions

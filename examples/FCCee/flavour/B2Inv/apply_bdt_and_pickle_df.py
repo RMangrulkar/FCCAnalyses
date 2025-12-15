@@ -15,7 +15,7 @@ import config as cfg
 from  efficiency_tools import efficiency_finder
 import basic_functions
 
-ROOT.EnableImplicitMT()
+#ROOT.EnableImplicitMT()
 
 def load_bdt_and_apply(df, 
                         config_bdtopts = cfg.baseline_bdt_lh_opts,

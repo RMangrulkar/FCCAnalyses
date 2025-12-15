@@ -189,6 +189,9 @@ fccana_opts = {
 
 
 # TMVA options
+bdt_outputs_map = {"bdt_score_2":"P_signal",
+                   "bdt_score_1":"P_heavy",
+                   "bdt_score_0":"P_light",}
 
 baseline_bdt_lh_opts = {
     "label":               '_lh',
@@ -550,6 +553,12 @@ eventsProcessed = {
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU": 10900000,
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu": 10000000,
 }
+
+eventsProcessed_with_MC_full_prelim = {
+    "p8_ee_Zbb_ecm91" : 152899179,
+    "p8_ee_Zcc_ecm91" : 174932285,
+    "p8_ee_Zss_ecm91" : 174950845,
+    "p8_ee_Zud_ecm91" : 245719072,}
 
 eventsSelected_preBDT_notau_veto = { #nb excluding tau veto
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1752184,

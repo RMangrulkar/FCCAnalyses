@@ -703,6 +703,7 @@ class RDFanalysis():
             .Define("Rec_vtx_thrustCosTheta_max_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(1)")
             .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
         
+            .Define("EVT_ID", "rdfentry_") 
         )
 
 

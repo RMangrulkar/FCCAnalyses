@@ -310,6 +310,14 @@ BSC_opts = {
     "spring2021": [4.5,20e-3,0.3e3],
 }
 
+quark_dictionary = {"b":5,
+                    "c":4,
+                    "s":3,
+                    "d":1,
+                    "u":2,}
+
+
+
 
 ##############################
 ## SAMPLE OPTIONS
@@ -583,3 +591,6 @@ eventsSelected_preBDT_withtau_veto = {
     "p8_ee_Zmumu_ecm91":12,
     "p8_ee_Zee_ecm91":6,
 }
+
+# b-hadrons from PDG API - background_analysis_root.get_list_b_hadrons(np.arange(0,500000)) - copied here as takes 12 mins to run [searches for all hadrons with b or B in their name]
+Bhadron_MC_PDG_ID = [511, 513, 515, 521, 523, 525, 531, 533, 535, 541, 551, 555, 3122, 3124, 3126, 3128, 4122, 5112, 5114, 5122, 5132, 5212, 5214, 5222, 5224, 5232, 5332, 10113, 10213, 10551, 10553, 13122, 13124, 13126, 14122, 20553, 23122, 23124, 23126, 33122, 43122, 53122, 100551, 100555, 104122, 110551, 110553, 120553, 200555, 204126, 220553]

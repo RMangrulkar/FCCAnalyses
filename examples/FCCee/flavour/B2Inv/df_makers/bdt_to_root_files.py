@@ -41,7 +41,7 @@ BDT_params_dict = {"config_bdtopts": cfg.optimised_bdt_lh_opts,
                    "features_list_name": "bdtlh-vars-v1",
                    "bdt_label": "_lh"}
 
-
+'''
 samples = ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu"] #["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu"]#cfg.sample_allocations["Bu2lnu_background"]# MUST BE A LIST 
 runmode = "Bu2lnu_background_no_lepton_veto"
 data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) 
@@ -59,3 +59,18 @@ runmode ="process_with_MC_full_prelim"
 data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
 data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)
 
+samples = ["p8_ee_Zcc_ecm91"]# MUST BE A LIST 
+runmode ="process_with_MC_full_prelim"
+data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
+data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)
+
+samples = cfg.sample_allocations["light_hadronic_background"]# MUST BE A LIST 
+runmode ="process_with_MC_full_prelim"
+data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
+data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)
+'''
+
+samples = cfg.sample_allocations["combined_signal"]# MUST BE A LIST 
+runmode ="process_with_MC_full_prelim"
+data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
+data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)

@@ -318,7 +318,6 @@ quark_dictionary = {"b":5,
 
 
 
-
 ##############################
 ## SAMPLE OPTIONS
 ##############################
@@ -331,9 +330,11 @@ background_samples = [
     "p8_ee_Zmumu_ecm91",
     "p8_ee_Zee_ecm91",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu", #note this isn't it's own sample (us just the MuNuNu sample with no SS lepton veto) but will be treated as one
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu", #note this isn't it's own sample (us just the MuNuNu sample with no SS lepton veto) but will be treated as one
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"]
 
@@ -350,24 +351,26 @@ sample_allocations = {
     "leptonic_background": ["p8_ee_Ztautau_ecm91","p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
     "tau_background":  ["p8_ee_Ztautau_ecm91"],
     "light_leptonic_background": ["p8_ee_Zmumu_ecm91","p8_ee_Zee_ecm91"],
-    "Bu2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu"],
-    "Bc2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
-    "B2lnu_background_combined":["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "Bu2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu"],
+    "Bc2lnu_background": ["p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "B2lnu_background_combined":["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "derived_B2lnu_samples":["p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu"],
     "bb_only":    ["p8_ee_Zbb_ecm91"],
     "ud_only": ["p8_ee_Zud_ecm91"], 
     "Bssignal":     ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu"],
     "Bdsignal":   ["p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],#want the signal last here so that it's plotted on top in binning plots
-    "high_stats_sample": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
+    "high_stats_sample": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
     "mid_stats_sample":["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU"],    
     "low_stats_sample":["p8_ee_Zud_ecm91", ]
     
 }
 
 
-
 exclusive_backgrounds = sample_allocations["Bu2lnu_background"] + sample_allocations["Bc2lnu_background"]
 
+samples_to_derive_new_Tau2HNu = {"p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu":"p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu",
+                                 "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu":"p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu"}
 
 sample_colors = {
     "combined_signal": plt.cm.Blues( np.linspace(0, 1, 6)[3:-1] ),
@@ -380,8 +383,8 @@ sample_colors = {
     "tau_background": plt.cm.tab20c(12),#[ plt.cm.tab20b((4+ np.linspace(0, 1, 5)[1])/5 ) ],
     "leptonic_background": plt.cm.tab20c([12,13,14]),#plt.cm.tab20b( (4+np.linspace(0, 1, 5)[1:-1]) /5 ),
     "light_leptonic_background": plt.cm.tab20c([13,14]),#plt.cm.tab20b((4+ np.linspace(0, 1, 5)[2:-1])/5 )
-    "Bu2lnu_background":plt.cm.tab20b([4,5,6]),
-    "Bc2lnu_background": plt.cm.tab20b([8,9,10]),
+    "Bu2lnu_background":plt.cm.tab20b([4,5,6,7]),
+    "Bc2lnu_background": plt.cm.tab20b([8,9,10,11]),
     "B2lnu_background_combined":"thistle", #"mistyrose",#, #"lightgrey",#
 }
 
@@ -448,10 +451,14 @@ titles = {
     "light_hadronic_background": "Total light hadronic background",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":r"$B^+ \to [\mu^+ \nu_{\mu}\bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu_oneprong_tau":r"$B^+ \to [one-prong]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu_1prong_leptonic_tau":r"$B^+ \to [e^+/\mu^+ \nu_{e/\mu} \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu":r"$B^+ \to [h^+ \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":r"$B^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":r"$B^+ \to \mu^+ \nu_{\mu} $",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":r"$B_c^+ \to [\mu^+ \nu_{\mu}\bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu_oneprong_tau":r"$B_c^+ \to [one-prong]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu_1prong_leptonic_tau":r"$B_c^+ \to [e^+/\mu^+ \nu_{e/\mu} \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu":r"$B_c^+ \to [h^+ \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":r"$B_c^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":r"$B_c^+ \to \nu_{\mu} \mu^+$",
     "B2lnu_background_combined":r"$B_{(c)}^+ \to l^+ \nu_l $",
@@ -474,9 +481,11 @@ prod_frac = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": LEP_prod_fracs["Bs"],
     "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": LEP_prod_fracs["Bd"],
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":LEP_prod_fracs["Bu"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu":LEP_prod_fracs["Bu"],
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":LEP_prod_fracs["Bu"],
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":LEP_prod_fracs["Bu"],
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":LEP_prod_fracs["Bc"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu":LEP_prod_fracs["Bc"],
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":LEP_prod_fracs["Bc"],
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":LEP_prod_fracs["Bc"],
 }
@@ -502,12 +511,14 @@ branching_fractions = {
     "p8_ee_Zmumu_ecm91":(0.033662,0.000066),
     "p8_ee_Zee_ecm91":(0.033632,0.000042),
     #Below are all BF from Bu (ie. doesnt include Z2bb or hadronation etc)
-    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":(1.89551e-5,0.41738e-5), 
-    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu_modelling_oneprong":(5.09248e-5,1.12131e-5), # ie. tau 2 nu (h+mu+e)
-    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":(1.6568e-5,0.3649e-5),# hhh final state
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu":(1.89551e-5,0.41738e-5),
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu_modelling_oneprong_leptonic":(3.83898e-5,0.84530e-5), # ie. tau 2 nu (mu+e) 
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu": (1.25459e-5,0.27629e-5),
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU":(1.6568e-5,0.3649e-5),# hhh final state >=0 neutrals >=0 KL (ie. 15.2% for tau bf)
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu":(4.7e-7,0.7e-7), #Theory pred. from https://arxiv.org/pdf/hep-ex/0611045
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu":(3.98231e-3,0.15678e-3), # Thry pred https://arxiv.org/pdf/2305.02998
-    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu_modelling_oneprong":(1.06989e-2,0.04208e-2), # Thry pred https://arxiv.org/pdf/2305.02998
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu_modelling_oneprong_leptonic":(8.06538e-3,0.31724e-3), # Thry pred https://arxiv.org/pdf/2305.02998
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu": (2.63579e-3,0.10422e-3),
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":(3.4808e-3,0.1375e-3), # Thry pred https://arxiv.org/pdf/2305.02998
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":(1e-4,1e-4), # I cant find a theory prediction so assume scaling of Bc2taunu same as between bu2taunu and bu2munu
 }
@@ -523,26 +534,26 @@ BELLEII_projected_limits = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu':1.1e-5, 'p8_ee_Zbb_
 BELLEII_projected_lumi = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu':r'5 ab$^{-1}$ $\Upsilon(5S)$', 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu':r'50 ab$^{-1}$ $\Upsilon(4S)$'}
 
 
-prelim_cut_effs = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu': (0.876092, 0.00023297513169984185),
- 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu': (0.8826863636363637, 0.00021695324861459309),
- 'p8_ee_Zbb_ecm91': (0.05767557918542743, 1.112995134404382e-05),
- 'p8_ee_Zcc_ecm91': (0.041443724884963125, 8.915504876430558e-06), 
- 'p8_ee_Zss_ecm91': (0.04597152896410762, 9.367329187236206e-06),  
- 'p8_ee_Zud_ecm91': (0.024312405153808926, 6.902017868782445e-06),
- 'p8_ee_Ztautau_ecm91': (0.04472734, 2.0670463638239323e-05), 
- 'p8_ee_Zmumu_ecm91': (2.29e-06, 1.5140986460763067e-07), 
- 'p8_ee_Zee_ecm91': (1.4e-06, 1.1842710888770522e-07)
-}
+#prelim_cut_effs = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu': (0.876092, 0.00023297513169984185),
+# 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu': (0.8826863636363637, 0.00021695324861459309),
+# 'p8_ee_Zbb_ecm91': (0.05767557918542743, 1.112995134404382e-05),
+# 'p8_ee_Zcc_ecm91': (0.041443724884963125, 8.915504876430558e-06), 
+# 'p8_ee_Zss_ecm91': (0.04597152896410762, 9.367329187236206e-06),  
+# 'p8_ee_Zud_ecm91': (0.024312405153808926, 6.902017868782445e-06),
+# 'p8_ee_Ztautau_ecm91': (0.04472734, 2.0670463638239323e-05), 
+# 'p8_ee_Zmumu_ecm91': (2.29e-06, 1.5140986460763067e-07), 
+# 'p8_ee_Zee_ecm91': (1.4e-06, 1.1842710888770522e-07)
+#}
 
-Presel_eff_incl_tau = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_eff': (0.8591695,0.00024596470709481455),
- 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_eff': (0.8659218181818182,0.00022972437147417146),
- 'p8_ee_Zbb_ecm91_eff': (0.05682641759221219,1.1052690619586802e-05),
- 'p8_ee_Zcc_ecm91_eff': (0.039435947543960743,8.705967643483914e-06),
- 'p8_ee_Zss_ecm91_eff': (0.041542190314042576,8.925279735547131e-06),
- 'p8_ee_Zud_ecm91_eff': (0.021884987304170968, 6.556541853171283e-06),
- 'p8_ee_Ztautau_ecm91_eff': (3.434e-05,5.860146762460286e-07),
- 'p8_ee_Zmumu_ecm91_eff': (1.2e-07,3.49999975928571e-08),
- 'p8_ee_Zee_ecm91_eff': (6e-08, 2.4999999029999996e-08)}
+#Presel_eff_incl_tau = {'p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu_eff': (0.8591695,0.00024596470709481455),
+# 'p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu_eff': (0.8659218181818182,0.00022972437147417146),
+# 'p8_ee_Zbb_ecm91_eff': (0.05682641759221219,1.1052690619586802e-05),
+# 'p8_ee_Zcc_ecm91_eff': (0.039435947543960743,8.705967643483914e-06),
+# 'p8_ee_Zss_ecm91_eff': (0.041542190314042576,8.925279735547131e-06),
+# 'p8_ee_Zud_ecm91_eff': (0.021884987304170968, 6.556541853171283e-06),
+# 'p8_ee_Ztautau_ecm91_eff': (3.434e-05,5.860146762460286e-07),
+# 'p8_ee_Zmumu_ecm91_eff': (1.2e-07,3.49999975928571e-08),
+# 'p8_ee_Zee_ecm91_eff': (6e-08, 2.4999999029999996e-08)}
 
 eventsProcessed = {
     "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 2000000,
@@ -555,9 +566,11 @@ eventsProcessed = {
     "p8_ee_Zmumu_ecm91":100000000,
     "p8_ee_Zee_ecm91":100000000,
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu": 1000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu":1000000,#derived from p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu sample - therefore same number of eventsProcessed for eff
     "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU": 10000000,
     "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu": 10000000,
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu": 5000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu":5000000,#derived from p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu sample - therefore same number of eventsProcessed for eff
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU": 10900000,
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu": 10000000,
 }
@@ -568,29 +581,33 @@ eventsProcessed_with_MC_full_prelim = {
     "p8_ee_Zss_ecm91" : 174950845,
     "p8_ee_Zud_ecm91" : 245719072,}
 
-eventsSelected_preBDT_notau_veto = { #nb excluding tau veto
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1752184,
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1941910,
-    "p8_ee_Zbb_ecm91":25304505,
-    "p8_ee_Zcc_ecm91":20713014,
-    "p8_ee_Zss_ecm91":22977759,
-    "p8_ee_Zud_ecm91":12106385,#12046354,IDK why this was the initial number in here, I think a typo - these also arent used anywhere I dont think so it's not super importnat
-    "p8_ee_Ztautau_ecm91":4472734,
-    "p8_ee_Zmumu_ecm91":229,
-    "p8_ee_Zee_ecm91":140,
-}
+#eventsSelected_preBDT_notau_veto = { #nb excluding tau veto
+#    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1752184,
+#    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1941910,
+#    "p8_ee_Zbb_ecm91":25304505,
+#    "p8_ee_Zcc_ecm91":20713014,
+#    "p8_ee_Zss_ecm91":22977759,
+#    "p8_ee_Zud_ecm91":12106385,#12046354,IDK why this was the initial number in here, I think a typo - these also arent used anywhere I dont think so it's not super importnat
+#    "p8_ee_Ztautau_ecm91":4472734,
+#    "p8_ee_Zmumu_ecm91":229,
+#    "p8_ee_Zee_ecm91":140,
+#}
 
-eventsSelected_preBDT_withtau_veto = { 
-    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1718339,
-    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1905028,
-    "p8_ee_Zbb_ecm91":24931945,
-    "p8_ee_Zcc_ecm91":19709554,
-    "p8_ee_Zss_ecm91":20763861,
-    "p8_ee_Zud_ecm91":10897650,
-    "p8_ee_Ztautau_ecm91":3434,
-    "p8_ee_Zmumu_ecm91":12,
-    "p8_ee_Zee_ecm91":6,
-}
+#eventsSelected_preBDT_withtau_veto = { 
+#    "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu": 1718339,
+#    "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": 1905028,
+#    "p8_ee_Zbb_ecm91":24931945,
+#    "p8_ee_Zcc_ecm91":19709554,
+#    "p8_ee_Zss_ecm91":20763861,
+#    "p8_ee_Zud_ecm91":10897650,
+#    "p8_ee_Ztautau_ecm91":3434,
+#    "p8_ee_Zmumu_ecm91":12,
+#    "p8_ee_Zee_ecm91":6,
+#}
 
 # b-hadrons from PDG API - background_analysis_root.get_list_b_hadrons(np.arange(0,500000)) - copied here as takes 12 mins to run [searches for all hadrons with b or B in their name]
-Bhadron_MC_PDG_ID = [511, 513, 515, 521, 523, 525, 531, 533, 535, 541, 551, 555, 3122, 3124, 3126, 3128, 4122, 5112, 5114, 5122, 5132, 5212, 5214, 5222, 5224, 5232, 5332, 10113, 10213, 10551, 10553, 13122, 13124, 13126, 14122, 20553, 23122, 23124, 23126, 33122, 43122, 53122, 100551, 100555, 104122, 110551, 110553, 120553, 200555, 204126, 220553]
+#Bhadron_MC_PDG_ID = [511, 513, 515, 521, 523, 525, 531, 533, 535, 541, 551, 555, 3122, 3124, 3126, 3128, 4122, 5112, 5114, 5122, 5132, 5212, 5214, 5222, 5224, 5232, 5332, 10113, 10213, 10551, 10553, 13122, 13124, 13126, 14122, 20553, 23122, 23124, 23126, 33122, 43122, 53122, 100551, 100555, 104122, 110551, 110553, 120553, 200555, 204126, 220553]
+
+#Taken by hand straight from PDG MC numbering pdf as also had lambdas above
+Bhadron_MC_PDG_ID = [511, 521, 10511, 10521, 513, 523, 10513, 10523,  20513, 20523, 515, 525, 531, 10531, 533, 10533, 20533, 535, 541, 10541, 543, 10543, 20543, 545, 551, 10551, 100551, 110551, 200551, 210551, 553, 10553, 20553, 30553, 100553, 110553, 120553, 130553, 200553, 210553, 220553, 300553, 9000553, 9010553, 555, 10555, 20555, 100555, 110555, 120555, 200555, 557, 100557,5122, 5112, 5212, 5222, 5114, 5214, 5224, 5132, 5232, 5312, 5322, 5314, 5324, 5332, 5334, 5142, 5242, 5412, 5422, 5414, 5424, 5342, 5432, 5434, 5442, 5444, 5512, 5522, 5514, 5524, 5532, 5534, 5542, 5544,  5554]
+Chadron_MC_PDG_ID = [411, 421, 10411, 10421, 413, 423, 10413, 10423, 20413, 20423, 415,  425, 431, 10431, 433 , 10433,  20433 ,  435, 441, 10441, 100441, 443, 10443, 20443, 100443,  30443, 9000443,  9010443, 9020443, 445, 100445,4122, 4222, 4212, 4112, 4224, 4214, 4114,4232 , 4132, 4322, 4312 ,  4324 , 4314 , 4332,  4334 , 4412 , 4422 ,  4414 , 4424 ,  4432 ,  4434, 4444]

@@ -45,7 +45,7 @@ def make_final_binning_plot_extra_bkgs(df, interp_N_dict,
                                        eventsProcessed_dict = cfg.eventsProcessed, 
                                        histbins=(2,2), 
                                        components_to_plot =  ['hadronic_background','combined_signal'],
-                                       model_all_1prong_tau = False, 
+                                       model_all_1prong_leptonic_tau = True, 
                                        binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                                        plot_signal_components=False,  
                                        nMC_plots_path=None, 
@@ -165,7 +165,7 @@ def make_final_binning_plot_extra_bkgs(df, interp_N_dict,
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC, eventsProcessed_dict = eventsProcessed_dict)
-    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_tau = model_all_1prong_tau)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau)
 
     #check if have additional backgrounds to inclusive ones (ie. compare samples to inclusive backgrounds list in config)
     if len(list(set(samples).intersection(cfg.exclusive_backgrounds)))>0:
@@ -214,9 +214,9 @@ def make_final_binning_plot_extra_bkgs(df, interp_N_dict,
                         h = per_sample_n_expect_dict[sample]
                         hist_opts = histogram_settings()[allocation]
                         
-                        if model_all_1prong_tau==True:
+                        if model_all_1prong_leptonic_tau==True:
                             if sample in ("p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu"):
-                                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}_oneprong_tau"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}_1prong_leptonic_tau"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                             else:
                                 plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                         else:
@@ -318,7 +318,7 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
                                        eventsProcessed_dict = cfg.eventsProcessed, 
                                        histbins=(2,2), 
                                        components_to_plot =  ['hadronic_background','combined_signal'], 
-                                       model_all_1prong_tau = False,
+                                       model_all_1prong_leptonic_tau = True,
                                        binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                                        plot_signal_components=False,  
                                        nMC_plots_path=None, 
@@ -489,7 +489,7 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC, eventsProcessed_dict = eventsProcessed_dict)
-    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_tau = model_all_1prong_tau)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau)
 
     #check if have additional backgrounds to inclusive ones (ie. compare samples to inclusive backgrounds list in config)
     if len(list(set(samples).intersection(cfg.exclusive_backgrounds)))>0:
@@ -552,14 +552,14 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
                         h = per_sample_n_expect_dict[sample]
                         hist_opts = histogram_settings()[allocation]
 
-                        if model_all_1prong_tau==True:
+                        if model_all_1prong_leptonic_tau==True:
                             if sample in ("p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu"):
-                                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}_oneprong_tau"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
+                                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}_1prong_leptonic_tau"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                             else:
                                 plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])
                         else:
                                 plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[h[1,0],h[0,0],h[0,1],h[1,1]],label=cfg.titles[f"{sample}"], bottom=tot_arr, width=1.0, lw=1.5,edgecolor =hist_opts['edgecolor'][i] , facecolor= hist_opts['facecolor'][i], hatch=hist_opts['hatch'][i])   
-                        
+
                         i+=1
                         tot_arr = np.add(tot_arr, [h[1,0],h[0,0],h[0,1],h[1,1]])
 
@@ -617,7 +617,7 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
                 #add systematic error to B - error bar
                 #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', color='black', alpha=0.4, width=1)
                 #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='black')            
-                plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='none', hatch='///')            
+                #plt.bar([x[1,0],x[0,0],x[0,1],x[1,1]],[2*i for i in [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]], bottom =np.subtract([B[1,0],B[0,0],B[0,1],B[1,1]], [B_err[1,0],B_err[0,0],B_err[0,1],B_err[1,1]]), label=r'$Z \to q \bar{q}$ background systematic', facecolor='none',  width=1, edgecolor='none', hatch='///')            
                 
 
                 plt.legend()
@@ -630,7 +630,7 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
 
 
 
-def likelihood_model_builder_extra_bkgs(df, interp_N_dict, cut_opt_samples=None, componenets_in_FOM=['hadronic_background','combined_signal'], model_all_1prong_tau = False, signal_BF=1e-6,
+def likelihood_model_builder_extra_bkgs(df, interp_N_dict, cut_opt_samples=None, componenets_in_FOM=['hadronic_background','combined_signal'], model_all_1prong_leptonic_tau = True, signal_BF=1e-6,
                              lrange_interp_N_dict=(0.999,1) ,hrange_interp_N_dict=(0.999,1),nlh=200,bins = (2,2),
                              ntoys = 250,
                              fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None):
@@ -640,8 +640,8 @@ def likelihood_model_builder_extra_bkgs(df, interp_N_dict, cut_opt_samples=None,
 
     """
 
-    _, S, B, S_err, B_err, signal_BF,opt_l_cut,opt_h_cut = make_final_binning_plot_extra_bkgs(df, interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components_to_plot = componenets_in_FOM ,model_all_1prong_tau = model_all_1prong_tau, binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=lcut, hcut=hcut)
-    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err,_,_,_ = make_final_binning_plot_extra_bkgs(df, interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components_to_plot =  componenets_in_FOM, model_all_1prong_tau = model_all_1prong_tau, binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=opt_l_cut, hcut=opt_h_cut)
+    _, S, B, S_err, B_err, signal_BF,opt_l_cut,opt_h_cut = make_final_binning_plot_extra_bkgs(df, interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components_to_plot = componenets_in_FOM ,model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=lcut, hcut=hcut)
+    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err,_,_,_ = make_final_binning_plot_extra_bkgs(df, interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components_to_plot =  componenets_in_FOM, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=opt_l_cut, hcut=opt_h_cut)
     poisson_expectation = B + S
     overall_background_error = onebin_B_err.item()/onebin_B.item()  #need fractional error as it propagates through on scale factor                            
 
@@ -820,7 +820,7 @@ def likelihood_model_builder_extra_bkgs(df, interp_N_dict, cut_opt_samples=None,
 
 
 # Note the ONLY changes compated to likelihood_model_builder_extra_bkgs is that make_final_binning_plot_extra_bkgs is replaced by make_final_binning_plot_extra_bkgs_nodata
-def likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=['hadronic_background','combined_signal'], model_all_1prong_tau = False, signal_BF=1e-6,
+def likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=['hadronic_background','combined_signal'], model_all_1prong_leptonic_tau = True, signal_BF=1e-6,
                              lrange_interp_N_dict=(0.999,1) ,hrange_interp_N_dict=(0.999,1),nlh=200,bins = (2,2),
                              ntoys = 250,
                              fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None):
@@ -831,8 +831,8 @@ def likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=No
     """
 
 
-    _, S, B, S_err, B_err, signal_BF,opt_l_cut,opt_h_cut = make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components_to_plot = componenets_in_FOM ,model_all_1prong_tau = model_all_1prong_tau, binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=lcut, hcut=hcut)
-    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err,_,_,_ = make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components_to_plot =  componenets_in_FOM,model_all_1prong_tau = model_all_1prong_tau, binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=opt_l_cut, hcut=opt_h_cut)
+    _, S, B, S_err, B_err, signal_BF,opt_l_cut,opt_h_cut = make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=bins, components_to_plot = componenets_in_FOM ,model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, binned_x_axis = x_values,nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=lcut, hcut=hcut)
+    _, onebin_S, onebin_B, onebin_S_err, onebin_B_err,_,_,_ = make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,cut_opt_samples=cut_opt_samples, lrange_interp_N_dict=lrange_interp_N_dict ,hrange_interp_N_dict=hrange_interp_N_dict,signal_BF=signal_BF, nlh=nlh,eventsProcessed_dict = cfg.eventsProcessed , histbins=1, components_to_plot =  componenets_in_FOM,model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, binned_x_axis = x_values, nMC_plots_path=None, final_plot_path = None, logpath = logpath, lcut=opt_l_cut, hcut=opt_h_cut)
     poisson_expectation = B + S
     overall_background_error = onebin_B_err.item()/onebin_B.item()  #need fractional error as it propagates through on scale factor                            
 
@@ -1009,7 +1009,7 @@ def likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=No
 
     return av_significance_for_bf, stdev_significance_for_bf
 
-def calculate_BF_sensitivities_extra_bkgs(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=None,model_all_1prong_tau=False,  lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),incl_other_syst=True, incl_toys_fit=False, full_df=None, ntoys=200,plot=True,saveplotpath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999',toyplotpath = None, dict_path = 'outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999'):
+def calculate_BF_sensitivities_extra_bkgs(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=None,model_all_1prong_leptonic_tau=True,  lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),incl_other_syst=True, incl_toys_fit=False, full_df=None, ntoys=200,plot=True,saveplotpath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999',toyplotpath = None, dict_path = 'outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999'):
     
     #create dictionaries to store results
     max_FOM_arr = np.zeros(len(sig_BFs))
@@ -1040,7 +1040,7 @@ def calculate_BF_sensitivities_extra_bkgs(interp_N_dict, cut_opt_samples=None, c
         else:
             samples_in_FOM = None 
 
-        FOM, err_FOM, S, B, S_err, B_err, sig_BF, l_optcut, h_optcut = calc_SB_from_opt_cut(interp_N_dict, FOM_arr, lsearch, hsearch, sig_BF, SB_samples=samples_in_FOM, model_all_1prong_tau = model_all_1prong_tau,incl_other_syst = True)
+        FOM, err_FOM, S, B, S_err, B_err, sig_BF, l_optcut, h_optcut = calc_SB_from_opt_cut(interp_N_dict, FOM_arr, lsearch, hsearch, sig_BF, SB_samples=samples_in_FOM, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau,incl_other_syst = True)
         
 
         max_FOM_arr[i] = FOM
@@ -1062,9 +1062,9 @@ def calculate_BF_sensitivities_extra_bkgs(interp_N_dict, cut_opt_samples=None, c
                 else:
                     #only produce plots for toys every 20th BF
                     if i % 20 == 0:
-                        av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs(full_df,  interp_N_dict, cut_opt_samples =cut_opt_samples,  componenets_in_FOM=componenets_in_FOM, model_all_1prong_tau = model_all_1prong_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
+                        av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs(full_df,  interp_N_dict, cut_opt_samples =cut_opt_samples,  componenets_in_FOM=componenets_in_FOM, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
                     else:
-                        av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs(full_df, interp_N_dict,cut_opt_samples =cut_opt_samples,   componenets_in_FOM=componenets_in_FOM,model_all_1prong_tau = model_all_1prong_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
+                        av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs(full_df, interp_N_dict,cut_opt_samples =cut_opt_samples,   componenets_in_FOM=componenets_in_FOM,model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
                     
                     toy_BFs.append(sig_BFs[i])
                     toy_significance.append(av_significance_for_bf[0])
@@ -1146,7 +1146,7 @@ def calculate_BF_sensitivities_extra_bkgs(interp_N_dict, cut_opt_samples=None, c
 
 
 # Again only changes here are replacing likelihood_model_builder_extra_bkgs with likelihood_model_builder_extra_bkgs_nodata and removing associated df requreiements
-def calculate_BF_sensitivities_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=None, model_all_1prong_tau = False,  lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),incl_other_syst=True, incl_toys_fit=False, ntoys=200,plot=True,saveplotpath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999',toyplotpath = None, dict_path = 'outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999'):
+def calculate_BF_sensitivities_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=None, model_all_1prong_leptonic_tau = True,  lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),incl_other_syst=True, incl_toys_fit=False, ntoys=200,plot=True,saveplotpath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999',toyplotpath = None, dict_path = 'outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999'):
     
     #create dictionaries to store results
     max_FOM_arr = np.zeros(len(sig_BFs))
@@ -1177,7 +1177,7 @@ def calculate_BF_sensitivities_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=
         else:
             samples_in_FOM = None 
 
-        FOM, err_FOM, S, B, S_err, B_err, sig_BF, l_optcut, h_optcut = calc_SB_from_opt_cut(interp_N_dict, FOM_arr, lsearch, hsearch, sig_BF, SB_samples=samples_in_FOM,model_all_1prong_tau = model_all_1prong_tau,incl_other_syst = True)
+        FOM, err_FOM, S, B, S_err, B_err, sig_BF, l_optcut, h_optcut = calc_SB_from_opt_cut(interp_N_dict, FOM_arr, lsearch, hsearch, sig_BF, SB_samples=samples_in_FOM,model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau,incl_other_syst = True)
         
 
         max_FOM_arr[i] = FOM
@@ -1195,9 +1195,9 @@ def calculate_BF_sensitivities_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=
 
             #only produce plots for toys every 20th BF
             if i % 20 == 0:
-                av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples =cut_opt_samples,  componenets_in_FOM=componenets_in_FOM, model_all_1prong_tau = model_all_1prong_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
+                av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples =cut_opt_samples,  componenets_in_FOM=componenets_in_FOM, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=toyplotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=toyplotpath)
             else:
-                av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs_nodata(interp_N_dict,cut_opt_samples =cut_opt_samples,   componenets_in_FOM=componenets_in_FOM, model_all_1prong_tau = model_all_1prong_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
+                av_significance_for_bf, stdev_significance_for_bf =likelihood_model_builder_extra_bkgs_nodata(interp_N_dict,cut_opt_samples =cut_opt_samples,   componenets_in_FOM=componenets_in_FOM, model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau, signal_BF=BF, lrange_interp_N_dict=lrange_plot ,hrange_interp_N_dict=hrange_plot,nlh=nlh,bins = (2,2), ntoys = ntoys,fit_plotpath=None, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None)
             
             toy_BFs.append(sig_BFs[i])
             toy_significance.append(av_significance_for_bf[0])
@@ -1278,7 +1278,7 @@ def calculate_BF_sensitivities_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=
     return max_FOM_arr, light_cut_arr, heavy_cut_arr, BFs_arr, CL
 
 
-def calc_BF_sig_stderrs_nodata(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=None, model_all_1prong_tau=False, lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),plot=True,saveplotpath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999',dict_path = 'outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999', plot_dotted_line_list =  ["noBsyst","5percent_Bsyst" ,"10percent_Bsyst"]):
+def calc_BF_sig_stderrs_nodata(interp_N_dict, cut_opt_samples=None, componenets_in_FOM=None, model_all_1prong_leptonic_tau=True, lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),plot=True,saveplotpath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999',dict_path = 'outputs/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/no_smoothing/optimisation/0999', plot_dotted_line_list =  ["noBsyst","5percent_Bsyst" ,"10percent_Bsyst"]):
     
     #create dictionaries to store results
     max_FOM_arr = np.zeros(len(sig_BFs))
@@ -1306,7 +1306,7 @@ def calc_BF_sig_stderrs_nodata(interp_N_dict, cut_opt_samples=None, componenets_
         else:
             samples_in_FOM = None 
 
-        FOM, err_FOM, S, B, S_err, B_err, sig_BF, l_optcut, h_optcut = calc_SB_from_opt_cut(interp_N_dict, FOM_arr, lsearch, hsearch, sig_BF, SB_samples=samples_in_FOM,model_all_1prong_tau = model_all_1prong_tau,incl_other_syst = True)
+        FOM, err_FOM, S, B, S_err, B_err, sig_BF, l_optcut, h_optcut = calc_SB_from_opt_cut(interp_N_dict, FOM_arr, lsearch, hsearch, sig_BF, SB_samples=samples_in_FOM,model_all_1prong_leptonic_tau = model_all_1prong_leptonic_tau,incl_other_syst = True)
         
         light_cut_arr[i] = l_optcut
         heavy_cut_arr[i] = h_optcut 
@@ -1418,7 +1418,7 @@ def plot_BF_sig_stderrs(S,B,sig_BFs,savepath,plot_dotted_line_list= ["noBsyst","
     plt.xlabel(x_label)
     plt.ylabel(r'Significance')
     plt.xscale('log')
-    plt.ylim(0,6)
+    plt.ylim(0,6) 
     plt.xlim(1e-9,2e-5) #cut optimisation not really valid beyond this due to spline range
     plt.legend(fontsize = 11)
     plt.savefig(os.path.join(set_outputpath(savepath),f'FOMvsBF_StandardSysts.pdf'))

@@ -58,16 +58,16 @@ def histogram_settings():
         samples = cfg.sample_allocations[allocation]
         if allocation=='combined_signal':
             hist_settings[allocation]['edgecolor'] =cfg.sample_colors[allocation]
-            hist_settings[allocation]['facecolor'] = ['none','none']
+            hist_settings[allocation]['facecolor'] = ['none'] * len(cfg.sample_colors[allocation])
             hist_settings[allocation]['hatch'] = cfg.sample_hatches[allocation]
-        elif allocation == 'hadronic_background':
+        #elif allocation == 'hadronic_background':
+        #    hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
+        #    hist_settings[allocation]['edgecolor'] = ['none'] * len(cfg.sample_colors[allocation])
+        #    hist_settings[allocation]['hatch'] =  [None] * len(cfg.sample_colors[allocation])#[None,None,None,None] 
+        elif allocation in ['hadronic_background','Bu2lnu_background' , 'Bc2lnu_background']:
             hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
-            hist_settings[allocation]['edgecolor'] = ['none','none','none','none'] 
-            hist_settings[allocation]['hatch'] =  [None,None,None,None] 
-        elif allocation in ['Bu2lnu_background' , 'Bc2lnu_background']:
-            hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
-            hist_settings[allocation]['edgecolor'] = ['none','none','none'] 
-            hist_settings[allocation]['hatch'] =  [None,None,None] 
+            hist_settings[allocation]['edgecolor'] = ['none'] * len(cfg.sample_colors[allocation])#['none','none','none','none'] 
+            hist_settings[allocation]['hatch'] =  [None] * len(cfg.sample_colors[allocation])#[None,None,None,None] 
         elif allocation == "B2lnu_background_combined":
             hist_settings[allocation]['facecolor'] = cfg.sample_colors[allocation]
             hist_settings[allocation]['edgecolor'] = 'none'
@@ -104,7 +104,7 @@ def create_N_map(df,lrange=(0.999,1) ,hrange=(0.999,1),nlh_highstats=20, nlh_mid
             nlh = nlh_lowstats
 
         else:
-            raise ValueError("Decay must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
+            raise ValueError(f"Decay {decay} must be classed as either low stats or high stats in config to proceed. The number of points used to interpolate over depends on this.")
 
         lsearch = np.linspace(*lrange,nlh) 
         hsearch = np.linspace(*hrange,nlh)
@@ -561,7 +561,7 @@ def plot_interpolted_effs(interp_N_dict, N_dict, lrange=(0.999,1) ,hrange=(0.999
 
 
   
-def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200, sig_BF=1e-7,incl_other_syst = True):
+def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200, sig_BF=1e-7,incl_other_syst = True, model_all_1prong_leptonic_tau = True):
 
     # check input value for samples want to optimise cut over
     if cut_opt_samples==None:
@@ -601,7 +601,7 @@ def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.999,1
             interp_eff_dict_lh = {decay: interp_eff_dict[decay][l, h] for decay in interp_eff_dict.keys()}
             interp_eff_err_dict_lh = {decay: interp_eff_err_dict[decay][l, h] for decay in interp_eff_err_dict.keys()}
             
-            per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict_lh, interp_eff_err_dict_lh, signal_bf=sig_BF,model_all_1prong_tau=False)
+            per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict_lh, interp_eff_err_dict_lh, signal_bf=sig_BF,model_all_1prong_leptonic_tau=model_all_1prong_leptonic_tau) #model_1prong is kinda irrelevat as only use inclusive samples in cut opt
             S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=incl_other_syst)
 
             S_arr[l,h]=S
@@ -634,7 +634,7 @@ def run_2d_optimisation(interp_N_dict, cut_opt_samples=None,lrange_plot=(0.999,1
     return FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, lsearch, hsearch, sig_BF
 
 
-def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_samples=None,incl_other_syst = True, model_all_1prong_tau=False):
+def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_samples=None,incl_other_syst = True, model_all_1prong_leptonic_tau=True):
 
     # check input value for samples want to optimise cut over
     if SB_samples==None:
@@ -689,7 +689,7 @@ def calc_SB_from_opt_cut(interp_N_dict, FOM, lsearch, hsearch, sig_BF, SB_sample
     
     interp_eff_dict = {decay: interp_eff_dict[decay][l, h] for decay in samples}
     interp_eff_err_dict = {decay: interp_eff_err_dict[decay][l, h] for decay in samples}
-    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict, interp_eff_err_dict, signal_bf=sig_BF, model_all_1prong_tau=model_all_1prong_tau)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err =post_bdt_eff_finder.get_n_expected_components(interp_eff_dict, interp_eff_err_dict, signal_bf=sig_BF, model_all_1prong_leptonic_tau=model_all_1prong_leptonic_tau)
     
     S, B, S_err, B_err = post_bdt_eff_finder.get_total_SB(per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err, incl_other_syst=incl_other_syst)
 
@@ -787,7 +787,7 @@ def plot_2d_optimisation(FOM, err_FOM, S_arr, B_arr, S_error_arr, B_error_arr, l
         plt.savefig(os.path.join(save_path,f'B_slice_heavy.pdf'))
 
 
-def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'],model_all_1prong_tau = False, binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
+def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh = 200, signal_BF=1e-6, eventsProcessed_dict = cfg.eventsProcessed , histbins=(2,2), components =  ['hadronic_background','combined_signal'],model_all_1prong_leptonic_tau = True, binned_x_axis = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]),
                             plot_signal_components=False,  nMC_plots_path=None, final_plot_path = None, pull_type_plot=False, lcut=None, hcut=None, logpath= None):
     #turn BF into title worthy version
     latex_BF = latex_form_exp(signal_BF)
@@ -858,7 +858,7 @@ def make_final_binning_plot(df, interp_N_dict, lrange_interp_N_dict=(0.995,1) ,h
 
     #calculating per bin efficiencies from N MC remaining and convert into per bin S, B and errors (systematics include S and B from efficiency (finite MC size) and BF(Z--> qq) error [based on current measurements - would improve with FCCee])
     efficienies, efficiencies_err, N_dict_MC = post_bdt_eff_finder.get_eff_from_nMC_list(N_dict_MC, eventsProcessed_dict = eventsProcessed_dict)
-    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_tau=model_all_1prong_tau)
+    per_sample_n_expect_dict, per_sample_novereff, per_sample_eff_err, per_sample_frac_BFZbb_err, per_sample_frac_fk_err  =post_bdt_eff_finder.get_n_expected_components(efficienies, efficiencies_err,signal_bf=signal_BF, model_all_1prong_leptonic_tau=model_all_1prong_leptonic_tau)
 
     #check if have additional backgrounds to inclusive ones (ie. compare samples to inclusive backgrounds list in config)
     if len(list(set(samples).intersection(cfg.exclusive_backgrounds)))>0:
@@ -1001,7 +1001,7 @@ def likelihood_model_builder(df, interp_N_dict,  signal_BF=1e-6,
                              lrange_interp_N_dict=(0.995,1) ,hrange_interp_N_dict=(0.995,1),nlh=200,bins = (2,2),
                              ntoys = 250,
                              fit_plotpath=None, x_values = np.array([['A','B'],['C','D']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None):
-    #note no model_all_1prong_tau = model_all_1prong_tau, as not set up for extra B2lnu backgrounds
+    #note no model_all_1prong_tau = model_all_1prong_leptonic_tau, as not set up for extra B2lnu backgrounds
 
     """ 
     likelihood_model_builder(**opts ) will return optimum point from minimising signal error on fit to toys
@@ -1598,7 +1598,8 @@ def sensitivity_CL_plotter(naive_dict, incl_syst_dict, toys_dict = None, x_label
         else:
             plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
 
-
+# Same as sensitivity_CL_plotter function, expcept for toys CL plot use sigma_to_percentage() function on interpolated toy significance (rather than applying it to raw significance then interpolating)
+# works much better for getting smooth CL toys line
 def sensitivity_CL_plotter_v2(naive_dict, incl_syst_dict, toys_dict = None, x_label = r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$',BF_plot_min=2e-9,BF_plot_max=4e-6,comparison_line_sig = None,comparison_line_CL = None,savepath=None,spine_sampling=4):
 
     '''
@@ -1829,8 +1830,8 @@ def sensitivity_CL_plotter_v2(naive_dict, incl_syst_dict, toys_dict = None, x_la
         else:
             plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
 
-
-
+"""
+# trying using PchipInterpolator instead - essentiall no imporvement
 def sensitivity_CL_plotter_monotonic_interp(naive_dict, incl_syst_dict, toys_dict = None, x_label = r'$\mathcal{B}(B_{(s)}^0 \rightarrow$ invisible$)$',BF_plot_min=2e-9,BF_plot_max=4e-6,comparison_line_sig = None,comparison_line_CL = None,savepath=None,spine_sampling=4):
 
     '''
@@ -2065,7 +2066,7 @@ def sensitivity_CL_plotter_monotonic_interp(naive_dict, incl_syst_dict, toys_dic
             plt.savefig(os.path.join(set_outputpath(savepath),f'CLvsBF.pdf'))
 
 
-
+"""
 
 
 

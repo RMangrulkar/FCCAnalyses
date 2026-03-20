@@ -135,7 +135,7 @@ for key in ['Bssignal','Bdsignal']:
     hist_settings[key]['hatch'] = cfg.sample_hatches[key]
 """
 
-def make_maxpK_efficiency_plot(filtered_dict,K_type = ' Signal Side Final State $K$ ($K^\pm$ or $K^0_L$) from PV',savepath=None,plottype=None):
+def make_maxpK_efficiency_plot(filtered_dict,K_type = ' signal-side final-state $K$ ($K^\pm$ or $K^0_L$) from PV',savepath=None,plottype=None):
     dfbs = filtered_dict['bs']
     dfbd = filtered_dict['bd']
     maxp_bs =[np.max(dfbs['Rec_p'][i]) if len(dfbs['Rec_p'][i]) != 0 else -1 for i in range(len(dfbs))]
@@ -162,14 +162,14 @@ def make_maxpK_efficiency_plot(filtered_dict,K_type = ' Signal Side Final State 
     plt.plot(cut_arr,n_remaining_bs,label=cfg.titles['p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu'], color = hist_settings['Bssignal']['color'],lw=2) 
     plt.xlim(0,8)
     plt.legend()
-    plt.xlabel('Cut on $p$/GeV of Highest $p$ '+f'{K_type}')
-    plt.ylabel('Cut Efficiency')
+    plt.xlabel('$p$ [GeV] of the highest momentum '+f'{K_type}')
+    plt.ylabel('Cut efficiency')
     if savepath!=None:
         plt.savefig(os.path.join(set_outputpath(savepath),f'{plottype}_cut_eff.pdf'))
     plt.show()
 
 
-def  make_nK_plot(filtered_dict,K_type = ' Signal Side Final State $K$ ($K^\pm$ or $K^0_L$) from PV',savepath=None,plottype=None):
+def  make_nK_plot(filtered_dict,K_type = ' signal-side final-state $K$ ($K^\pm$ or $K^0_L$) from PV',savepath=None,plottype=None):
     dfbs = filtered_dict['bs']
     dfbd = filtered_dict['bd']
     num_K_bs =[len(dfbs['Rec_p'][i]) for i in range(len(dfbs))]
@@ -187,7 +187,7 @@ def  make_nK_plot(filtered_dict,K_type = ' Signal Side Final State $K$ ($K^\pm$ 
     plt.show()
 
 
-def make_maxpKS_efficiency_plot(KS_dict,K_type = ' Signal Side $K_s^0$',savepath=None,plottype=None):  
+def make_maxpKS_efficiency_plot(KS_dict,K_type = ' signal-side $K_s^0$',savepath=None,plottype=None):  
     dfbs = KS_dict['bs']
     dfbd = KS_dict['bd']
     maxp_bs =[np.max(dfbs['KS_p'][i]) if len(dfbs['KS_p'][i]) != 0 else -1 for i in range(len(dfbs))]
@@ -209,14 +209,14 @@ def make_maxpKS_efficiency_plot(KS_dict,K_type = ' Signal Side $K_s^0$',savepath
     plt.plot(cut_arr,n_remaining_bs,label=cfg.titles['p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu'], color = hist_settings['Bssignal']['color'],lw=2) 
     plt.xlim(0,6)
     plt.legend()
-    plt.xlabel('Cut on $p$/GeV of Highest $p$ '+f'{K_type}')
-    plt.ylabel('Cut Efficiency')
+    plt.xlabel('$p$ [GeV] of the highest momentum '+f'{K_type}')
+    plt.ylabel('Cut efficiency')
     if savepath!=None:
         plt.savefig(os.path.join(set_outputpath(savepath),f'{plottype}_efficiency.pdf'))
     plt.show()
 
 
-def make_nKS_plot(KS_dict,K_type = ' Signal Side $K_s^0$',savepath=None,plottype=None):
+def make_nKS_plot(KS_dict,K_type = ' signal-side $K_s^0$',savepath=None,plottype=None):
     dfbs = KS_dict['bs']
     dfbd = KS_dict['bd']
     num_K_bs =[len(dfbs['KS_p'][i]) for i in range(len(dfbs))]
@@ -363,8 +363,8 @@ if __name__ == "__main__":
     print('--> Saving Charged K plots')
     savepath = 'plots/paper_plots'
     #savepath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/flavour_tagging/'
-    make_maxpK_efficiency_plot(charged_fsK_dict_fromPV,K_type = ' Signal Side Final State $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
-    make_nK_plot(charged_fsK_dict_fromPV,K_type = ' Signal Side Final State $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
+    make_maxpK_efficiency_plot(charged_fsK_dict_fromPV,K_type = ' signal-side final-state $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
+    make_nK_plot(charged_fsK_dict_fromPV,K_type = ' signal-side final-state $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
 
     #################
     # reconstruct Ks#

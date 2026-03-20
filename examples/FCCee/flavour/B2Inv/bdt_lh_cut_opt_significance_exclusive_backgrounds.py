@@ -240,7 +240,7 @@ def make_final_binning_plot_extra_bkgs(df, interp_N_dict,
             plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
             plt.legend()
             plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
-            plt.ylabel('Expected Counts')
+            plt.ylabel('Expected counts')
 
             if pull_type_plot==True:
                 # Bottom axis 
@@ -257,7 +257,7 @@ def make_final_binning_plot_extra_bkgs(df, interp_N_dict,
                 # Clean up sub axis
                 ax_sub.set_xticks([x[1,0],x[0,0],x[0,1],x[1,1]])
                 ax_sub.tick_params(axis='x', which='major', length=0) 
-                ax_sub.set_ylabel('Backgrond Subtracted \n Counts')  
+                ax_sub.set_ylabel('Background-subtracted \n counts')  
                 ax_sub.tick_params(axis='x', which='minor', length=4)  # show edge ticks
                 ax_sub.legend()
 
@@ -578,7 +578,7 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
             plt.tick_params(axis='x', which='minor', length=4)  # show edge ticks
             plt.legend()
             plt.ticklabel_format(axis='y', style='sci', scilimits=(0,0))
-            plt.ylabel('Expected Counts')
+            plt.ylabel('Expected counts')
 
             if pull_type_plot==True:
                 # Bottom axis 
@@ -595,7 +595,7 @@ def make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
                 # Clean up sub axis
                 ax_sub.set_xticks([x[1,0],x[0,0],x[0,1],x[1,1]])
                 ax_sub.tick_params(axis='x', which='major', length=0) 
-                ax_sub.set_ylabel('Backgrond Subtracted \n Counts')  
+                ax_sub.set_ylabel('Background-subtracted \n counts')  
                 ax_sub.tick_params(axis='x', which='minor', length=4)  # show edge ticks
                 ax_sub.legend()
 
@@ -709,12 +709,12 @@ def likelihood_model_builder_extra_bkgs(df, interp_N_dict, cut_opt_samples=None,
                 # --- Main plot (stacked bars) ---
                 ax0 = fig.add_subplot(gs[0])
                 ''' MAYBE CHANGE SO THAT USE bkg_fit etc more'''
-                ax0.bar(x,bkg_fit,label='Fitted B', width=1.0, edgecolor='red', facecolor='none',hatch='///')
-                ax0.bar(x,sig_fit,label='Fitted S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                ax0.bar(x,bkg_fit,label=r'Fitted $B$', width=1.0, edgecolor='red', facecolor='none',hatch='///')
+                ax0.bar(x,sig_fit,label=r'Fitted $S$', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
                 # Error on bkg expectation used as gaussain constraint (ie. fractionalB error * B expected)
                 ax0.bar(x,[2*overall_background_error*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
                 # error bar just contains stat error on toy data
-                ax0.errorbar(x, toy_data_np,yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Pseudoexperiment Data', color='k')
+                ax0.errorbar(x, toy_data_np,yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Pseudoexperiment data', color='k')
 
                 ax0.set_ylabel('Counts')
                 ax0.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
@@ -735,8 +735,8 @@ def likelihood_model_builder_extra_bkgs(df, interp_N_dict, cut_opt_samples=None,
                 ax1 = fig.add_subplot(gs[1], sharex=ax0)
 
                 ax1.errorbar(x, toy_data_np - bkg_fit,yerr=np.sqrt(toy_data_np),xerr=0.5, fmt='.',color='k')
-                ax1.set_ylabel('Backgrond Subtracted \n Counts') 
-                ax1.bar(x,sig_fit,label='Fit S', width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                ax1.set_ylabel('Background-subtracted \n counts') 
+                ax1.bar(x,sig_fit,label=r'Fit $S$', width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
                 #ax1.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],bottom=[-overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
                 ax1.set_xticks(x)
                 ax1.set_xticklabels(x_strings)
@@ -900,12 +900,12 @@ def likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=No
                 # --- Main plot (stacked bars) ---
                 ax0 = fig.add_subplot(gs[0])
                 ''' MAYBE CHANGE SO THAT USE bkg_fit etc more'''
-                ax0.bar(x,bkg_fit,label='Fitted B', width=1.0, edgecolor='red', facecolor='none',hatch='///')
-                ax0.bar(x,sig_fit,label='Fitted S', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                ax0.bar(x,bkg_fit,label=r'Fitted $B$', width=1.0, edgecolor='red', facecolor='none',hatch='///')
+                ax0.bar(x,sig_fit,label=r'Fitted $S$', bottom=[sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
                 # Error on bkg expectation used as gaussain constraint (ie. fractionalB error * B expected)
                 ax0.bar(x,[2*overall_background_error*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], bottom =np.subtract(np.add([sc_b *i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], [sc_s *i for i in [S[1,0],S[0,0],S[0,1],S[1,1]]]),[overall_background_error*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]]), label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
                 # error bar just contains stat error on toy data
-                ax0.errorbar(x, toy_data_np,yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Pseudoexperiment Data', color='k')
+                ax0.errorbar(x, toy_data_np,yerr=[np.sqrt(i) for i in [toy_data[1,0],toy_data[0,0],toy_data[0,1],toy_data[1,1]]],xerr=0.5, fmt='.',label='Pseudoexperiment data', color='k')
 
                 ax0.set_ylabel('Counts')
                 ax0.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
@@ -926,8 +926,8 @@ def likelihood_model_builder_extra_bkgs_nodata(interp_N_dict, cut_opt_samples=No
                 ax1 = fig.add_subplot(gs[1], sharex=ax0)
 
                 ax1.errorbar(x, toy_data_np - bkg_fit,yerr=np.sqrt(toy_data_np),xerr=0.5, fmt='.',color='k')
-                ax1.set_ylabel('Backgrond Subtracted \n Counts') 
-                ax1.bar(x,sig_fit,label='Fit S', width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
+                ax1.set_ylabel('Background-subtracted \n counts') 
+                ax1.bar(x,sig_fit,label=r'Fit $S$', width=1.0, edgecolor=plt.cm.Blues( np.linspace(0, 1, 12)[-4] ) ,hatch='\\\\\\', facecolor='none')
                 #ax1.bar(x,[2*overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]],bottom=[-overall_background_error*sc_b*i for i in [B[1,0],B[0,0],B[0,1],B[1,1]]], label=r'$\sigma_B$', color='black', alpha=0.4, width=1)
                 ax1.set_xticks(x)
                 ax1.set_xticklabels(x_strings)

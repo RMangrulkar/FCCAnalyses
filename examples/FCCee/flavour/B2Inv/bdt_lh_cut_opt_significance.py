@@ -218,7 +218,7 @@ def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_highsta
         if normalised==True:
             im = plt.imshow([[gridded_interp[l][h]/interp_N_dict[decay](lsearchinterp[0], hsearchinterp[0]).item() for h in range(len(hsearchinterp))] for l in range(len(lsearchinterp))], origin='lower')
             if separate_cbar == False:
-                plt.colorbar(label='Interpolated Density')
+                plt.colorbar(label='Interpolated relative efficiency')
 
         else:
             im = plt.imshow(gridded_interp, origin='lower')
@@ -242,7 +242,7 @@ def plot_N(N_dict, interp_N_dict, lrange=(0.995,1) ,hrange=(0.995,1),nlh_highsta
             plt.savefig(os.path.join(set_outputpath(save_path),f'N_interp_{decay}_normalised.pdf'), bbox_inches='tight')
             if separate_cbar ==True:
                 fig2, ax2 = plt.subplots()
-                plt.colorbar(im, ax=ax2, label='Interpolated Density')
+                plt.colorbar(im, ax=ax2, label='Relative efficiency')
                 fig2.tight_layout()
                 ax2.remove()
                 plt.savefig(os.path.join(set_outputpath(save_path),'N_interp_colorbar_density.pdf'), bbox_inches='tight')
@@ -1620,8 +1620,8 @@ def sensitivity_CL_plotter_v2(naive_dict, incl_syst_dict, toys_dict = None, x_la
     print(f'3sigma BF= {naive_three_sigma_BF}')
     print(f'5sigma BF= {naive_five_sigma_BF}')
 
-    line_names = ['Counting \nExperiment','Counting \nExperiment \nIncluding \nSystematic','Binned Fits']
-    line_namesFOM = ['Counting Experiment','Counting Experiment \nIncluding Systematic','Binned Fits']
+    line_names = ['Counting \nexperiment','Counting \nexperiment \nincluding \nsystematic','Binned fits']
+    line_namesFOM = ['Counting experiment','Counting experiment \nincluding systematic','Binned fits']
 
     
 

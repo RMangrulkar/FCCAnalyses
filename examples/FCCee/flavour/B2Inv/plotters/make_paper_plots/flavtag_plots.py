@@ -25,11 +25,11 @@ with open(os.path.join(data_savepath,'flavtag_KS.pkl'), 'rb') as f:
 
 
 #prompt charge K plots
-savepath = 'plots/paper_plots/JHEP_review'
+savepath = 'plots/paper_plots/JHEP_proofs_replies'
 
 #savepath = 'plots/BDTlh_baseline_plus_cut_optimisation/with_tau_veto/flavour_tagging/'
-make_maxpK_efficiency_plot(charged_fsK_dict_fromPV,K_type = ' Signal Side Final State $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
-make_nK_plot(charged_fsK_dict_fromPV,K_type = ' Signal Side Final State $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
+make_maxpK_efficiency_plot(charged_fsK_dict_fromPV,K_type = ' signal-side final-state $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
+make_nK_plot(charged_fsK_dict_fromPV,K_type = ' signal-side final-state $K^\pm$ from PV', savepath=savepath,plottype='chargedK')
 
 
 #KS plots

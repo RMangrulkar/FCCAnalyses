@@ -1,4 +1,5 @@
 import os
+import sys
 import uproot
 import numpy as np
 import awkward as ak
@@ -9,9 +10,11 @@ from matplotlib.lines import Line2D
 from matplotlib.transforms import IdentityTransform
 from matplotlib.legend import Legend
 from matplotlib.offsetbox import AnnotationBbox, DrawingArea
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 plt.rcParams['text.usetex'] = True
 
-path = "../ella_files/for_evt_disp"
+path = "outputs/prelims_incltauveto_evtdisp"
 
 samples = { "Bd" : "Bd.root",
             "Zbb": "bb.root",
@@ -160,7 +163,7 @@ def draw_event_display( file, event_number, elev=None, azim=None, roll=None, cli
     if thrust[2]!=0:
         zz = (-thrust[0]*xx - thrust[1]*yy + d) / thrust[2]
 
-        ax.plot_surface(zz, yy, xx, alpha=0.3, color='0.4', label='Hemisphere Defining Plane', zorder=4, clip_on=False)
+        ax.plot_surface(zz, yy, xx, alpha=0.3, color='0.4', label='Hemisphere defining plane', zorder=4, clip_on=False)
 
         x_corners = [xx[0,0], xx[0,-1], xx[-1,-1], xx[-1,0], xx[0,0]]
         y_corners = [yy[0,0], yy[0,-1], yy[-1,-1], yy[-1,0], yy[0,0]]
@@ -315,8 +318,8 @@ def make_legend():
 
     pv = Line2D([0], [0], marker='o', color='r', label='PV', markerfacecolor='r', markersize=6, lw=0)
     sv = Line2D([0], [0], marker='o', color='g', label='DV', markerfacecolor='g', markersize=3, lw=0)
-    thrust = Line2D([0], [0], color='0.4', linestyle='--', label='Thrust Vector', lw=1.2)
-    hemis = Patch(color='0.4', alpha=0.5, label='Hemisphere Defining Plane')
+    thrust = Line2D([0], [0], color='0.4', linestyle='--', label='Thrust vector', lw=1.2)
+    hemis = Patch(color='0.4', alpha=0.5, label='Hemisphere defining plane')
     bs = Line2D([0], [0], color='b', lw=1.2, label='$B^{0}$')
     nu = Line2D([0], [0], color='b', lw=1.2, ls=':', label=r'$\nu$')
     lep = Line2D([0], [0], color='darkviolet', lw=0.8, label=r'$\mu^{\pm}$, $e^\pm$')
@@ -326,13 +329,13 @@ def make_legend():
     # ax.add_artist(legend)
     ax.legend( handles=[pv, sv, thrust, hemis, bs, nu, lep, had], ncol=4, loc='center' )
     fig.tight_layout()
-    fig.savefig("figs/evt_disp_legend.pdf", bbox_inches="tight")
+    fig.savefig("plots/paper_plots/JHEP_proofs_replies/evt_disp_legend.pdf", bbox_inches="tight")
 
 if __name__ == "__main__":
 
-    draw_event_display( os.path.join( path, samples["Bd"] ), event_choice["Bd"], elev=50, azim=90, clip=[-0.08,1.08,-0.1,1.07], save="figs/evt_disp_Bd.pdf" )
-    draw_event_display( os.path.join( path, samples["Zbb"] ), event_choice["Zbb"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], hemis_stretch=0.8, save="figs/evt_disp_Zbb.pdf" )
-    draw_event_display( os.path.join( path, samples["Zud"] ), event_choice["Zud"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], save="figs/evt_disp_Zud.pdf" )
+    draw_event_display( os.path.join( path, samples["Bd"] ), event_choice["Bd"], elev=50, azim=90, clip=[-0.08,1.08,-0.1,1.07], save="plots/paper_plots/JHEP_proofs_replies/evt_disp_Bd.pdf" )
+    draw_event_display( os.path.join( path, samples["Zbb"] ), event_choice["Zbb"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], hemis_stretch=0.8, save="plots/paper_plots/JHEP_proofs_replies/evt_disp_Zbb.pdf" )
+    draw_event_display( os.path.join( path, samples["Zud"] ), event_choice["Zud"], elev=50, azim=-90, clip=[-0.08,1.08,-0.1,1.07], save="plots/paper_plots/JHEP_proofs_replies/evt_disp_Zud.pdf" )
     make_legend()
 
     plt.show()

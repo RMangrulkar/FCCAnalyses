@@ -205,9 +205,9 @@ def make_the_bloody_plot(var, range, bins, inputpath, samples, normalisation='no
     if xtitle is not None:
         ax.set_xlabel(xtitle)
         if normalisation=='none':
-            ax.set_ylabel("Event Counts")
+            ax.set_ylabel("Event counts")
         elif normalisation=='norm':
-            ax.set_ylabel("Normalised Counts")
+            ax.set_ylabel("Normalised counts")
         elif normalisation=='density':
             ax.set_ylabel("Density")
 

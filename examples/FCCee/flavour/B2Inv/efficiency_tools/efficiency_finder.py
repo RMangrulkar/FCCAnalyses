@@ -149,7 +149,7 @@ def get_efficiencies(inputtype,
     Parameters
     ----------
     inputtype: str, required
-        Choose one of `no_selection`, `prelim_cuts`, `stage1_training` to use from config. To use a custom path pass `custom` with a valid `custompath`.
+        Choose one of `no_selection`, `prelim_cuts` to use from config. To use a custom path pass `custom` with a valid `custompath`.
     further_analysis: bool, optional
         If True, a dictionary of type {sample: (efficiency, error)} is returned, where sample belongs to the specified samples (or default config.samples). Default = True.
     samples: list of str, optional

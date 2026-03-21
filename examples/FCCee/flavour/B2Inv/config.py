@@ -9,13 +9,9 @@ import numpy as np
 # MANDATORY ----> replace the default string with the path to the B2Inv directory in the FCCAnalyses repo
 FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B2Inv/"
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
-SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
+#SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full', 'process_with_MC_full_prelim', 'Bu2lnu_background_no_lepton_veto', 'Bc2lnu_background_no_lepton_veto'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
-
-#BDTh - single hadronic BDT, used to separate signal from all hadronic bkgs in one go
-#BDTl - BDT to discriminate against light hadronic bkgs (u,d,s)
-#BDTmE - BDT to look for missing energy events in events that pass BDTl
+run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full_data', 'process_with_MC_full_prelim', 'Bu2lnu_background_no_lepton_veto', 'Bc2lnu_background_no_lepton_veto'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 
 run_mode = 'Bc2lnu_background_no_lepton_veto'
@@ -70,9 +66,9 @@ processList = {
         "p8_ee_Zcc_ecm91": {"fraction": 0.028, "chunks": 16},
         "p8_ee_Zss_ecm91": {"fraction": 0.028, "chunks": 16},
         "p8_ee_Zud_ecm91": {"fraction": 0.048, "chunks": 32},
-        #"p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 40}, 
-        #"p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
-        #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},    
+        "p8_ee_Ztautau_ecm91": {"fraction": 1., "chunks": 40}, 
+        "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
+        "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100},    
     },
 
     "prelims_incltauveto_evtdisp":{ 
@@ -83,11 +79,11 @@ processList = {
         "p8_ee_Zss_ecm91": {"fraction": 0.0001, "chunks": 1},
         "p8_ee_Zud_ecm91": {"fraction": 0.0001, "chunks": 1},
         "p8_ee_Ztautau_ecm91": {"fraction": 0.1, "chunks":10}, 
-        #"p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
-        #"p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100}, 
+        "p8_ee_Zmumu_ecm91": {"fraction": 1., "chunks": 100},
+        "p8_ee_Zee_ecm91": {"fraction": 1., "chunks": 100}, 
     },
 
-    "prelim_cuts_full": {  # processing all data
+    "prelim_cuts_full_data": {  # processing all data
         "p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1, "chunks": 20},
         "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu": {"fraction": 1, "chunks": 20},
         "p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 800},
@@ -136,11 +132,12 @@ processList = {
 fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
+
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
         "no_selection_taus": os.path.join(FCCAnalysesPath, "outputs/no_selection_taus/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts_500k/"),
         "prelims_incltauveto_evtdisp": os.path.join(FCCAnalysesPath, "outputs/prelims_incltauveto_evtdisp/"),
-        "prelim_cuts_full": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_full_data/"),
+        "prelim_cuts_full_data": os.path.join(FCCAnalysesPath, "outputs/prelim_cuts_full_data/"),
         "n_lept_cut_failed":os.path.join(FCCAnalysesPath, "outputs/n_lept_cut_failed/"),
         "stage1_training": os.path.join(FCCAnalysesPath, "outputs/stage1_training/"),
         "process_with_MC_full_prelim":os.path.join(FCCAnalysesPath, "outputs/MC_particles_full_prelim/"),
@@ -165,7 +162,6 @@ fccana_opts = {
         "Bc2munu":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu/events_000811090.root",
         "Bc2taunu2HAD":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU/events_001034647.root",
         "Bc2taunu2mu":	"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu/events_004620103.root",
-    
     },
     "analysisName":   "b2inv",
     "nCPUS":          8,
@@ -178,7 +174,7 @@ fccana_opts = {
         "no_selection_taus":"full-vars",
         "prelim_cuts": "full-vars",
         "prelims_incltauveto_evtdisp": "eventdisplay-vars",
-        "prelim_cuts_full": "full-vars",
+        "prelim_cuts_full_data": "full-vars",
         "n_lept_cut_failed": "full-vars",
         "process_with_MC_full_prelim":"full-vars-plus-MCtruth",
         "Bu2lnu_background_no_lepton_veto":"full-vars-plus-MCtruth",
@@ -188,7 +184,7 @@ fccana_opts = {
 }
 
 
-# TMVA options
+# BDT options
 bdt_outputs_map = {"bdt_score_2":"P_signal",
                    "bdt_score_1":"P_heavy",
                    "bdt_score_0":"P_light",}
@@ -205,7 +201,6 @@ baseline_bdt_lh_opts = {
 }
 
 
-
 optimised_bdt_lh_opts = {
     "label":               '_lh',
     #"training":           True,                  
@@ -217,10 +212,12 @@ optimised_bdt_lh_opts = {
     "backgroundAllocation_heavy":  ["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91"],
 }
 
+
+#options from investigatory BDT for Ztautau incase rejection not strong enough - not needed
 bdttau_opts = {
     "label":               'tau',
-    "inputPath":          os.path.join(fccana_opts["outputDir"]["prelim_cuts_full"],'dataframes'),       
-    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts_full'], "bdttau_outputs/"),
+    "inputPath":          os.path.join(fccana_opts["outputDir"]["prelim_cuts_full_data"],'dataframes'),       
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts_full_data'], "bdttau_outputs/"),
     "mvaBranchList":      "bdttau-baseline-vars",  # key in the yaml file pointing to the feature list 
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Ztautau_ecm91"],
@@ -228,8 +225,8 @@ bdttau_opts = {
 
 bdttau_opts_nonNeutrals = {
     "label":               'tau',
-    "inputPath":          os.path.join(fccana_opts["outputDir"]["prelim_cuts_full"],'dataframes'),       
-    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts_full'], "bdttau_outputs/"),
+    "inputPath":          os.path.join(fccana_opts["outputDir"]["prelim_cuts_full_data"],'dataframes'),       
+    "outputPath":         os.path.join(fccana_opts['outputDir']['prelim_cuts_full_data'], "bdttau_outputs/"),
     "mvaBranchList":      "bdttau-nonNeutrals-vars",  # key in the yaml file pointing to the feature list 
     "signalAllocation":   ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],
     "backgroundAllocation":  ["p8_ee_Ztautau_ecm91"],
@@ -379,8 +376,8 @@ sample_colors = {
     "light_hadronic_background": plt.cm.Reds_r( np.linspace(0, 1, 6)[3:-1] ),
     "Bssignal":  plt.cm.Blues( np.linspace(0, 1, 6)[3] ) ,
     "Bdsignal":  plt.cm.Blues( np.linspace(0, 1, 6)[-2] ) ,
-    "bb_only":  plt.cm.Reds_r( np.linspace(0, 1, 6)[1] ) ,
-    "tau_background": plt.cm.tab20c(12),#[ plt.cm.tab20b((4+ np.linspace(0, 1, 5)[1])/5 ) ],
+    "bb_only":  [plt.cm.Reds_r( np.linspace(0, 1, 6)[1] )] ,
+    "tau_background": [plt.cm.tab20c(12)],#[ plt.cm.tab20b((4+ np.linspace(0, 1, 5)[1])/5 ) ],
     "leptonic_background": plt.cm.tab20c([12,13,14]),#plt.cm.tab20b( (4+np.linspace(0, 1, 5)[1:-1]) /5 ),
     "light_leptonic_background": plt.cm.tab20c([13,14]),#plt.cm.tab20b((4+ np.linspace(0, 1, 5)[2:-1])/5 )
     "Bu2lnu_background":plt.cm.tab20b([4,5,6,7]),
@@ -604,9 +601,6 @@ eventsProcessed_with_MC_full_prelim = {
 #    "p8_ee_Zmumu_ecm91":12,
 #    "p8_ee_Zee_ecm91":6,
 #}
-
-# b-hadrons from PDG API - background_analysis_root.get_list_b_hadrons(np.arange(0,500000)) - copied here as takes 12 mins to run [searches for all hadrons with b or B in their name]
-#Bhadron_MC_PDG_ID = [511, 513, 515, 521, 523, 525, 531, 533, 535, 541, 551, 555, 3122, 3124, 3126, 3128, 4122, 5112, 5114, 5122, 5132, 5212, 5214, 5222, 5224, 5232, 5332, 10113, 10213, 10551, 10553, 13122, 13124, 13126, 14122, 20553, 23122, 23124, 23126, 33122, 43122, 53122, 100551, 100555, 104122, 110551, 110553, 120553, 200555, 204126, 220553]
 
 #Taken by hand straight from PDG MC numbering pdf as also had lambdas above
 Bhadron_MC_PDG_ID = [511, 521, 10511, 10521, 513, 523, 10513, 10523,  20513, 20523, 515, 525, 531, 10531, 533, 10533, 20533, 535, 541, 10541, 543, 10543, 20543, 545, 551, 10551, 100551, 110551, 200551, 210551, 553, 10553, 20553, 30553, 100553, 110553, 120553, 130553, 200553, 210553, 220553, 300553, 9000553, 9010553, 555, 10555, 20555, 100555, 110555, 120555, 200555, 557, 100557,5122, 5112, 5212, 5222, 5114, 5214, 5224, 5132, 5232, 5312, 5322, 5314, 5324, 5332, 5334, 5142, 5242, 5412, 5422, 5414, 5424, 5342, 5432, 5434, 5442, 5444, 5512, 5522, 5514, 5524, 5532, 5534, 5542, 5544,  5554]

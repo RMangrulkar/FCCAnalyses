@@ -2,20 +2,58 @@
 #
 # Use this file to process B -> inv tuples
 # Runs in a few different configurations
-#   -no_selection:
-#       Processes small test file with no cuts for bb bkg and signal
+#
+#   -no_selection and no_selection_taus:
+#       Processes small test file with no cuts (except "EVT_hasPV==1"  requiring PV) for inclusive bkgs and signal
 #
 #   -prelim_cuts:
-#       Produces ntuples to train 1st stage BDTs (BDTh and BDTl)
-#       Includes all variables that I believe might be helpful for selection 
-#       Applies preliminary cuts:
-#               -"EVT_hasPV==1"                 #EVT must have a PV
-#               - "EVT__e < 85"                 # Total energy must be < 85 GeV
+#       Produces ntuples to train multiclass BDT (BDTlh)
+#       Includes all variables that we believe might be helpful for selection 
+#       Applies preliminary cuts: 
+#               - "EVT_e < 85"                  # Total energy must be < 85 GeV
 #               - "EVT_hemisEmin_nCharged > 0"  # Signal side must have at least one charged reco particle
 #               - "EVT_hemisEmin_nLept == 0"    # Remove events with a reconstructed lepton on the signal side -- removes a lot of semileptonic decays
-#       
+#               - "PV_Rec_vtx_m<40"             # helps filter light hadronic backgrounds as heavy hadronics produce heavy mesons that fly, carrying mass away from PV
+#       Including those based on reconstruction:
+#               - "EVT_hasPV==1"                 #EVT must have a PV
+#               - "Rec_PV_ntracks>1"             #Ensures PV properly reconstructed (ie. has >1 track)
+#               - "HasFormZeroOnes==1"           # defined such that requires vertex assignment via vertex momentum pointing and PV-DV displacement to match
+#       Note that this doesn't include the cut EVT_hemisEmax_n>10 used to veto Ztautau background which was applied after the BDT
+#
+#    -prelim_cuts_full_data:
+#       Produces ntuples of full MC samples available to apply mutliclass BDT to
+#       Includes identical cuts to "prelim_cuts" configuration
+#
+#   -n_lept_cut_failed:
+#       Produces small sample to investigate inverted SS lepton veto.
+#
+#
+# Configurations which include MC truth information for various studies
+#
+#    - prelims_incltauveto_evtdisp
+#        Produces small tuple files with MC information required to produce "event display" type plots
+#        Includes full pre-selection from "prelim_cuts" mode 
+#        Additionally includes veto for Ztautau background EVT_hemisEmax_n>10
+#
+#    - process_with_MC_full_prelim 
+#        Produces slightly smaller files to study decays which survive the full selection in inclusive background files
+#        Includes full pre-selection from "prelim_cuts" mode 
+#        Additionally includes veto for Ztautau background EVT_hemisEmax_n>10
+#
+# Configurations to study additional exclusive background samples from B(c)2lnu decays
+#
+#    - Bu2lnu_background_no_lepton_veto
+#        Produces ntuples of full exclusice Bu2lnu MC samples available to study as background contribution
+#        Includes full preselection from "prelim_cuts" mode EXCEPT SS charged lepton veto ("EVT_hemisEmin_nLept == 0") to allow the effect of this cut to be studied, especially for single prong tau decays
+#        Additionally includes Ztautau veto: EVT_hemisEmax_n>10
+#
+#    - Bc2lnu_background_no_lepton_veto
+#        Produces ntuples of full exclusice Bc2lnu MC samples available to study as background contribution
+#        Includes full preselection from "prelim_cuts" mode EXCEPT SS charged lepton veto ("EVT_hemisEmin_nLept == 0") to allow the effect of this cut to be studied, especially for single prong tau decays
+#        Additionally includes Ztautau veto: EVT_hemisEmax_n>10
 #
 ####################################
+
 
 import os
 import sys
@@ -51,7 +89,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['Bc2munu']
+testFile = cfg.fccana_opts['testFile']['bb']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -765,7 +803,7 @@ class RDFanalysis():
         
 
          # If producing files for training BDTh/l then we are done
-        elif cfg.run_mode == 'prelim_cuts_full':
+        elif cfg.run_mode == 'prelim_cuts_full_data':
             return df3   
 
         elif cfg.run_mode == 'n_lept_cut_failed':

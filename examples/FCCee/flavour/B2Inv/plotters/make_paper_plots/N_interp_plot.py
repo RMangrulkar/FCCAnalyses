@@ -1,3 +1,5 @@
+# script to produce full set of plots from N-interpolated maps onwards.
+
 import dill
 import os
 import sys
@@ -14,18 +16,19 @@ import bdt_lh_cut_opt_significance_exclusive_backgrounds
 save_path='outputs/B2lnu_backgrounds_included/BDTlh_baseline_plus_cut_optimisation/no_smoothing/0999/8x8xmidstats_4x4lowstats'
 plotpath = 'plots/paper_plots/JHEP_proofs_replies/'
 
+# samples we want to use in bdt cut optimisation (using S/sqrt(S+B) figure of merit)
 samples_for_cut_opt = cfg.sample_allocations['hadronic_background'] + cfg.sample_allocations['combined_signal']
 
-# make N interp plots
+# make N interp plots - loading maps 
 with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "N_remaining_dictionary"), "rb") as dill_file:
         N_dict = dill.load(dill_file)
 
 with open(os.path.join(bdt_lh_cut_opt_significance.set_outputpath(save_path), "interpolated_N_remaining_dictionary"), "rb") as dill_file:
     interp_N_dict = dill.load(dill_file)
 
+bdt_lh_cut_opt_significance.plot_N(N_dict, interp_N_dict, lrange=(0.999,1) ,hrange=(0.999,1),nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4,normalised=True, separate_cbar = True,slice=False, save_path=plotpath)
 
-#bdt_lh_cut_opt_significance.plot_N(N_dict, interp_N_dict, lrange=(0.999,1) ,hrange=(0.999,1),nlh_highstats=20, nlh_midstats=8, nlh_lowstats=4,normalised=True, separate_cbar = True,slice=False, save_path=plotpath)
-"""
+
 opt_path = 'outputs/B2lnu_backgrounds_included/BDTlh_baseline_plus_cut_optimisation/no_smoothing/0999/8x8xmidstats_4x4lowstats/only_hadbkg'
 # load dicts for final sensitivity plot
 with open(os.path.join(opt_path,'naive_sensitivity_dict.pkl'), 'rb') as f:
@@ -52,7 +55,7 @@ for key in full_eff:
 
 # Print the table
 print(tabulate(table_data, headers="firstrow", tablefmt="grid"))
-"""
+
 
 bdt_lh_cut_opt_significance_exclusive_backgrounds.make_final_binning_plot_extra_bkgs_nodata(interp_N_dict,
                                        cut_opt_samples=samples_for_cut_opt,  
@@ -74,13 +77,13 @@ bdt_lh_cut_opt_significance_exclusive_backgrounds.likelihood_model_builder_extra
                                                                                              lrange_interp_N_dict=(0.999,1) ,hrange_interp_N_dict=(0.999,1),nlh=200,bins = (2,2),
                                                                                              ntoys = 1, fit_plotpath=plotpath, x_values = np.array([['Signal depleted','Heavy background \n enriched'],['Light background \n enriched','Signal enriched']]), spread_plotpath=None, logpath=None, lcut=None, hcut=None)
 
-"""
+
 bdt_lh_cut_opt_significance.sensitivity_CL_plotter_v2(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath, spine_sampling=24)#21 #23
 
 dict_path = os.path.join(save_path,"only_hadbkg")
 #only need this is dont have SB_dict saved in pickle format with correct components etc.
-#print("Running: calc_BF_sig_stderrs_nodata")
-#bdt_lh_cut_opt_significance_exclusive_backgrounds.calc_BF_sig_stderrs_nodata(interp_N_dict, cut_opt_samples=samples_for_cut_opt, componenets_in_FOM=['hadronic_background','combined_signal', 'B2lnu_background_combined'], model_all_1prong_leptonic_tau=True, lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),plot=True,saveplotpath = plotpath ,dict_path = dict_path, plot_dotted_line_list =  ["noBsyst","2percent_Bsyst" ,"10percent_Bsyst"])
+print("Running: calc_BF_sig_stderrs_nodata")
+bdt_lh_cut_opt_significance_exclusive_backgrounds.calc_BF_sig_stderrs_nodata(interp_N_dict, cut_opt_samples=samples_for_cut_opt, componenets_in_FOM=['hadronic_background','combined_signal', 'B2lnu_background_combined'], model_all_1prong_leptonic_tau=True, lrange_plot=(0.999,1) ,hrange_plot=(0.999,1), nlh=200 , sig_BFs=np.logspace(-9,-4,250),plot=True,saveplotpath = plotpath ,dict_path = dict_path, plot_dotted_line_list =  ["noBsyst","2percent_Bsyst" ,"10percent_Bsyst"])
 
 
 #otherwise load this file and plot directly
@@ -91,7 +94,6 @@ with open(os.path.join(dict_path,'SB_dict.pkl'), 'rb') as f:
 bdt_lh_cut_opt_significance_exclusive_backgrounds.plot_BF_sig_stderrs(SB_dict["S"],SB_dict["B"],SB_dict["BFs"],plotpath,plot_dotted_line_list= ["noBsyst","2percent_Bsyst" ,"10percent_Bsyst"])
 
 
-
-"""
+#various old studies.
 #bdt_lh_cut_opt_significance.sensitivity_CL_plotter_monotonic_interp(naive_dict, incl_syst_dict, toys_dict = toys_dict, savepath=plotpath, spine_sampling=26)
 #bdt_lh_cut_opt_significance.run_2d_optimisation(interp_N_dict,lrange_plot=(0.995,1) ,hrange_plot=(0.995,1), nlh=200, sig_BF=4/10*1.4e-4,incl_other_syst = True)

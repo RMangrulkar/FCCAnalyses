@@ -4,7 +4,7 @@
 Ella Wood: [ella.wood@cern.ch](malito:ella.wood@cern.ch)  
 Ritwik Mangrulkar: [ritwik.mangrulkar@cern.ch](malito:ritwik.mangrulkar@cern.ch)
 
-## Pre-print submitted 6th August 2026
+## Pre-print submitted 6th August 2025
 - Prospects of searches for $B_{(s)}^0 \rightarrow$ Invisible decays at FCC-ee
 : [arXiv:2508.04471](https://arxiv.org/abs/2508.04471)
 

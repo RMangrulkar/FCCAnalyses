@@ -11,10 +11,10 @@ FCCAnalysesPath = "/r02/lhcb/ejnw2/fcc_2025/FCCAnalyses/examples/FCCee/flavour/B
 FCCAnalysesPath = os.path.abspath(FCCAnalysesPath)
 #SavedOutputsPath = "/r02/lhcb/ejnw2/FCC_outputs_2024/outputs" #this is where old BDTs are saved
 # RUNNING MODE
-run_mode_choices = ['no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full_data', 'process_with_MC_full_prelim', 'Bu2lnu_background_no_lepton_veto', 'Bc2lnu_background_no_lepton_veto'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
+run_mode_choices = ['FCCee_FT','ella_INVestigations', 'kenzie_CPV_tuples_no_selection','no_selection','no_selection_taus','n_lept_cut_failed','prelim_cuts','prelims_incltauveto_evtdisp','prelim_cuts_full_data', 'process_with_MC_full_prelim', 'Bu2lnu_background_no_lepton_veto', 'Bc2lnu_background_no_lepton_veto'] #when add run mode, now need to add to processList, fccana_opts AND PROCESS_TUPLES!!!
 
 
-run_mode = 'Bc2lnu_background_no_lepton_veto'
+run_mode = 'FCCee_FT'#'Bc2lnu_background_no_lepton_veto'
 if run_mode not in run_mode_choices:
     raise RuntimeError(f'{run_mode} is not a valid run mode')
 
@@ -40,6 +40,29 @@ processList = {
     # p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu == 5,000,000 events
     # p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU  ==  10,900,000 events
     # p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu  == 10,000,000 events 
+    
+    "kenzie_CPV_tuples_no_selection": {  # 200,000 events per sample just to look at
+        #"p8_ee_Zbb_ecm91_EvtGen_Bs2JpsiPhiSVV":{"fraction": 0.04, "chunks": 2},
+        #"p8_ee_Zbb_ecm91_EvtGen_Bd2JpsiKS": {"fraction": 0.04, "chunks": 2},
+        #"p8_ee_Zbb_ecm91_EvtGen_Bd2JpsiKL": {"fraction": 0.04, "chunks": 2},
+        #"p8_ee_Zbb_ecm91_EvtGen_Bd2JpsiKstSVV": {"fraction": 0.04, "chunks": 2},
+        #2,000,000 events per sample for backgrounds
+        "p8_ee_Zbb_ecm91": {"fraction": 1, "chunks": 4400},
+        #"p8_ee_Zcc_ecm91": {"fraction": 0.005, "chunks": 25},
+        #"p8_ee_Zss_ecm91": {"fraction": 0.005, "chunks": 25},
+        #"p8_ee_Zud_ecm91": {"fraction": 0.005, "chunks": 25},
+    },
+
+
+    "ella_INVestigations": {
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2KsNuNu":{"fraction": 1, "chunks": 20},
+        "p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu":{"fraction": 1, "chunks": 20},
+        # doest exist in winter2023 #"p8_ee_Zbb_ecm91_EvtGen_Bs2PhiNuNu":{"fraction": 1, "chunks": 20},
+        # doest exist in winter2023 # "p8_ee_Zbb_ecm91_EvtGen_Bu2KNuNu":{"fraction": 1, "chunks": 20},
+    },
+
+    "FCCee_FT":{"p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu":{"fraction": 1, "chunks": 2},
+                "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu":{"fraction": 1, "chunks": 2},},
 
 
     "no_selection": {  # 100,000 events per sample just to look at
@@ -132,7 +155,9 @@ processList = {
 fccana_opts = {
     "prodTag":   "FCCee/winter2023/IDEA",
     "outputDir": {
-
+        "kenzie_CPV_tuples_no_selection": os.path.join(FCCAnalysesPath, "outputs/kenzie_CPV_tuples_no_selection/"),
+        "ella_INVestigations":os.path.join(FCCAnalysesPath, "outputs/ella_INVestigations/"),
+        "FCCee_FT":os.path.join(FCCAnalysesPath, "outputs/FCCee_FT_tuples/"),
         "no_selection": os.path.join(FCCAnalysesPath, "outputs/no_selection/"),
         "no_selection_taus": os.path.join(FCCAnalysesPath, "outputs/no_selection_taus/"),
         "prelim_cuts": os.path.join(FCCAnalysesPath, "outputs/full_prelim_cuts_500k/"),
@@ -162,6 +187,9 @@ fccana_opts = {
         "Bc2munu":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu/events_000811090.root",
         "Bc2taunu2HAD":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU/events_001034647.root",
         "Bc2taunu2mu":	"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu/events_004620103.root",
+        "kenzie_CPV":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bd2JpsiKstSVV/events_081506979.root",
+        "ellaINV":"root://eospublic.cern.ch//eos/experiment/fcc/ee/generation/DelphesEvents/winter2023/IDEA/p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu/events_197636552.root",
+    
     },
     "analysisName":   "b2inv",
     "nCPUS":          8,
@@ -170,6 +198,9 @@ fccana_opts = {
     "compGroup":      "group_u_FCC.local_gen",
     "yamlPath":       os.path.join(FCCAnalysesPath, "B2Inv.yaml"),  # Path to the YAML file containing feature names
     "outputBranches": {
+        "ella_INVestigations":"full-vars-plus-MCtruth",
+        "FCCee_FT":"fcc-FT-vars",
+        "kenzie_CPV_tuples_no_selection":"kenzie-CPV-tuples-vars",
         "no_selection":"full-vars",
         "no_selection_taus":"full-vars",
         "prelim_cuts": "full-vars",
@@ -359,8 +390,8 @@ sample_allocations = {
     "combined_signal": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu"],#want the signal last here so that it's plotted on top in binning plots
     "high_stats_sample": ["p8_ee_Zbb_ecm91_EvtGen_Bs2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bd2NuNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTau2HNu", "p8_ee_Zbb_ecm91_EvtGen_Bu2MuNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu","p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu", "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu"],
     "mid_stats_sample":["p8_ee_Zbb_ecm91", "p8_ee_Zcc_ecm91", "p8_ee_Zss_ecm91", "p8_ee_Zbb_ecm91_EvtGen_Bu2TauNuTAUHADNU", "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU"],    
-    "low_stats_sample":["p8_ee_Zud_ecm91", ]
-    
+    "low_stats_sample":["p8_ee_Zud_ecm91", ],    
+    "ella_INV":["p8_ee_Zbb_ecm91_EvtGen_Bd2KsNuNu","p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu"],
 }
 
 
@@ -383,6 +414,7 @@ sample_colors = {
     "Bu2lnu_background":plt.cm.tab20b([4,5,6,7]),
     "Bc2lnu_background": plt.cm.tab20b([8,9,10,11]),
     "B2lnu_background_combined":"thistle", #"mistyrose",#, #"lightgrey",#
+    "ella_INV":plt.cm.Oranges( np.linspace(0, 1, 6)[3:-1] ),
 }
 
 sample_total = {
@@ -397,6 +429,7 @@ sample_total = {
     "Bu2lnu_background": None,
     "Bc2lnu_background": None,
     "B2lnu_background_combined":None,
+    "ella_INV":None,
 }
 
 sample_hatches = {
@@ -413,6 +446,7 @@ sample_hatches = {
     "Bu2lnu_background": None,
     "Bc2lnu_background": None,
     "B2lnu_background_combined":None,
+    "ella_INV":None,
 }
 
 sample_shorthand = {
@@ -459,6 +493,8 @@ titles = {
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":r"$B_c^+ \to [h^+ h^+ h^- \bar{\nu_{\tau}}]_{\tau} \nu_{\tau}$",
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":r"$B_c^+ \to \nu_{\mu} \mu^+$",
     "B2lnu_background_combined":r"$B_{(c)}^+ \to l^+ \nu_l $",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KsNuNu":r"$B^0 \to K^0_S\nu \bar{\nu}$",
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu":r"$B^0 \to K^{*0}\nu \bar{\nu}$",
 }
 
 ##############################
@@ -485,6 +521,8 @@ prod_frac = {
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu":LEP_prod_fracs["Bc"],
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":LEP_prod_fracs["Bc"],
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":LEP_prod_fracs["Bc"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KsNuNu":LEP_prod_fracs["Bd"],
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu":LEP_prod_fracs["Bd"],
 }
 
 
@@ -518,6 +556,8 @@ branching_fractions = {
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu": (2.63579e-3,0.10422e-3),
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU":(3.4808e-3,0.1375e-3), # Thry pred https://arxiv.org/pdf/2305.02998
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu":(1e-4,1e-4), # I cant find a theory prediction so assume scaling of Bc2taunu same as between bu2taunu and bu2munu
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KsNuNu":(2.02e-6,1.2e-7),#from kenzie et al paper
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu":(7.93e-6,8.9e-7),
 }
 
 mass_Z = 91.188  # Ecm used in the winter2023 samples
@@ -570,6 +610,8 @@ eventsProcessed = {
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2HNu":5000000,#derived from p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTau2MuNuNu sample - therefore same number of eventsProcessed for eff
     "p8_ee_Zbb_ecm91_EvtGen_Bc2TauNuTAUHADNU": 10900000,
     "p8_ee_Zbb_ecm91_EvtGen_Bc2MuNu": 10000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KsNuNu":2000000,
+    "p8_ee_Zbb_ecm91_EvtGen_Bd2KstNuNu":2000000,
 }
 
 eventsProcessed_with_MC_full_prelim = {

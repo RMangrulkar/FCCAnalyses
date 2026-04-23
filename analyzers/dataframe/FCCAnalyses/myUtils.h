@@ -224,6 +224,22 @@ namespace myUtils{
     END OF B2INV FUNCTIONS
   ***********************************/
 
+  /*******************
+   * Functions for FT
+   ******************/
+
+  // Find production flavor of B0 and Bs0 mesons
+  /*int get_B_prod_flav(const ROOT::VecOps::RVec<int>& hemis_mask,
+                                                  const ROOT::VecOps::RVec<int>& mc_pdg,
+                                                  const ROOT::VecOps::RVec<int>& mc_m1);*/
+
+  //No hemisphere assumption
+  int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
+                              const ROOT::VecOps::RVec<int>& mc_m1);
+
+
+  /****end of FT*****/
+
   ROOT::VecOps::RVec<edm4hep::TrackState> get_pseudotrack(ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex,
 							  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> recop);
 

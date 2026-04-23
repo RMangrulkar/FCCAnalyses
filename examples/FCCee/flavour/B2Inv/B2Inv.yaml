@@ -1319,6 +1319,77 @@ flavour-tag-vars:
   #- Rec_track_absd0
   #- Rec_track_absnormd0
 
+fcc-FT-vars:
+  #reconstructed variables
+  - Rec_q
+  - Rec_m
+  - Rec_p
+  - Rec_px
+  - Rec_py
+  - Rec_pz
+  - Rec_eta
+  - Rec_phi
+  - Rec_eOverP
+  #current PID
+  - Rec_true_PDG
+  #IP-like
+  - Rec_track_d0
+  - Rec_track_z0
+  #event variables
+  - EVT_p
+  - EVT_e
+  - EVT_sum_Rec_px
+  - EVT_sum_Rec_py
+  - EVT_sum_Rec_pz
+  - EVT_nCharged
+  - EVT_nNeutral
+  - EVT_nPhotons
+  #- EVT_nKlong #removing for now until fix
+  #- Rec_track_n #double check number of tracks match EVT_nCharged and does as expect
+  
+  #B flavour on production
+  - MC_B_qTag
+  # Rec variables for FT
+  - Rec_track_dNdx
+  #- Rec_track_TOF # remove for now as only helpful if have first and last hits
+  
+
+  #Intermediate variables kept in for now
+  - Rec_photon_indices
+  #- Rec_Klong_indices
+  #- MC_thrustCosTheta
+  #- MC_in_hemisEmin
+  - MC_B_prodFlav
+  #- Rec_trackStates # I dont believe this is helpful but we'll see
+
+  #Additional variables kept to allow check for now
+  #MC vars so can check Btag
+  - MC_PDG
+  - MC_M1
+  - MC_M2
+  - MC_D1
+  - MC_D2
+  - MC_D3          
+  - MC_D4
+  - MC_e
+  - MC_m
+  - MC_q
+  - MC_p
+  - MC_pt
+  - MC_px
+  - MC_py
+  - MC_pz
+  - MC_eta
+  - MC_phi
+  - MC_orivtx_x
+  - MC_orivtx_y
+  - MC_orivtx_z
+  - EVT_unitThrust_x
+  - EVT_unitThrust_y
+  - EVT_unitThrust_z
+
+
+
 
 
 
@@ -1403,3 +1474,199 @@ bdttau-nonNeutrals-vars:
 
 
 
+kenzie-CPV-tuples-vars:
+
+  #############################################
+  ##         MC Particle info                ##
+  #############################################
+  - MC_n
+  - MC_PDG
+  - MC_M1
+  - MC_M2
+  - MC_D1
+  - MC_D2
+  - MC_D3          
+  - MC_D4
+
+  - MC_e
+  - MC_m
+  - MC_q
+  - MC_p
+  - MC_pt
+  - MC_px
+  - MC_py
+  - MC_pz
+  - MC_eta
+  - MC_phi
+  - MC_orivtx_x
+  - MC_orivtx_y
+  - MC_orivtx_z
+
+   # --------------------------------------- #
+  #    MC final-state particle variables    #
+  # --------------------------------------- #
+  - MCfinal_PDG
+  - MCfinal_e
+  - MCfinal_m
+  - MCfinal_q
+  - MCfinal_p
+  - MCfinal_pt
+  - MCfinal_px
+  - MCfinal_py
+  - MCfinal_pz
+  - MCfinal_eta
+  - MCfinal_phi
+  - MCfinal_orivtx_x
+  - MCfinal_orivtx_y
+  - MCfinal_orivtx_z
+
+  ##############################
+  ## Rec particle vars        ##
+  ##############################
+
+  - Rec_n
+  - Rec_type
+  - Rec_indvtx
+  - Rec_customid
+  - Rec_e
+  - Rec_m
+  - Rec_q
+  - Rec_p
+  - Rec_pt
+  - Rec_px
+  - Rec_py
+  - Rec_pz
+  - Rec_eta
+  - Rec_phi
+  - Rec_thrustCosTheta
+  - Rec_in_hemisEmin
+  - Rec_in_hemisEmax
+  
+  # MC variables of MCParticle matched to ReconstructedParticle
+  - Rec_true_PDG
+  - Rec_true_e
+  - Rec_true_m
+  - Rec_true_q
+  - Rec_true_p
+  - Rec_true_pt
+  - Rec_true_px
+  - Rec_true_py
+  - Rec_true_pz
+  - Rec_true_eta
+  - Rec_true_phi
+  - Rec_true_orivtx_x
+  - Rec_true_orivtx_y
+  - Rec_true_orivtx_z
+  - Rec_true_M1
+  - Rec_true_M2
+  - Rec_true_M1ofM1
+  - Rec_true_M2ofM1
+  - Rec_true_M1ofM2
+  - Rec_true_M2ofM2
+
+    ##############################
+  ## Rec Vtx vars             ##
+  ##############################
+    # PV 
+  - Rec_PV_ntracks
+  - Rec_PV_x
+  - Rec_PV_y
+  - Rec_PV_z
+  - Rec_PV_chi2
+
+  # Reconstructed vertex variables
+  - Rec_vtx_n
+  - Rec_vtx_ntracks         
+  - Rec_vtx_indRP
+  - Rec_vtx_chi2
+  - Rec_vtx_isPV
+  - Rec_vtx_m
+  - Rec_vtx_x
+  - Rec_vtx_y
+  - Rec_vtx_z
+  - Rec_vtx_xerr
+  - Rec_vtx_yerr
+  - Rec_vtx_zerr
+
+
+    #variables relating to new hemisphere assignment
+  - Rec_vtx_d2PV_x
+  - Rec_vtx_d2PV_y
+  - Rec_vtx_d2PV_z
+  - Rec_vtx_thrustCosTheta_d2PV
+  - Rec_vtx_thrustCosTheta
+  - Rec_vtx_in_hemisEmin
+
+  #some d2pv vtx variables as a check
+  - Rec_vtx_d2PV
+  - Rec_vtx_d2PV_err
+  - Rec_vtx_normd2PV
+  - Rec_vtx_normd2PV_x
+  - Rec_vtx_normd2PV_y
+  - Rec_vtx_normd2PV_z
+
+  ##############################
+  ## Rec track vars           ##
+  ##############################
+
+  #track variables
+  - Rec_track_absd0
+  - Rec_track_absz0
+  - Rec_track_absnormd0
+  - Rec_track_absnormz0
+
+
+  ############################
+  #overall event-wide vars
+  ############################
+
+  - EVT_sum_Rec_px
+  - EVT_sum_Rec_py
+  - EVT_sum_Rec_pz
+  - EVT_p
+  - EVT_e  
+  - PV_Rec_vtx_m
+  
+  # nRecTracks
+  - Rec_track_n
+
+    # Event variables -- thrust
+  - EVT_Thrust_mag
+  - EVT_Thrust_x
+  - EVT_Thrust_y
+  - EVT_Thrust_z
+  - EVT_Thrust_xerr
+  - EVT_Thrust_yerr
+  - EVT_Thrust_zerr
+  - EVT_unitThrust_x
+  - EVT_unitThrust_y
+  - EVT_unitThrust_z 
+  
+
+    #to allow application of cuts manually
+  - EVT_hemisEmin_nLept
+
+            
+  #############################
+  #hemisphere based vars
+  ############################
+
+  - EVT_hemisEmin_p
+  - EVT_hemisEmax_p
+
+  # Event variables -- hemisphere
+  - EVT_hemisEmin_e
+  - EVT_hemisEmin_eCharged
+  - EVT_hemisEmin_eNeutral
+  - EVT_hemisEmin_n
+  - EVT_hemisEmin_nCharged
+  - EVT_hemisEmin_nNeutral
+  - EVT_hemisEmin_nDV
+
+  - EVT_hemisEmax_e
+  - EVT_hemisEmax_eCharged
+  - EVT_hemisEmax_eNeutral
+  - EVT_hemisEmax_n
+  - EVT_hemisEmax_nCharged
+  - EVT_hemisEmax_nNeutral
+  - EVT_hemisEmax_nDV

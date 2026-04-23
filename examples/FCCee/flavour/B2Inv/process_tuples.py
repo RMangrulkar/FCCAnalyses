@@ -89,7 +89,7 @@ nCPUS = cfg.fccana_opts['nCPUS']
 runBatch = cfg.fccana_opts['runBatch']
 
 #Optional test file
-testFile = cfg.fccana_opts['testFile']['bb']
+testFile = cfg.fccana_opts['testFile']['Bs']
 
 print("----> INFO: Using config.py file from:")
 print(f"{15*' '}{os.path.abspath(configPath)}")
@@ -105,6 +105,17 @@ class RDFanalysis():
         #BSC for vertexing
         #bsc = [ 6, 25e-3, 400 ]
         bsc = cfg.BSC_opts['winter2023'] # list of sigmax,sigmay,sigmaz
+        
+        '''print Hit/Track variables to find names!
+        all_columns = [str(c) for c in df.GetColumnNames()]
+        # Filter for anything that looks like a tracker hit collection
+        hit_columns = [c for c in all_columns if "Hit" in c or "Tracker" in c or "Track" in c]
+        
+        print("\n" + "="*50)
+        print("DEBUG: Found these track/hit related columns in the DataFrame:")
+        for col in sorted(hit_columns):
+            print(f" - {col}")
+        print("="*50 + "\n")'''
 
 
         df2 = (
@@ -373,6 +384,7 @@ class RDFanalysis():
             .Define("Rec_pz",        "ReconstructedParticle::get_pz(RecoParticlesPIDAtVertex)")
             .Define("Rec_eta",       "ReconstructedParticle::get_eta(RecoParticlesPIDAtVertex)")
             .Define("Rec_phi",       "ReconstructedParticle::get_phi(RecoParticlesPIDAtVertex)")
+            .Define("Rec_eOverP",    "Rec_e/Rec_p")
             
             # Do MC association of reco particle to true MC particle
             .Define("MC_fromRP",           "myUtils::get_MCObject_fromRP(MCRecoAssociationsRec, MCRecoAssociationsGen, RecoParticlesPIDAtVertex, Particle)")
@@ -449,6 +461,8 @@ class RDFanalysis():
             .Define("EVT_hemisEmax_nNeutral",  "float(EVT_ThrustInfoMax_N.at(2))")
 
             .Define("EVT_e", "(EVT_hemisEmin_e)+(EVT_hemisEmax_e)")
+            .Define("EVT_nCharged",          "(EVT_hemisEmax_nCharged)+(EVT_hemisEmin_nCharged)")
+            .Define("EVT_nNeutral",          "(EVT_hemisEmax_nNeutral)+(EVT_hemisEmin_nNeutral)")
 
             # Count secondary vertices in each hemisphere
             .Define("SecondaryVertexThrustAngle",  "myUtils::get_DVertex_thrusthemis_angle(Rec_VertexObject, RecoParticlesPIDAtVertex, EVT_ThrustInfo)")
@@ -742,6 +756,41 @@ class RDFanalysis():
             .Define("Rec_vtx_thrustCosTheta_ave_hemisEmax",   "Rec_vtx_thrustCosThetaStatsEmax.at(2)")
         
             .Define("EVT_ID", "rdfentry_") 
+
+            ####################################################
+            ## Defining additional variables for flavour tagging
+            ####################################################
+
+            #Get the indices of all photons (PDG ID == 22)
+            .Define("Rec_photon_indices", "myUtils::sel_PID(22)(RecoParticlesPIDAtVertex)") # intermediate
+            # Count photons
+            .Define("EVT_nPhotons",       "float(Rec_photon_indices.size())")
+            
+            #Repeat for Kl (PDG ID == 130)
+            ## Having issues here as the RecoParticlesPIDAtVertex treats all neutral as Kl whereas when take from MC gives Kl, n as separate
+            #.Define("Rec_Klong_indices", "myUtils::sel_PID(130)(RecoParticlesPIDAtVertex)") # intermediate
+            # Count photons
+            #.Define("EVT_nKlong",       "float(Rec_Klong_indices.size())")
+
+
+            #Define qtag (ie. if B0 or B0b and equiv for Bs)
+            #Thrust axis infor for MC particles
+            .Define("MC_thrustCosTheta",           "Algorithms::getAxisCosTheta(EVT_ThrustInfo, MC_px, MC_py, MC_pz)")
+            .Define("MC_in_hemisEmin",             "myUtils::get_RP_inHemis(1)(MC_thrustCosTheta)") # just gives 1 or 0 based on whether in min hemisphere or not
+            # Get the production flavour of B0/Bs0 mesons in signal hemisphere
+            .Define("MC_B_prodFlav", "myUtils::get_B_prod_flav_from_nunu(MC_PDG, MC_M1)")
+            #use this to define qtag (saved flav as a check)
+            .Define("MC_B_qTag",  "MC_B_prodFlav > 0 ? 1 : (MC_B_prodFlav < 0 ? -1 : 0)")
+
+            #Also define dNdx for PID tool
+            # First get the track states  associated with  reconstructed particles
+            .Define("Rec_trackStates", "ReconstructedParticle2Track::getRP2TRK(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+            # Get the dN/dx for those tracks (maintains the same array indices as d0, z0 etc)
+            .Define("Rec_track_dNdx", "ReconstructedTrack::tracks_dNdx(Rec_trackStates, EFlowTrack_1, EFlowTrack, EFlowTrack_2)")
+            #Also define TOF using TrackerHits: RVec<edm4hep::TrackerHit3DData> object
+            # remove for now as also need first and last hits to be helpful
+            #.Define("Rec_track_TOF","ReconstructedTrack::tracks_TOF(Rec_trackStates, EFlowTrack_1, EFlowTrack, TrackerHits)")
+
         )
 
 
@@ -751,6 +800,19 @@ class RDFanalysis():
 
         elif cfg.run_mode == 'no_selection_taus':
             return df2 
+        
+        elif cfg.run_mode == 'kenzie_CPV_tuples_no_selection':
+            return df2 
+        
+        elif cfg.run_mode == 'FCCee_FT':
+            df3 = (
+                df2 
+                #This is clearest way to cut on this as physically impossible to reconstruct a 1 track vertex
+                .Filter("Rec_PV_ntracks>1")
+                )   
+            return df3
+ 
+        
 
 
 
@@ -795,6 +857,13 @@ class RDFanalysis():
             return df5
         
         elif cfg.run_mode == 'process_with_MC_full_prelim':
+            df5 = (
+                df3
+                .Filter("EVT_hemisEmax_n>10") #tau veto
+            )
+            return df5
+        
+        elif cfg.run_mode == 'ella_INVestigations':
             df5 = (
                 df3
                 .Filter("EVT_hemisEmax_n>10") #tau veto

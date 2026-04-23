@@ -559,6 +559,141 @@ float fromPV_map(float input_var) {
   END OF B2INV FUNCTIONS
 ***********************************/
 
+
+/*******************
+ * Functions for FT
+ ******************/
+
+// Get prodctions flavour for B or Bs looking in SS hemis
+//ISSUE: not all B2Inv decays end up on SS, if on OS, then cant find flavour
+/*
+int get_B_prod_flav(const ROOT::VecOps::RVec<int>& hemis_mask,
+                                        const ROOT::VecOps::RVec<int>& mc_pdg,
+                                        const ROOT::VecOps::RVec<int>& mc_m1) {
+  
+  ROOT::VecOps::RVec<int> prod_flavour;
+
+  // find indices where the mask is 1 and particle is a B0 (511) or Bs0 (531).
+  auto is_target = (hemis_mask == 1) && (ROOT::VecOps::abs(mc_pdg) == 511 || ROOT::VecOps::abs(mc_pdg) == 531);
+  auto target_indices = ROOT::VecOps::Nonzero(is_target);
+
+  // If  no B mesons in this hemisphere return 0
+  if (target_indices.empty()) {
+    return 0; 
+  }
+  
+  // Take first Bmeson found and trace up chain to ensure production flavour
+  int current_idx = target_indices[0];
+  int current_pdg = mc_pdg[current_idx];
+  
+  // Trace up the parent chain using MC_M1 
+  while (true) {
+    int parent_idx = mc_m1[current_idx];    
+    int parent_pdg = mc_pdg[parent_idx];
+    
+    // If the parent is same type of B meson then in oscillation chain
+    if (std::abs(parent_pdg) == std::abs(current_pdg)) {
+      current_idx = parent_idx;
+      current_pdg = parent_pdg;
+    } else {
+      // Have found production type, break infinite loop
+      break; 
+    }
+  }
+  
+  return current_pdg;
+}*/
+
+
+// New implementation which doesn't assume B2Inv on SS
+// Get production flavour for B or Bs by tracing from a nu-anu pair across the whole event
+int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
+                              const ROOT::VecOps::RVec<int>& mc_m1) {
+  
+  std::vector<int> b_ancestors_nu;
+  std::vector<int> b_ancestors_anu;
+
+  // 1. Find all neutrinos and antineutrinos in the event and trace to their B parent
+  for (size_t i = 0; i < mc_pdg.size(); ++i) {
+    int pdg = mc_pdg[i];
+    
+    // Check for neutrinos (12: ve, 14: vmu, 16: vtau)
+    bool is_nu  = (pdg == 12 || pdg == 14 || pdg == 16);
+    bool is_anu = (pdg == -12 || pdg == -14 || pdg == -16);
+
+    if (!is_nu && !is_anu) continue;
+
+    // Trace up the chain using mc_m1 to find a B meson ancestor
+    int curr_idx = mc_m1[i];
+    int b_ancestor_idx = -1;
+
+    while (curr_idx >= 0 && curr_idx < mc_pdg.size()) {
+      int parent_pdg = std::abs(mc_pdg[curr_idx]);
+      
+      // Check if the ancestor is a B0 (511) or Bs0 (531)
+      if (parent_pdg == 511 || parent_pdg == 531) {
+        b_ancestor_idx = curr_idx;
+        break;
+      }
+
+      // If dont find Bs0 or B0 break on reaching quark and reurun indx -1
+      if (parent_pdg == 5) {
+        b_ancestor_idx = -1;
+        break;
+      }
+      
+      
+      curr_idx = mc_m1[curr_idx];
+    }
+
+    // Store the B meson ancestor index based on whether we started from a nu or anu
+    if (b_ancestor_idx != -1) {
+      if (is_nu)  b_ancestors_nu.push_back(b_ancestor_idx);
+      if (is_anu) b_ancestors_anu.push_back(b_ancestor_idx);
+    }
+  }
+
+  // 2. Find a B meson that is the ancestor to BOTH a neutrino and an antineutrino
+  int target_b_idx = -1;
+  for (int b_idx : b_ancestors_nu) {
+    if (std::find(b_ancestors_anu.begin(), b_ancestors_anu.end(), b_idx) != b_ancestors_anu.end()) {
+      target_b_idx = b_idx;
+      break; 
+    }
+  }
+
+  // If no B meson parent with a nu-nub pair was found, return 0
+  if (target_b_idx == -1) {
+    return 0; 
+  }
+  
+  // 3. Trace up the oscillation chain to ensure production flavour
+  int current_idx = target_b_idx;
+  int current_pdg = mc_pdg[current_idx];
+  
+  while (true) {
+    int parent_idx = mc_m1[current_idx];    
+    
+    // Safety check for valid parent index bounds
+    if (parent_idx < 0 || parent_idx >= mc_pdg.size()) break;
+
+    int parent_pdg = mc_pdg[parent_idx];
+    
+    // If the parent is the same type of B meson, then it is in the oscillation chain
+    if (std::abs(parent_pdg) == std::abs(current_pdg)) {
+      current_idx = parent_idx;
+      current_pdg = parent_pdg;
+    } else {
+      // Have found production type, break infinite loop
+      break; 
+    }
+  }
+  
+  return current_pdg;
+}
+
+/****end of FT*****/
+
 ROOT::VecOps::RVec<float> get_Vertex_mass(ROOT::VecOps::RVec<VertexingUtils::FCCAnalysesVertex> vertex,
 						   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco){
 

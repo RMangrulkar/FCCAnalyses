@@ -5,10 +5,22 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from plotters.matt_paper_plotter import make_the_bloody_plot
 
-path = "outputs/no_selection"#"outputs/no_selection"
+path = "/r02/lhcb/ejnw2/FCC_outputs_Jan26/outputs/no_selection"#"outputs/no_selection"
 samples = ["combined_signal", "hadronic_background"]
 tau_samples = ["combined_signal", "tau_background"]
 
+make_the_bloody_plot( var="EVT_hemisEmin_nNeutral", range=(0,30), bins=30, 
+                      inputpath=path, samples=["combined_signal"], 
+                      xtitle='Number of neutral particles in the signal hemisphere', 
+                      plot_cutline=None,
+                      save="BInv_EVT_hemisEmin_nNeutral_prelim.png" )
+
+make_the_bloody_plot( var="EVT_hemisEmax_nNeutral", range=(0,40), bins=40, 
+                      inputpath=path, samples=["combined_signal"], 
+                      xtitle='Number of neutral particles in the opposite hemisphere', 
+                      plot_cutline=None,
+                      save="BInv_EVT_hemisEmax_nNeutral_prelim.png" )
+'''
 make_the_bloody_plot( var="EVT_hemisEmax_n", range=(0,60), bins=60, 
                       inputpath=path, samples=tau_samples, 
                       xtitle='Non-signal hemisphere particle multiplicity', 
@@ -40,3 +52,4 @@ make_the_bloody_plot( var="PV_Rec_vtx_m", range=(0,90), bins=45,
                       save="plots/paper_plots/JHEP_proofs_replies/PV_Rec_vtx_m_prelim.pdf" )
 
 plt.show()
+'''

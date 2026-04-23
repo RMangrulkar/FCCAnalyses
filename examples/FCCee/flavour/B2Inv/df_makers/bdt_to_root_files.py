@@ -68,9 +68,16 @@ samples = cfg.sample_allocations["light_hadronic_background"]# MUST BE A LIST
 runmode ="process_with_MC_full_prelim"
 data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
 data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)
-'''
 
 samples = cfg.sample_allocations["combined_signal"]# MUST BE A LIST 
 runmode ="process_with_MC_full_prelim"
 data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
 data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)
+'''
+
+samples = cfg.processList["ella_INVestigations"].keys()# MUST BE A LIST 
+runmode ="ella_INVestigations"
+data_to_pickle_function.add_BDT_to_new_root_files(runmode, samples, vars_to_save, BDT_params = BDT_params_dict) #BDT_cut_value = 0.99)
+data_to_pickle_function.add_friends_and_bdtcut(runmode, samples, bdtcut=0.99965)
+
+

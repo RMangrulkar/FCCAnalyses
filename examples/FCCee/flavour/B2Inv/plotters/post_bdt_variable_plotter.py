@@ -67,6 +67,10 @@ def histogram_settings():
             hist_settings[allocation]['color'] = plt.cm.tab20b((4+ np.linspace(0, 1, len(cfg.sample_allocations['leptonic_background'])+2)[2:-1])/5 )
             total_color[allocation] = 'mediumvioletred'
 
+        elif allocation=='ella_INV':
+            hist_settings[allocation]['histtype'] = 'stepfilled'
+            hist_settings[allocation]['color'] = cfg.sample_colors[allocation]
+
     return hist_settings, total_color
 
 #Function to enable automatic xtitle with > or <
@@ -155,7 +159,7 @@ def plot_variable(data,variable,
             n_exp, n_err, BFZbb_err_dict_components = eff_finder.get_n_expected(eff, err, signal_bf=signal_bf, calc_BFZbb_err=True)
 
             hist_w = [ n_exp[sample]/len(df[df['decay']==sample])* np.ones_like(values[sample]) for sample in samples ] 
-
+            print([f'eff_{sample}={eff[sample]}'for sample in samples ])
             print([f'n_{sample}={n_exp[sample]}'for sample in samples ])
 
         else:

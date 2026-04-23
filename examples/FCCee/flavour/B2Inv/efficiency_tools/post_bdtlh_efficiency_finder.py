@@ -197,6 +197,10 @@ def get_total_eff_post_bdt(df,
         
         else:
             N_post = len(df_decay)
+
+        print(sample)
+        print(N_post)
+        print(eventsProcessed)
            
         total_efficiency, error = efficiency_finder.efficiency_calc(eventsProcessed, N_post)
         
@@ -219,8 +223,7 @@ def get_total_eff_post_bdt(df,
 def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_err=False, model_all_1prong_leptonic_tau = False): #set up to take efficiencies which is a disctionary of floats
     
     #function to return the expected number of events for each sample and the efficiency error on that number
-    
-    
+    # ONLY used in plotting without exclusive background samples!!!!!!
     
     #print('Note: error on n_expected is currently only from efficiency (assuming that dominant)')
     
@@ -244,7 +247,9 @@ def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_er
         else:
             bfs_val = cfg.branching_fractions[sample][0] #value=1 for signal
             bfs_err = cfg.branching_fractions[sample][1] #value=0 for signal modes
+
         eff_val = efficiencies[sample]
+        print(eff_val)
         eff_err_val = efficiencies_err[sample]
         N_z = cfg.N_z
         if eff_val >0:
@@ -255,8 +260,21 @@ def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_er
         
         num = N_z*bfs_val*eff_val
 
+        print(sample)
+        print(N_z)
+        print(bfs_val)
+        print(eff_val)
+        print(num)
+
         if sample in cfg.sample_allocations['combined_signal']:
             num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]*signal_bf
+            print(num)
+
+        elif sample in cfg.sample_allocations['B2lnu_background_combined'] or sample in cfg.sample_allocations['ella_INV']:
+            num *= 2*cfg.branching_fractions['p8_ee_Zbb_ecm91'][0]*cfg.prod_frac[sample][0]
+            print(num)
+            print("BF error currently not correct for exclusive bkg modes")
+
 
         num_err = num*frac_eff_err # nb. for now just includes the efficiency error
 
@@ -269,10 +287,13 @@ def get_n_expected(efficiencies, efficiencies_err, signal_bf=1e-6, calc_BFZbb_er
         n_err_dict[sample] = num_err
         BFZbb_err_dict[sample] = BFZbb_err
 
+        print(n_expect_dict[sample])
+
     if calc_BFZbb_err == True:
     #due to different error formula for signal and background for BF error (as in signal Zbb common to both terms whilst for B Zqq different for each term)
     # make BF error per component (ie. S and B)
-        print(efficiencies.keys())
+        print("calc_BFZbb_err is True, not this is only accurate for signal and hadronic bkg")
+        #print(efficiencies.keys())
         if all(sample in efficiencies.keys() for sample in cfg.sample_allocations['combined_signal']):
             BFZbb_err_dict_components['combined_signal'] = sum([BFZbb_err_dict[sample] for sample in cfg.sample_allocations['combined_signal']])
         if all(sample in efficiencies.keys() for sample in cfg.sample_allocations['hadronic_background']):

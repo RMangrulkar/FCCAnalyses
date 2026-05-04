@@ -172,12 +172,14 @@ def draw_event_display( file, event_number, elev=None, azim=None, roll=None, cli
 
     
     # PLOT THE B and NU NU
-    pv = tr.arrays( ["MCZ_orivtx_x", "MCZ_orivtx_y", "MCZ_orivtx_z"], entry_start=event_number, entry_stop=event_number+1, library="np" )
-    pv = conv_uproot_to_unit_vec( pv, 'MCZ_orivtx_', False )
+    #pv = tr.arrays( ["MCZ_orivtx_x", "MCZ_orivtx_y", "MCZ_orivtx_z"], entry_start=event_number, entry_stop=event_number+1, library="np" )
+    #pv = conv_uproot_to_unit_vec( pv, 'MCZ_orivtx_', False )
+
 
     mc_parts = tr.arrays( ["MC_px", "MC_py", "MC_pz", "MC_q", "MC_orivtx_x", "MC_orivtx_y", "MC_orivtx_z", "MC_PDG", "MC_D1", "MC_D2"], entry_start=event_number, entry_stop=event_number+1 )
 
     b_parts = mc_parts[ abs(mc_parts['MC_PDG'])==511 ]
+
     if len(b_parts['MC_PDG'][0])>0:
         d1_ind = b_parts['MC_D1']
         d2_ind = b_parts['MC_D2']
@@ -185,40 +187,48 @@ def draw_event_display( file, event_number, elev=None, azim=None, roll=None, cli
         d2 = mc_parts[d2_ind]['MC_PDG']
         b_parts['MC_D1_PDG'] = d1
         b_parts['MC_D2_PDG'] = d2
+        
+        #cheat and define pv as origin vertex of B
+        b_vx, b_vy, b_vz = b_parts['MC_orivtx_x'][0], b_parts['MC_orivtx_y'][0], b_parts['MC_orivtx_z'][0]
+        # Convert Awkward arrays to NumPy, flatten them, and extract the pure float
+        pv = np.array([ float(np.asarray(t).flatten()[0]) for t in [b_vx, b_vy, b_vz] ])
+        print(pv)
 
         b_cand = b_parts[ (abs(b_parts['MC_D1_PDG'])==12) & (abs(b_parts['MC_D2_PDG'])==12) ]
-        b_vx, b_vy, b_vz = b_cand['MC_orivtx_x'][0,0], b_cand['MC_orivtx_y'][0,0], b_cand['MC_orivtx_z'][0,0]
-        b_px, b_py, b_pz = b_cand['MC_px'][0,0], b_cand['MC_py'][0,0], b_cand['MC_pz'][0,0]
-        nu1 = mc_parts[ b_cand['MC_D1'] ]
-        nu2 = mc_parts[ b_cand['MC_D2'] ]
-        nu1_vx, nu1_vy, nu1_vz = nu1['MC_orivtx_x'][0,0], nu1['MC_orivtx_y'][0,0], nu1['MC_orivtx_z'][0,0]
-        nu1_px, nu1_py, nu1_pz = nu1['MC_px'][0,0], nu1['MC_py'][0,0], nu1['MC_pz'][0,0]
-        nu2_vx, nu2_vy, nu2_vz = nu2['MC_orivtx_x'][0,0], nu2['MC_orivtx_y'][0,0], nu2['MC_orivtx_z'][0,0]
-        nu2_px, nu2_py, nu2_pz = nu2['MC_px'][0,0], nu2['MC_py'][0,0], nu2['MC_pz'][0,0]
-        nu1_p = np.sqrt( nu1_px**2 + nu1_py**2 + nu1_pz**2 )
-        nu2_p = np.sqrt( nu2_px**2 + nu2_py**2 + nu2_pz**2 )
+        if len(b_cand['MC_orivtx_x'][0])>0:
+           b_vx, b_vy, b_vz = b_cand['MC_orivtx_x'][0,0], b_cand['MC_orivtx_y'][0,0], b_cand['MC_orivtx_z'][0,0]
+           b_px, b_py, b_pz = b_cand['MC_px'][0,0], b_cand['MC_py'][0,0], b_cand['MC_pz'][0,0]
+           nu1 = mc_parts[ b_cand['MC_D1'] ]
+           nu2 = mc_parts[ b_cand['MC_D2'] ]
+           nu1_vx, nu1_vy, nu1_vz = nu1['MC_orivtx_x'][0,0], nu1['MC_orivtx_y'][0,0], nu1['MC_orivtx_z'][0,0]
+           nu1_px, nu1_py, nu1_pz = nu1['MC_px'][0,0], nu1['MC_py'][0,0], nu1['MC_pz'][0,0]
+           nu2_vx, nu2_vy, nu2_vz = nu2['MC_orivtx_x'][0,0], nu2['MC_orivtx_y'][0,0], nu2['MC_orivtx_z'][0,0]
+           nu2_px, nu2_py, nu2_pz = nu2['MC_px'][0,0], nu2['MC_py'][0,0], nu2['MC_pz'][0,0]
+           nu1_p = np.sqrt( nu1_px**2 + nu1_py**2 + nu1_pz**2 )
+           nu2_p = np.sqrt( nu2_px**2 + nu2_py**2 + nu2_pz**2 )
+
 
     
-        b = Arrow3D( [b_vz-pv[2], nu1_vz-pv[2]],
+           b = Arrow3D( [b_vz-pv[2], nu1_vz-pv[2]],
                      [b_vy-pv[1], nu1_vy-pv[1]],
                      [b_vx-pv[0], nu1_vx-pv[0]],
                      mutation_scale=18,
                      lw=1.8, arrowstyle='-', color='blue' )
-        ax.add_artist(b)
+           ax.add_artist(b)
 
-        n1 = Arrow3D( [nu1_vz-pv[2], nu1_vz-pv[2]+0.7*stretch*nu1_pz/nu1_p],
+           n1 = Arrow3D( [nu1_vz-pv[2], nu1_vz-pv[2]+0.7*stretch*nu1_pz/nu1_p],
                       [nu1_vy-pv[1], nu1_vy-pv[1]+0.7*stretch*nu1_py/nu1_p],
                       [nu1_vx-pv[0], nu1_vx-pv[0]+0.7*stretch*nu1_px/nu1_p],
                       mutation_scale=18,
                       lw=1.8, arrowstyle='-', color='blue', linestyle=':' )
-        ax.add_artist(n1)
+           ax.add_artist(n1)
 
-        n2 = Arrow3D( [nu2_vz-pv[2], nu2_vz-pv[2]+0.7*stretch*nu2_pz/nu2_p],
+           n2 = Arrow3D( [nu2_vz-pv[2], nu2_vz-pv[2]+0.7*stretch*nu2_pz/nu2_p],
                       [nu2_vy-pv[1], nu2_vy-pv[1]+0.7*stretch*nu2_py/nu2_p],
                       [nu2_vx-pv[0], nu2_vx-pv[0]+0.7*stretch*nu2_px/nu2_p],
                       mutation_scale=18,
                       lw=1.8, arrowstyle='-', color='blue', linestyle=':' )
-        ax.add_artist(n2)
+           ax.add_artist(n2)
         
     # PLOT THE TRACKS
     rec_parts = tr.arrays( ["Rec_true_orivtx_x", "Rec_true_orivtx_y", "Rec_true_orivtx_z", "Rec_true_px", "Rec_true_py", "Rec_true_pz", "Rec_true_PDG"], entry_start=event_number, entry_stop=event_number+1 )

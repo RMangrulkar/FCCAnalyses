@@ -613,7 +613,7 @@ int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
   std::vector<int> b_ancestors_nu;
   std::vector<int> b_ancestors_anu;
 
-  // 1. Find all neutrinos and antineutrinos in the event and trace to their B parent
+  // Find all neutrinos and antineutrinos in the event and trace to their B parent
   for (size_t i = 0; i < mc_pdg.size(); ++i) {
     int pdg = mc_pdg[i];
     
@@ -653,7 +653,7 @@ int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
     }
   }
 
-  // 2. Find a B meson that is the ancestor to BOTH a neutrino and an antineutrino
+  // Find a B meson that is the ancestor to BOTH a neutrino and an antineutrino
   int target_b_idx = -1;
   for (int b_idx : b_ancestors_nu) {
     if (std::find(b_ancestors_anu.begin(), b_ancestors_anu.end(), b_idx) != b_ancestors_anu.end()) {
@@ -667,7 +667,7 @@ int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
     return 0; 
   }
   
-  // 3. Trace up the oscillation chain to ensure production flavour
+  // Trace up the oscillation chain to ensure production flavour
   int current_idx = target_b_idx;
   int current_pdg = mc_pdg[current_idx];
   
@@ -690,6 +690,182 @@ int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
   }
   
   return current_pdg;
+}
+
+
+/*int count_rec_KS2pippim_noCombinatorics(const ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> &reco,
+                                 const ROOT::VecOps::RVec<edm4hep::MCParticleData> &MC_fromReco,
+                                 const ROOT::VecOps::RVec<int> &Rec_true_M1){   
+                                  
+    ROOT::VecOps::RVec<edm4hep::Vector3d> Rec_true_orivtx = MCParticle::get_vertex(MC_fromReco);
+
+    // Use a vtx position (x, y, z) as a key for vertex, storing number of pions at vertex
+    std::map<std::tuple<float, float, float>, int> vtx_map;
+
+    for (size_t i = 0; i < reco.size(); ++i) {
+        // Only look at particles whose parent is a KS
+        if (Rec_true_M1[i] == 310) {
+            auto &v = Rec_true_orivtx[i];
+           
+            // Add to the map using the vertex coordinates
+            vtx_map[std::make_tuple(v.x, v.y, v.z)]++;
+        }
+    }
+
+    int ks_count = 0;
+    for (auto const& [pos, count] : vtx_map) {
+        // If 2 pions share this vertex, we count it as a reconstructed KS
+        if (count == 2) {
+            ks_count++;
+        }
+    }
+
+    return ks_count;
+}
+
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> get_RP_from_MCObject (
+    ROOT::VecOps::RVec<int> reco_ind,
+    ROOT::VecOps::RVec<int> mc_ind, 
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco, 
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> mc) {
+    
+  edm4hep::ReconstructedParticleData placeholder;
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> result;
+  
+  // Resize to match the number of MC particles
+  result.resize(mc.size(), placeholder);
+
+  // Loop over the association indices
+  // (mc_ind and reco_ind are the same size, representing matched pairs)
+  for (unsigned int i = 0; i < mc_ind.size(); ++i) {
+    // Map the MC index to the corresponding Reconstructed particle
+    result[mc_ind.at(i)] = reco.at(reco_ind.at(i));
+  }
+
+  return result;
+}*/
+
+// Returns an array of length MC particles with reconstructed index, or -1 if not reconstructed.
+ROOT::VecOps::RVec<int> get_RP_idx_from_MC(
+    
+    ROOT::VecOps::RVec<int> reco_ind,//MCRecoAssociationsRec
+    ROOT::VecOps::RVec<int> mc_ind,//MCRecoAssociationsGen
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> mc){ //Particle object
+    
+  // Initialize the vector with -999 (for not reconstructed)
+  ROOT::VecOps::RVec<int> result(mc.size(), -999);
+
+  // Fill in the valid indices
+  for (unsigned int i = 0; i < reco_ind.size(); ++i) {
+    result[mc_ind.at(i)] = reco_ind.at(i);
+  }
+
+  return result;
+}
+
+
+
+//Function to return MC KS where all daughters in recop particles
+ROOT::VecOps::RVec<edm4hep::MCParticleData> get_rec_true_KS(
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> mc_particles,//Particle
+    ROOT::VecOps::RVec<int> mc_children,//ParticleChildren
+    ROOT::VecOps::RVec<int> mc_reco_idx //vector matching MC shape containing index of Rec particle (from get_RP_idx_from_MC) - if not -9 then reco [see above]
+) {
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> result;
+
+    for (size_t i = 0; i < mc_particles.size(); ++i) {
+        // select ks
+        if (mc_particles.at(i).PDG == 310) {
+            
+            // get indices of the MC daughters for given KS
+            int d_idx_start = mc_particles.at(i).daughters_begin;
+            int d_idx_end = mc_particles.at(i).daughters_end;
+
+            if (d_idx_end - d_idx_start < 1) continue;// If no daughters, skip
+            
+            bool all_reconstructed = true;
+
+            for (int d_idx = d_idx_start; d_idx < d_idx_end; ++d_idx) {
+
+                //check if daughters decay (ie. if pi0) - if they do then instead cehck granddaughters
+                int gd_idx_start =  mc_particles.at(mc_children.at(d_idx)).daughters_begin;
+                int gd_idx_end = mc_particles.at(mc_children.at(d_idx)).daughters_end;
+
+                if (gd_idx_end - gd_idx_start > 0) {
+                    // if granddaughters, check all of them are reco
+                    for (int gd_idx = gd_idx_start; gd_idx < gd_idx_end; ++gd_idx) {
+                        if (mc_reco_idx.at(mc_children.at(gd_idx)) == -999) {//Check gd index exists in our Reco-to-MC map
+                            all_reconstructed = false;
+                            break; // A granddaughter is missing
+                        }
+                    }
+
+                } 
+                else{// daughter stable therefore check daughter reco
+                  
+                  if (mc_reco_idx.at(mc_children.at(d_idx))==-999){
+                    all_reconstructed = false;
+                    break;
+                  }
+                }
+
+                // If any branch of the decay failed to reconstruct, stop checking this KS
+                if (!all_reconstructed) break; 
+            }
+    
+            //If every daughter was found in the reco list, save the KS
+            if (all_reconstructed) {
+                result.push_back(mc_particles.at(i));
+            }
+        }
+    }
+    return result;
+}
+
+
+//Function to return KS daughters (or granddaughters in the case of Ks to pi0pi0) missed in reco objects
+ROOT::VecOps::RVec<edm4hep::MCParticleData> get_missed_KS_children(
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> mc_particles,//Particle
+    ROOT::VecOps::RVec<int> mc_children,//ParticleChildren
+    ROOT::VecOps::RVec<int> mc_reco_idx //vector matching MC shape containing index of Rec particle (from get_RP_idx_from_MC) - if not -9 then reco [see above]
+) {
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> missed;
+
+    for (size_t i = 0; i < mc_particles.size(); ++i) {
+        // select ks
+        if (mc_particles.at(i).PDG == 310) {
+            
+            // get indices of the MC daughters for given KS
+            int d_idx_start = mc_particles.at(i).daughters_begin;
+            int d_idx_end = mc_particles.at(i).daughters_end;
+
+            if (d_idx_end - d_idx_start < 1) continue;// If no daughters, skip
+            
+            for (int d_idx = d_idx_start; d_idx < d_idx_end; ++d_idx) {
+
+                //check if daughters decay (ie. if pi0) - if they do then instead cehck granddaughters
+                int gd_idx_start =  mc_particles.at(mc_children.at(d_idx)).daughters_begin;
+                int gd_idx_end = mc_particles.at(mc_children.at(d_idx)).daughters_end;
+
+                if (gd_idx_end - gd_idx_start > 0) {
+                    // if granddaughters, check all of them are reco
+                    for (int gd_idx = gd_idx_start; gd_idx < gd_idx_end; ++gd_idx) {
+                        if (mc_reco_idx.at(mc_children.at(gd_idx)) == -999) {//Check gd index exists in our Reco-to-MC map
+                             missed.push_back(mc_particles.at(mc_children.at(gd_idx)));
+                        }
+                    }
+
+                } 
+                else{// daughter stable therefore check daughter reco
+                  
+                  if (mc_reco_idx.at(mc_children.at(d_idx))==-999){
+                      missed.push_back(mc_particles.at(mc_children.at(d_idx)));
+                  }
+                }
+            }
+        }
+    }
+    return missed;
 }
 
 /****end of FT*****/

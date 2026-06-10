@@ -533,15 +533,15 @@ class RDFanalysis():
             ##           IP-like track vars            ##
             #############################################
             .Define("Rec_track_d0",      "ReconstructedParticle2Track::getRP2TRK_D0(RecoParticlesPIDAtVertex, EFlowTrack_1)")
-            .Define("Rec_track_normd0",  "ReconstructedParticle2Track::getRP2TRK_D0_sig(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+            .Define("Rec_track_d0_sig",  "ReconstructedParticle2Track::getRP2TRK_D0_sig(RecoParticlesPIDAtVertex, EFlowTrack_1)")
             .Define("Rec_track_z0",      "ReconstructedParticle2Track::getRP2TRK_Z0(RecoParticlesPIDAtVertex, EFlowTrack_1)")
-            .Define("Rec_track_normz0",  "ReconstructedParticle2Track::getRP2TRK_Z0_sig(RecoParticlesPIDAtVertex, EFlowTrack_1)")
+            .Define("Rec_track_z0_sig",  "ReconstructedParticle2Track::getRP2TRK_Z0_sig(RecoParticlesPIDAtVertex, EFlowTrack_1)")
 
 
             .Define("Rec_track_absd0",      "myUtils::abs_RVec(Rec_track_d0)")
-            .Define("Rec_track_absnormd0",  "myUtils::abs_RVec(Rec_track_normd0)")
+            .Define("Rec_track_absnormd0",  "myUtils::abs_RVec(Rec_track_d0_sig)")
             .Define("Rec_track_absz0",      "myUtils::abs_RVec(Rec_track_z0)")
-            .Define("Rec_track_absnormz0",  "myUtils::abs_RVec(Rec_track_normz0)")
+            .Define("Rec_track_absnormz0",  "myUtils::abs_RVec(Rec_track_z0_sig)")
 
 
             # Reco track stats
@@ -778,20 +778,46 @@ class RDFanalysis():
             .Define("MC_thrustCosTheta",           "Algorithms::getAxisCosTheta(EVT_ThrustInfo, MC_px, MC_py, MC_pz)")
             .Define("MC_in_hemisEmin",             "myUtils::get_RP_inHemis(1)(MC_thrustCosTheta)") # just gives 1 or 0 based on whether in min hemisphere or not
             # Get the production flavour of B0/Bs0 mesons in signal hemisphere
-            .Define("MC_B_prodFlav", "myUtils::get_B_prod_flav_from_nunu(MC_PDG, MC_M1)")
+            .Define("EVT_sigB_MCprodFlav", "myUtils::get_B_prod_flav_from_nunu(MC_PDG, MC_M1)")
             #use this to define qtag (saved flav as a check)
-            .Define("MC_B_qTag",  "MC_B_prodFlav > 0 ? 1 : (MC_B_prodFlav < 0 ? -1 : 0)")
+            .Define("EVT_sigB_MCqTag",  "EVT_sigB_MCprodFlav > 0 ? 1 : (EVT_sigB_MCprodFlav < 0 ? -1 : 0)")
 
             #Also define dNdx for PID tool
             # First get the track states  associated with  reconstructed particles
             .Define("Rec_trackStates", "ReconstructedParticle2Track::getRP2TRK(RecoParticlesPIDAtVertex, EFlowTrack_1)")
             # Get the dN/dx for those tracks (maintains the same array indices as d0, z0 etc)
             .Define("Rec_track_dNdx", "ReconstructedTrack::tracks_dNdx(Rec_trackStates, EFlowTrack_1, EFlowTrack, EFlowTrack_2)")
+            .Define("Rec_track_dNdx_paddedNeutrals", "ReconstructedParticle2Track::getRP2TRK_dNdX(RecoParticlesPIDAtVertex, Rec_trackStates, EFlowTrack_1, EFlowTrack, EFlowTrack_2)")
+
             #Also define TOF using TrackerHits: RVec<edm4hep::TrackerHit3DData> object
             # remove for now as also need first and last hits to be helpful
             #.Define("Rec_track_TOF","ReconstructedTrack::tracks_TOF(Rec_trackStates, EFlowTrack_1, EFlowTrack, TrackerHits)")
 
+            # Get number of KS (various assumption levels)
+            #number of MC KS
+            .Define("MC_KS", "MCParticle::sel_pdgID(310, false)(Particle)") #m_abs redundant for KS where PID == 310 ##INTERMEDIATE STATE 
+            .Define("MC_nKS", "MC_KS.size()" )
+
+
+            # Get number of reco KS (still cheating without using combinatorics - ie count if have two pi with same origin vertex and parent as KS). As seen in B2Inv study, some inefficiency to hugh energy KS which decay beyon tracker
+            .Define("MC_recParticle_indx", "myUtils::get_RP_idx_from_MC(MCRecoAssociationsRec, MCRecoAssociationsGen, Particle)")
+            .Define("Rec_true_KS","myUtils::get_rec_true_KS(Particle, ParticleChildren , MC_recParticle_indx)")
+            .Define("Rec_true_nKS","Rec_true_KS.size()")
+
+
+            #Adding IPs corrected so that from PV rather than 000
+            
+            .Define("Rec_PV_TLorentz",     "TLorentzVector(Rec_PrimaryVertex.position.x, Rec_PrimaryVertex.position.y, Rec_PrimaryVertex.position.z, 0.)") #time component not used so fill with 0.
+            .Define("MC_PV_TLorentz",     "TLorentzVector(MC_PrimaryVertex.X(), MC_PrimaryVertex.Y(), MC_PrimaryVertex.Z(), 0.)")
+            .Define("Rec_track_d0_fromRecPV",     f"ReconstructedParticle2Track::XPtoPar_dxy(RecoParticlesPIDAtVertex, EFlowTrack_1, Rec_PV_TLorentz, {cfg.B_z})")
+            .Define("Rec_track_z0_fromRecPV",     f"ReconstructedParticle2Track::XPtoPar_dz(RecoParticlesPIDAtVertex, EFlowTrack_1,  Rec_PV_TLorentz, {cfg.B_z})")
+            .Define("Rec_track_d0_fromMCPV",     f"ReconstructedParticle2Track::XPtoPar_dxy(RecoParticlesPIDAtVertex, EFlowTrack_1, MC_PV_TLorentz, {cfg.B_z})")
+            .Define("Rec_track_z0_fromMCPV",     f"ReconstructedParticle2Track::XPtoPar_dz(RecoParticlesPIDAtVertex, EFlowTrack_1,  MC_PV_TLorentz, {cfg.B_z})")
+
+
+
         )
+
 
 
         # If producing raw_tuples we are done

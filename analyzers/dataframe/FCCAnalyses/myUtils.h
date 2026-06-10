@@ -237,6 +237,22 @@ namespace myUtils{
   int get_B_prod_flav_from_nunu(const ROOT::VecOps::RVec<int>& mc_pdg,
                               const ROOT::VecOps::RVec<int>& mc_m1);
 
+  ROOT::VecOps::RVec<int> get_RP_idx_from_MC(
+                        ROOT::VecOps::RVec<int> reco_ind,//MCRecoAssociationsRec
+                        ROOT::VecOps::RVec<int> mc_ind,//MCRecoAssociationsGen
+                        ROOT::VecOps::RVec<edm4hep::MCParticleData> mc);
+
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> get_rec_true_KS(
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> mc_particles,//Particle
+    ROOT::VecOps::RVec<int> mc_children,//ParticleChildren
+    ROOT::VecOps::RVec<int> mc_reco_idx); //vector matching MC shape containing index of Rec particle (from get_RP_idx_from_MC) - if not -9 then reco [see above]
+
+  
+  //KS reco (just based on pipm final state)
+  /*int count_rec_KS2pippim_noCombinatorics(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco,
+                                 ROOT::VecOps::RVec<edm4hep::MCParticleData> MC_fromReco,
+                                 ROOT::VecOps::RVec<int> Rec_true_M1);*/
+
 
   /****end of FT*****/
 

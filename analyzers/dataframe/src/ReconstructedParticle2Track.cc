@@ -1,5 +1,6 @@
 #include "FCCAnalyses/ReconstructedParticle2Track.h"
 #include "FCCAnalyses/VertexingUtils.h"
+#include "FCCAnalyses/ReconstructedTrack.h"
 
 namespace FCCAnalyses{
 
@@ -313,6 +314,54 @@ getRP2TRK_Z0_sig(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in,
   }
   return result;
 }
+
+// Add new dNdx functions that pad neutral reco particles like for d0/z0
+
+ROOT::VecOps::RVec<float> getRP2TRK_dNdX(
+    const ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> &reco_particles,
+    const ROOT::VecOps::RVec<int> &track_indices,
+    const ROOT::VecOps::RVec<edm4hep::TrackData> &trackdata, // Eflowtrack
+    const ROOT::VecOps::RVec<edm4hep::Quantity> &dNdx)       // ETrackFlow_2
+{
+  ROOT::VecOps::RVec<float> results;
+  for (auto & p: reco_particles) {
+    if (p.tracks_begin<track_indices.size()){
+      auto i = p.tracks_begin;
+      int tk_idx = track_indices[i]; // index of the track in EFlowTrack_1
+      int tk_jdx = -1;
+      // find the index of the track in Eflowtrack (in principle, it is the same
+      // as tk_idx)
+      for (int k = 0; k < trackdata.size(); k++) {
+        int id_trackStates = trackdata[k].trackStates_begin;
+        if (id_trackStates == tk_idx) {
+          tk_jdx = k;
+          break;
+        }
+      }
+      float dndx = -1;
+      if (tk_jdx >= 0) {
+        int j = trackdata[tk_jdx].dxQuantities_begin;
+        dndx = dNdx[j].value / 1000;
+      }
+      results.push_back(dndx);}
+
+    else results.push_back(-9.);
+    
+  }
+  return results;
+}
+
+ROOT::VecOps::RVec<float> getRP2TRK_dNdX( 
+                const ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> &reco_particles,//reco particles
+                const ROOT::VecOps::RVec<edm4hep::TrackState> &some_tracks,//reco track states
+                const ROOT::VecOps::RVec<edm4hep::TrackState> &FullTracks,//EFlowTrack_1
+                const ROOT::VecOps::RVec<edm4hep::TrackData> &trackdata, // EFlowTrack
+                const ROOT::VecOps::RVec<edm4hep::Quantity> &dNdx)       // EFlowTrack_2
+{
+  ROOT::VecOps::RVec<int> indices = ReconstructedTrack::get_indices(some_tracks, FullTracks);
+  return getRP2TRK_dNdX(reco_particles, indices, trackdata, dNdx);
+}
+
 
 ROOT::VecOps::RVec<float>
 getRP2TRK_phi(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in,

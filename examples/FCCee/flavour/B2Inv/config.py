@@ -564,6 +564,8 @@ mass_Z = 91.188  # Ecm used in the winter2023 samples
 
 N_z = 6e12 # total number of Nz expected across all experiments during tera-Z run (from https://arxiv.org/pdf/2309.11353 Matt/Aidan paper)
 
+B_z = 2.0 #magnetic field strength from delphes card: https://raw.githubusercontent.com/HEP-FCC/FCC-config/winter2023/FCCee/Delphes/card_IDEA.tcl
+
 mass_KS = 0.497611 #\pm 0.000013 GeV
 mass_pi0 = 0.1349768#\pm0.0000005 GeV
 

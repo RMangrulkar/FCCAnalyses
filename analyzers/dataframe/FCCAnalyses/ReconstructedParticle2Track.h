@@ -104,6 +104,21 @@ namespace ReconstructedParticle2Track{
   ROOT::VecOps::RVec<float> getRP2TRK_Z0_cov (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in,
 					      ROOT::VecOps::RVec<edm4hep::TrackState> tracks);
 
+  /// Return the dNdX value for a track to a reconstructed particle        
+  ROOT::VecOps::RVec<float> getRP2TRK_dNdX(
+    const ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> &reco_particles,
+    const ROOT::VecOps::RVec<int> &track_indices,
+    const ROOT::VecOps::RVec<edm4hep::TrackData> &trackdata, // Eflowtrack
+    const ROOT::VecOps::RVec<edm4hep::Quantity> &dNdx);       // ETrackFlow_2
+
+  /// Return the dNdX value for a track to a reconstructed particle - overwrite so can input trackstate rather than index
+  ROOT::VecOps::RVec<float> getRP2TRK_dNdX( 
+                const ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> &reco_particles,//reco particles
+                const ROOT::VecOps::RVec<edm4hep::TrackState> &some_tracks,//reco track states
+                const ROOT::VecOps::RVec<edm4hep::TrackState> &FullTracks,//EFlowTrack_1
+                const ROOT::VecOps::RVec<edm4hep::TrackData> &trackdata, // EFlowTrack
+                const ROOT::VecOps::RVec<edm4hep::Quantity> &dNdx);       // EFlowTrack_2
+
   /// Return the variance (not the sigma)  of the the Phi of a track to a reconstructed particle
   ROOT::VecOps::RVec<float> getRP2TRK_phi_cov (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in,
 					       ROOT::VecOps::RVec<edm4hep::TrackState> tracks);
